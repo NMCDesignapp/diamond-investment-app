@@ -28,7 +28,7 @@ function StatusBadge({ status }: { status: string }) {
   };
   const c = config[status] || config['Chưa nhận quà'];
   return (
-    <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${c.bg} ${c.text} whitespace-nowrap`}>
+    <span className={`inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full text-[9px] font-semibold ${c.bg} ${c.text} whitespace-nowrap`}>
       <span>{c.icon}</span>{status.replace(' nhận quà', '')}
     </span>
   );
@@ -132,7 +132,7 @@ export default function InvestmentApp() {
               <thead>
                 <tr className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400">
                   <th className="p-2 text-amber-900 font-extrabold text-[13px] uppercase text-center w-12">STT</th>
-                  <th className="p-2 text-amber-900 font-extrabold text-[13px] uppercase text-center whitespace-nowrap">Họ Tên</th>
+                  <th className="p-2 text-amber-900 font-extrabold text-[13px] uppercase text-center whitespace-nowrap">Khách Hàng</th>
                   <th className="p-2 text-amber-900 font-extrabold text-[13px] uppercase text-center whitespace-nowrap">Tư Vấn Viên</th>
                   <th className="p-2 text-amber-900 font-extrabold text-[13px] uppercase text-center whitespace-nowrap">Phí Đầu Tư</th>
                   <th className="p-2 text-amber-900 font-extrabold text-[13px] uppercase text-center">Quà Tặng</th>
@@ -154,47 +154,36 @@ export default function InvestmentApp() {
                       className="border-b border-amber-100 hover:bg-amber-50/60 transition-colors duration-100"
                     >
                       <td className="p-2 text-center font-bold text-slate-400 text-xs w-12">{idx + 1}</td>
-                      <td className="p-2 font-semibold text-slate-800 text-[13px] whitespace-nowrap">{titleCase(c.name)}</td>
-                      <td className="p-2 text-slate-600 text-[13px] whitespace-nowrap">{titleCase(c.advisor) || '—'}</td>
+                      <td className="p-2 font-semibold text-slate-500 text-[13px] whitespace-nowrap">{titleCase(c.name)}</td>
+                      <td className="p-2 text-slate-500 text-[13px] whitespace-nowrap">{titleCase(c.advisor) || '—'}</td>
                       <td className="p-2 text-right font-mono text-emerald-700 font-semibold text-[13px] whitespace-nowrap">
                         {formatVND(c.investmentFee * 1e6)}
                       </td>
-                      <td className="p-2 text-slate-600 text-[13px]">
-                        <span className="inline-flex items-start gap-1">
-                          <Gift className="w-3.5 h-3.5 text-rose-400 flex-shrink-0 mt-0.5" />
+                      <td className="p-2 text-right font-semibold text-rose-700 text-[13px]">
+                        <span className="inline-flex items-end justify-end gap-1 flex-wrap">
+                          <Gift className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
                           <span className="leading-tight">{c.gift || '—'}</span>
                         </span>
                       </td>
                       <td className="p-2 text-right font-mono text-rose-700 font-semibold text-[13px] whitespace-nowrap">
                         {formatVND(c.giftValue)}
                       </td>
-                      <td className="p-2 w-24">
-                        <div className="flex flex-col items-center gap-0.5">
+                      <td className="p-2 w-20">
+                        <div className="flex flex-col items-center gap-1">
                           <StatusBadge status={c.status} />
-                          <div className="flex gap-0.5">
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => store.toggleReceivedStatus(c.id)}
-                              className="p-0.5 bg-emerald-50 hover:bg-emerald-100 rounded text-emerald-600 transition-colors"
-                              title={c.status === 'Đã nhận quà' ? 'Chưa nhận quà' : 'Đã nhận quà'}
-                            >
-                              <Check className="w-3 h-3" />
-                            </motion.button>
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => {
-                                const event = new CustomEvent('editCustomer', { detail: c });
-                                window.dispatchEvent(event);
-                              }}
-                              className="p-0.5 bg-amber-50 hover:bg-amber-100 rounded text-amber-600 transition-colors"
-                              title="Sửa"
-                            >
-                              <Pencil className="w-3 h-3" />
-                            </motion.button>
-                            <DeleteConfirmModal customerId={c.id} customerName={c.name} />
-                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.15 }}
+                            whileTap={{ scale: 0.85 }}
+                            onClick={() => store.toggleReceivedStatus(c.id)}
+                            className={`p-1 rounded-md transition-colors ${
+                              c.status === 'Đã nhận quà'
+                                ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700'
+                                : 'bg-slate-100 hover:bg-slate-200 text-slate-500'
+                            }`}
+                            title={c.status === 'Đã nhận quà' ? 'Chưa nhận quà' : 'Đã nhận quà'}
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </motion.button>
                         </div>
                       </td>
                     </motion.tr>
