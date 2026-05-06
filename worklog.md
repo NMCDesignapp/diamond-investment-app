@@ -26,3 +26,32 @@ Stage Summary:
 - All features from original preserved: customer CRUD, gift tiers, event settings, search/filter, status toggle
 - Enhanced with: animations, floating card effects, bright color scheme, responsive design
 - Key files: src/app/page.tsx, src/lib/investment-store.ts, src/components/investment-app/*.tsx, src/app/api/*/route.ts
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Update desktop UI per user requirements - centered title, compact layout, fixed screen, table improvements
+
+Work Log:
+- Centered title in header with Diamond icon above
+- Changed "Thêm KH" and "Cài đặt" buttons to small icon-only buttons in top-right corner
+- Made stats bar more compact (smaller padding, font sizes)
+- Moved search/filter bar to fixed bottom of screen with thin styling
+- Changed layout to h-screen flex-col with overflow-hidden for fixed screen
+- Split table into separate thead (fixed) and scrollable tbody using two table elements
+- Made table headers uppercase, centered, font-extrabold text-[13px]
+- Added whitespace-nowrap to STT, Họ Tên, TVV, Phí, Giá Trị columns
+- Quà Tặng column allows text wrapping
+- Added titleCase() function for auto-capitalizing KH and TVV names
+- Merged Trạng thái + Thao tác columns into single "GHI CHÚ" column
+- Arranged action buttons vertically (flex-col) with minimal sizing
+- Made StatusBadge much smaller (text-[10px], compact padding)
+- Added Gift icon before gift name in Quà Tặng content cells only
+- All lint checks pass, page renders correctly
+
+Stage Summary:
+- Desktop layout is now a fixed viewport with only customer list scrolling
+- Header compact with centered title and icon buttons top-right
+- Search/filter fixed at bottom
+- Table headers uppercase, centered, proper sizing
+- Names auto-capitalized, gift icon added, columns merged as requested

@@ -98,15 +98,16 @@ export function CustomerFormModal() {
   return (
     <>
       <motion.button
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => {
           setEditingCustomer(null);
           setIsOpen(true);
         }}
-        className="flex items-center gap-1.5 bg-amber-800 hover:bg-amber-900 text-white px-4 py-2.5 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+        className="p-1.5 bg-amber-800/80 hover:bg-amber-900 rounded-lg transition-all"
+        title="Thêm khách hàng"
       >
-        <Plus className="w-4 h-4" /> Thêm KH
+        <Plus className="w-4 h-4 text-white" />
       </motion.button>
 
       <AnimatePresence>

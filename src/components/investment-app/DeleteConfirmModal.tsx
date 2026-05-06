@@ -30,13 +30,13 @@ export function DeleteConfirmModal({ customerId, customerName }: DeleteConfirmMo
   return (
     <>
       <motion.button
-        whileHover={{ scale: 1.15 }}
+        whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(true)}
-        className="p-1.5 bg-rose-100 hover:bg-rose-200 rounded-lg text-rose-700 transition-colors shadow-sm"
+        className="p-0.5 bg-rose-50 hover:bg-rose-100 rounded text-rose-600 transition-colors"
         title="Xóa"
       >
-        <Trash2 className="w-4 h-4" />
+        <Trash2 className="w-3 h-3" />
       </motion.button>
 
       <AnimatePresence>

@@ -94,12 +94,13 @@ export function SettingsModal() {
   return (
     <>
       <motion.button
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-1.5 bg-black/20 hover:bg-black/30 px-3 py-2.5 rounded-xl font-bold backdrop-blur-sm transition-all"
+        className="p-1.5 bg-black/15 hover:bg-black/25 rounded-lg backdrop-blur-sm transition-all"
+        title="Cài đặt"
       >
-        <Settings className="w-4 h-4" /> Cài đặt
+        <Settings className="w-4 h-4 text-amber-900/70" />
       </motion.button>
 
       <AnimatePresence>
