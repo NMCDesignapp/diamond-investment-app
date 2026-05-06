@@ -47,7 +47,12 @@ export default function InvestmentApp() {
   const isEmpty = filtered.length === 0;
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/40 overflow-hidden">
+      {/* Decorative background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-amber-200/20 to-yellow-100/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -left-20 w-72 h-72 bg-gradient-to-tr from-amber-100/15 to-orange-100/10 rounded-full blur-3xl" />
+      </div>
 
       {/* === FIXED HEADER === */}
       <motion.div
@@ -75,7 +80,7 @@ export default function InvestmentApp() {
             </p>
           </div>
           {/* Right: small icon buttons */}
-          <div className="flex-1 flex justify-end items-start gap-1.5">
+          <div className="flex-1 flex flex-col items-end gap-1 pt-0.5">
             <SettingsModal />
             <CustomerFormModal />
           </div>
@@ -121,7 +126,7 @@ export default function InvestmentApp() {
             <p className="text-amber-500 text-sm">Nhấn &quot;+&quot; để thêm</p>
           </div>
         ) : (
-          <div className="h-full rounded-xl border-2 border-amber-300 shadow-lg bg-white flex flex-col overflow-hidden">
+          <div className="h-full rounded-lg border-2 border-amber-300 shadow-lg bg-white/95 backdrop-blur-sm flex flex-col overflow-hidden">
             {/* Fixed table header */}
             <table className="w-full border-collapse">
               <thead>
@@ -210,7 +215,7 @@ export default function InvestmentApp() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: idx * 0.03 }}
-                className="bg-white rounded-xl border border-amber-200 shadow-md overflow-hidden"
+                className="bg-white/90 backdrop-blur-sm rounded-xl border border-amber-200 shadow-md overflow-hidden"
               >
                 <div className="p-3 cursor-pointer" onClick={() => setExpandedMobile(expandedMobile === c.id ? null : c.id)}>
                   <div className="flex justify-between items-start">
@@ -266,7 +271,7 @@ export default function InvestmentApp() {
       </div>
 
       {/* === FIXED BOTTOM: SEARCH & FILTER === */}
-      <div className="flex-shrink-0 px-3 md:px-5 py-2 bg-white border-t border-amber-200 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
+      <div className="flex-shrink-0 px-3 md:px-5 py-2 bg-white/80 backdrop-blur-md border-t border-amber-200 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
         <div className="max-w-7xl mx-auto flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-amber-500" />
@@ -275,13 +280,13 @@ export default function InvestmentApp() {
               placeholder="Tìm tên, TVV..."
               value={store.searchKeyword}
               onChange={(e) => store.setSearchKeyword(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-amber-200 bg-white text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-200 outline-none transition-all"
+              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-amber-200 bg-white/90 text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-200 outline-none transition-all"
             />
           </div>
           <select
             value={store.statusFilter}
             onChange={(e) => store.setStatusFilter(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg border border-amber-200 bg-white text-sm focus:border-amber-400 outline-none transition-all cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg border border-amber-200 bg-white/90 text-sm focus:border-amber-400 outline-none transition-all cursor-pointer"
           >
             <option value="">Tất cả</option>
             <option value="Đã nhận quà">Đã nhận</option>
