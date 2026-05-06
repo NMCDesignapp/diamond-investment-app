@@ -104,10 +104,10 @@ export function CustomerFormModal() {
           setEditingCustomer(null);
           setIsOpen(true);
         }}
-        className="p-1.5 bg-amber-800/80 hover:bg-amber-900 rounded-lg transition-all"
+        className="p-1 bg-amber-800/80 hover:bg-amber-900 rounded transition-all"
         title="Thêm khách hàng"
       >
-        <Plus className="w-4 h-4 text-white" />
+        <Plus className="w-3.5 h-3.5 text-white" />
       </motion.button>
 
       <AnimatePresence>

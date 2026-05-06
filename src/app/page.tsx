@@ -47,12 +47,7 @@ export default function InvestmentApp() {
   const isEmpty = filtered.length === 0;
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/40 overflow-hidden">
-      {/* Decorative background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-amber-200/20 to-yellow-100/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -left-20 w-72 h-72 bg-gradient-to-tr from-amber-100/15 to-orange-100/10 rounded-full blur-3xl" />
-      </div>
+    <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
 
       {/* === FIXED HEADER === */}
       <motion.div
@@ -126,18 +121,18 @@ export default function InvestmentApp() {
             <p className="text-amber-500 text-sm">Nhấn &quot;+&quot; để thêm</p>
           </div>
         ) : (
-          <div className="h-full rounded-xl border-2 border-amber-300 shadow-lg bg-white/95 backdrop-blur-sm flex flex-col overflow-hidden">
+          <div className="h-full rounded-xl border-2 border-amber-300 shadow-lg bg-white flex flex-col overflow-hidden">
             {/* Fixed table header */}
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400">
-                  <th className="p-2 text-amber-900 font-extrabold text-[13px] uppercase text-center w-12">STT</th>
-                  <th className="p-2 text-amber-900 font-extrabold text-[13px] uppercase text-center whitespace-nowrap">Khách Hàng</th>
-                  <th className="p-2 text-amber-900 font-extrabold text-[13px] uppercase text-center whitespace-nowrap">Tư Vấn Viên</th>
-                  <th className="p-2 text-amber-900 font-extrabold text-[13px] uppercase text-center whitespace-nowrap">Phí Đầu Tư</th>
-                  <th className="p-2 text-amber-900 font-extrabold text-[13px] uppercase text-center">Quà Tặng</th>
-                  <th className="p-2 text-amber-900 font-extrabold text-[13px] uppercase text-center whitespace-nowrap">Giá Trị</th>
-                  <th className="p-2 text-amber-900 font-extrabold text-[13px] uppercase text-center w-24">Ghi Chú</th>
+                  <th className="px-2 py-1.5 text-amber-900 font-extrabold text-sm uppercase text-center w-12">STT</th>
+                  <th className="px-2 py-1.5 text-amber-900 font-extrabold text-sm uppercase text-center whitespace-nowrap">Khách Hàng</th>
+                  <th className="px-2 py-1.5 text-amber-900 font-extrabold text-sm uppercase text-center whitespace-nowrap">TVV</th>
+                  <th className="px-2 py-1.5 text-amber-900 font-extrabold text-sm uppercase text-center whitespace-nowrap">Phí Đầu Tư</th>
+                  <th className="px-2 py-1.5 text-amber-900 font-extrabold text-sm uppercase text-center">Quà Tặng</th>
+                  <th className="px-2 py-1.5 text-amber-900 font-extrabold text-sm uppercase text-center whitespace-nowrap">Giá Trị</th>
+                  <th className="px-2 py-1.5 text-amber-900 font-extrabold text-sm uppercase text-center w-24">Ghi Chú</th>
                 </tr>
               </thead>
             </table>
@@ -153,19 +148,19 @@ export default function InvestmentApp() {
                       transition={{ duration: 0.25, delay: idx * 0.02 }}
                       className="border-b border-amber-100 hover:bg-amber-50/60 transition-colors duration-100"
                     >
-                      <td className="p-2 text-center font-bold text-slate-400 text-xs w-12">{idx + 1}</td>
-                      <td className="p-2 font-semibold text-slate-500 text-[13px] whitespace-nowrap">{titleCase(c.name)}</td>
-                      <td className="p-2 text-slate-500 text-[13px] whitespace-nowrap">{titleCase(c.advisor) || '—'}</td>
-                      <td className="p-2 text-right font-mono text-emerald-700 font-semibold text-[13px] whitespace-nowrap">
+                      <td className="px-2 py-1.5 text-center font-bold text-slate-400 text-sm w-12">{idx + 1}</td>
+                      <td className="px-2 py-1.5 font-semibold text-slate-500 text-sm whitespace-nowrap">{titleCase(c.name)}</td>
+                      <td className="px-2 py-1.5 text-slate-500 text-sm whitespace-nowrap">{titleCase(c.advisor) || '—'}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-emerald-700 font-semibold text-sm whitespace-nowrap">
                         {formatVND(c.investmentFee * 1e6)}
                       </td>
-                      <td className="p-2 text-right font-semibold text-rose-700 text-[13px]">
+                      <td className="px-2 py-1.5 text-right font-semibold text-rose-700 text-sm">
                         <span className="inline-flex items-end justify-end gap-1 flex-wrap">
-                          <Gift className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
+                          <Gift className="w-4 h-4 text-rose-400 flex-shrink-0" />
                           <span className="leading-tight">{c.gift || '—'}</span>
                         </span>
                       </td>
-                      <td className="p-2 text-right font-mono text-rose-700 font-semibold text-[13px] whitespace-nowrap">
+                      <td className="px-2 py-1.5 text-right font-mono text-rose-700 font-semibold text-sm whitespace-nowrap">
                         {formatVND(c.giftValue)}
                       </td>
                       <td className="p-2 w-20">
@@ -215,7 +210,7 @@ export default function InvestmentApp() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: idx * 0.03 }}
-                className="bg-white/90 backdrop-blur-sm rounded-xl border border-amber-200 shadow-md overflow-hidden"
+                className="bg-white rounded-xl border border-amber-200 shadow-md overflow-hidden"
               >
                 <div className="p-3 cursor-pointer" onClick={() => setExpandedMobile(expandedMobile === c.id ? null : c.id)}>
                   <div className="flex justify-between items-start">
@@ -271,7 +266,7 @@ export default function InvestmentApp() {
       </div>
 
       {/* === FIXED BOTTOM: SEARCH & FILTER === */}
-      <div className="flex-shrink-0 px-3 md:px-5 py-2 bg-white/80 backdrop-blur-md border-t border-amber-200 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
+      <div className="flex-shrink-0 px-3 md:px-5 py-2 bg-white border-t border-amber-200 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
         <div className="max-w-7xl mx-auto flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-amber-500" />
@@ -280,13 +275,13 @@ export default function InvestmentApp() {
               placeholder="Tìm tên, TVV..."
               value={store.searchKeyword}
               onChange={(e) => store.setSearchKeyword(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-amber-200 bg-white/90 text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-200 outline-none transition-all"
+              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-amber-200 bg-white text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-200 outline-none transition-all"
             />
           </div>
           <select
             value={store.statusFilter}
             onChange={(e) => store.setStatusFilter(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg border border-amber-200 bg-white/90 text-sm focus:border-amber-400 outline-none transition-all cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg border border-amber-200 bg-white text-sm focus:border-amber-400 outline-none transition-all cursor-pointer"
           >
             <option value="">Tất cả</option>
             <option value="Đã nhận quà">Đã nhận</option>
