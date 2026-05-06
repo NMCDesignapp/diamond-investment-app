@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model EventInfo {
+  id       String @id @default("default")
+  name     String @default("SỰ KIỆN ĐẦU TƯ 2025")
+  date     String @default("20/03/2025")
+  location String @default("TP. Hồ Chí Minh")
+}
+
+model Customer {
+  id             String  @id @default(cuid())
+  name           String
+  advisor        String  @default("")
+  investmentFee  Float   @default(0)
+  gift           String  @default("")
+  giftValue      Float   @default(0)
+  status         String  @default("Chưa nhận quà")
+  note           String  @default("")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model GiftTier {
+  id        String @id @default(cuid())
+  minFee    Float  @default(0)
+  maxFee    Float  @default(10)
+  giftName  String @default("Quà mới")
+  giftValue Float  @default(500000)
+  order     Int    @default(0)
+}

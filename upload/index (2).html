@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đầu tư - Kim cương</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0c2e3b 0%, #144d5e 50%, #1a6f7a 100%);
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .gold-gradient {
+            background: linear-gradient(135deg, #F9E0A0 0%, #D4AF37 50%, #B8860B 100%);
+            color: #2d1f00;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+        }
+        .gold-card {
+            background: rgba(255,248,225,0.95);
+            border-left: 5px solid #DAA520;
+            backdrop-filter: blur(2px);
+        }
+        .btn-gold {
+            background: linear-gradient(to bottom, #F9E281, #D4AF37);
+            border: 1px solid #C59B0C;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+        .status-received { background: #2b6e3c; color: #FFE8B6; }
+        .status-pending { background: #c97e00; color: #FFF1CC; }
+        .status-not-received { background: #9a2e2e; color: #FFD5C5; }
+    </style>
+</head>
+<body class="p-4 md:p-6">
+<div class="max-w-7xl mx-auto">
+    <div class="gold-gradient rounded-2xl p-5 mb-6 shadow-xl">
+        <div class="flex flex-wrap justify-between items-center">
+            <div>
+                <h1 id="event-title-main" class="text-3xl font-black uppercase tracking-wider">SỰ KIỆN ĐẦU TƯ 2025</h1>
+                <p id="event-title-details" class="text-md font-medium mt-1">20/03/2025 • TP. Hồ Chí Minh</p>
+            </div>
+            <div class="flex gap-3 mt-3 sm:mt-0">
+                <button id="btn-settings" class="bg-black/20 px-3 py-2 rounded-xl font-bold flex items-center gap-1 backdrop-blur-sm"><i data-lucide="settings" class="w-4 h-4"></i> Cài đặt</button>
+                <button id="btn-add" class="bg-amber-800 hover:bg-amber-900 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-1 shadow"><i data-lucide="plus"></i> Thêm KH</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="gold-card rounded-xl p-4 text-center shadow"><p class="text-amber-800 font-semibold">🌟 TỔNG KH</p><p class="text-3xl font-black"><span id="stat-total">0</span></p></div>
+        <div class="gold-card rounded-xl p-4 text-center shadow"><p class="text-amber-800 font-semibold">💰 TỔNG PHÍ ĐK</p><p class="text-3xl font-black" id="stat-fee">0 VND</p></div>
+        <div class="gold-card rounded-xl p-4 text-center shadow"><p class="text-amber-800 font-semibold">🎁 TỔNG GIÁ TRỊ QUÀ</p><p class="text-3xl font-black" id="stat-gift">0 VND</p></div>
+    </div>
+
+    <div id="empty-state" class="text-center py-16 bg-amber-50/50 rounded-2xl hidden"><i data-lucide="users" class="w-12 h-12 mx-auto text-amber-500"></i><p class="text-xl font-bold mt-2">Chưa có khách hàng</p><p class="text-amber-700">Nhấn "Thêm KH" để bắt đầu</p></div>
+    <div id="table-wrapper" class="hidden md:block overflow-x-auto rounded-2xl border-2 border-amber-400 shadow-lg bg-white/95">
+        <table class="w-full text-sm">
+            <thead class="gold-gradient text-amber-900"><tr><th class="p-3">STT</th><th class="p-3 text-left">Họ tên</th><th class="p-3 text-left">Tư vấn viên</th><th class="p-3 text-right">Phí đăng ký</th><th class="p-3 text-left">Quà tặng</th><th class="p-3 text-right">Giá trị</th><th class="p-3">Trạng thái</th><th class="p-3">Thao tác</th></tr></thead>
+            <tbody id="customer-list-table"></tbody>
+        </table>
+    </div>
+    <div id="customer-list-mobile" class="md:hidden space-y-3"></div>
+
+    <div class="mt-6 flex flex-col sm:flex-row gap-3 bg-white/80 p-4 rounded-2xl border-2 border-amber-300 backdrop-blur-sm">
+        <div class="relative flex-1"><i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-700"></i><input id="search-input" type="text" placeholder="Tìm theo tên, tư vấn viên..." class="w-full pl-10 pr-3 py-2 rounded-xl border-2 border-amber-300"></div>
+        <select id="filter-status" class="px-3 py-2 rounded-xl border-2 border-amber-300 bg-white"><option value="">Tất cả trạng thái</option><option value="Đã nhận quà">Đã nhận quà</option><option value="Chưa nhận quà">Chưa nhận quà</option><option value="Không nhận quà">Không nhận quà</option></select>
+    </div>
+</div>
+
+<!-- MODAL thêm/sửa -->
+<div id="modal-overlay" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-auto border-4 border-amber-400"><div class="gold-gradient p-4 rounded-t-2xl flex justify-between"><h2 id="modal-title" class="text-xl font-bold">Thêm khách hàng</h2><button id="btn-close-modal"><i data-lucide="x" class="w-6 h-6"></i></button></div><form id="customer-form" class="p-5 space-y-4"><input id="f-name" placeholder="Họ tên *" required class="w-full p-2 border border-amber-300 rounded-lg"><input id="f-advisor" placeholder="Tư vấn viên" class="w-full p-2 border border-amber-300 rounded-lg"><input id="f-fee" type="number" step="1" placeholder="Phí đầu tư (triệu)" class="w-full p-2 border border-amber-300 rounded-lg"><div><label class="text-sm font-bold">Trạng thái quà</label><div class="flex gap-2 mt-1"><button type="button" id="status-pending-btn" class="flex-1 py-2 border rounded-lg">Chưa nhận</button><button type="button" id="status-not-received-btn" class="flex-1 py-2 border rounded-lg">Không nhận</button></div><input type="hidden" id="f-status" value="Chưa nhận quà"></div><div id="gift-fields"><input id="f-gift" placeholder="Quà tặng" readonly class="w-full p-2 bg-amber-50 rounded-lg"><input id="f-gift-value" type="number" placeholder="Giá trị quà" readonly class="w-full p-2 bg-amber-50 rounded-lg mt-2"></div><textarea id="f-note" rows="2" placeholder="Ghi chú" class="w-full p-2 border border-amber-300 rounded-lg"></textarea><div class="flex gap-3"><button type="button" id="btn-cancel" class="flex-1 bg-gray-200 py-2 rounded-lg">Hủy</button><button type="submit" class="flex-1 btn-gold py-2 rounded-lg font-bold">Lưu</button></div></form></div></div>
+
+<div id="delete-overlay" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4"><div class="bg-white rounded-xl p-5 text-center border-2 border-amber-400"><i data-lucide="alert-triangle" class="w-10 h-10 text-amber-600 mx-auto"></i><p id="delete-name" class="my-2 font-semibold"></p><div class="flex gap-3"><button id="btn-delete-cancel" class="flex-1 bg-gray-200 py-2 rounded-lg">Hủy</button><button id="btn-delete-confirm" class="flex-1 bg-red-600 text-white py-2 rounded-lg">Xóa</button></div></div></div>
+
+<div id="settings-overlay" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4"><div class="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] overflow-auto border-4 border-amber-400"><div class="gold-gradient p-4 flex justify-between"><h2 class="text-xl font-bold">Cài đặt</h2><button id="close-settings-btn"><i data-lucide="x" class="w-6 h-6"></i></button></div><div class="p-5 space-y-5"><div><h3 class="font-bold mb-1">Thông tin sự kiện</h3><input id="s-event-name" class="w-full p-2 border border-amber-300 rounded-lg mb-2" placeholder="Tên sự kiện"><input id="s-event-date" class="w-full p-2 border border-amber-300 rounded-lg mb-2" placeholder="Ngày"><input id="s-event-location" class="w-full p-2 border border-amber-300 rounded-lg mb-2" placeholder="Địa điểm"></div><div><h3 class="font-bold">Mức quà tặng (theo triệu)</h3><div id="gift-tiers-container" class="space-y-3"></div><button id="add-tier-btn" class="btn-gold w-full py-2 rounded-lg mt-2 flex items-center justify-center gap-1"><i data-lucide="plus"></i> Thêm mức</button></div><button id="settings-close" class="w-full bg-gray-200 py-2 rounded-lg mt-3">Đóng</button></div></div></div>
+
+<script>
+// 🔁 THAY URL NÀY BẰNG ĐỊA CHỈ WEB APP CỦA BẠN
+const SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+
+let allCustomers = [], giftTiers = [], eventInfo = {};
+let editingId = null;
+
+async function apiCall(action, data = null) {
+    const payload = { action: action };
+    if (data !== null) payload.data = data;
+    const response = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    return response.json();
+}
+
+async function loadAll() {
+    const res = await apiCall('load');
+    if (res.success) {
+        allCustomers = res.customers || [];
+        giftTiers = res.tiers || [];
+        eventInfo = res.eventInfo || { name: 'SỰ KIỆN ĐẦU TƯ 2025', date: '20/03/2025', location: 'TP. Hồ Chí Minh' };
+        document.getElementById('event-title-main').innerText = eventInfo.name;
+        document.getElementById('event-title-details').innerHTML = `${eventInfo.date} • ${eventInfo.location}`;
+        renderList();
+        updateStats();
+        renderTiersSettings();
+    } else {
+        alert('Lỗi tải dữ liệu: ' + (res.error || 'Unknown'));
+    }
+}
+
+function updateStats() {
+    document.getElementById('stat-total').innerText = allCustomers.length;
+    let totalFee = allCustomers.reduce((s,c)=>s+(c.investment_fee||0),0);
+    let totalGift = allCustomers.reduce((s,c)=>s+(c.gift_value||0),0);
+    document.getElementById('stat-fee').innerText = new Intl.NumberFormat('vi-VN').format(totalFee*1e6)+' VND';
+    document.getElementById('stat-gift').innerText = new Intl.NumberFormat('vi-VN').format(totalGift)+' VND';
+}
+
+function getGiftByFee(fee) {
+    let tier = giftTiers.find(t => fee >= t.min_fee && fee <= t.max_fee);
+    return tier ? { name: tier.gift_name, value: tier.gift_value } : { name: '', value: 0 };
+}
+
+function renderList() {
+    let keyword = document.getElementById('search-input').value.toLowerCase();
+    let statusFilter = document.getElementById('filter-status').value;
+    let filtered = allCustomers.filter(c => {
+        let match = (c.name||'').toLowerCase().includes(keyword) || (c.advisor||'').toLowerCase().includes(keyword);
+        let matchStatus = !statusFilter || c.status === statusFilter;
+        return match && matchStatus;
+    });
+    filtered.sort((a,b)=> (b.investment_fee||0) - (a.investment_fee||0));
+    let isEmpty = filtered.length===0;
+    document.getElementById('empty-state').classList.toggle('hidden', !isEmpty);
+    document.getElementById('table-wrapper').classList.toggle('hidden', isEmpty);
+    document.getElementById('customer-list-mobile').classList.toggle('hidden', isEmpty || window.innerWidth>=768);
+    if (isEmpty) return;
+    
+    let tbody = document.getElementById('customer-list-table');
+    tbody.innerHTML = '';
+    filtered.forEach((c,idx)=>{
+        let tr = tbody.insertRow();
+        tr.className = 'border-b border-amber-200 hover:bg-amber-50';
+        tr.insertCell(0).innerHTML = `<td class="p-2 text-center font-bold">${idx+1}</td>`;
+        tr.insertCell(1).innerHTML = `<td class="p-2 font-semibold">${escapeHtml(c.name)}</td>`;
+        tr.insertCell(2).innerHTML = `<td class="p-2">${escapeHtml(c.advisor||'-')}</td>`;
+        tr.insertCell(3).innerHTML = `<td class="p-2 text-right font-mono">${new Intl.NumberFormat('vi-VN').format((c.investment_fee||0)*1e6)}₫</td>`;
+        tr.insertCell(4).innerHTML = `<td class="p-2">${escapeHtml(c.gift||'-')}</td>`;
+        tr.insertCell(5).innerHTML = `<td class="p-2 text-right font-mono">${new Intl.NumberFormat('vi-VN').format(c.gift_value||0)}₫</td>`;
+        let stClass = c.status==='Đã nhận quà'?'status-received':(c.status==='Chưa nhận quà'?'status-pending':'status-not-received');
+        tr.insertCell(6).innerHTML = `<td class="p-2 text-center"><span class="px-2 py-1 rounded-full text-xs font-bold ${stClass}">${c.status}</span></td>`;
+        tr.insertCell(7).innerHTML = `<td class="p-2 text-center flex gap-2 justify-center"><button onclick="markAsReceived('${c.__backendId}')" class="p-1 bg-green-100 rounded"><i data-lucide="check" class="w-4 h-4"></i></button><button onclick="openEdit('${c.__backendId}')" class="p-1 bg-amber-100 rounded"><i data-lucide="pen" class="w-4 h-4"></i></button><button onclick="openDelete('${c.__backendId}')" class="p-1 bg-red-100 rounded"><i data-lucide="trash" class="w-4 h-4"></i></button></td>`;
+    });
+    
+    let mobileDiv = document.getElementById('customer-list-mobile');
+    mobileDiv.innerHTML = '';
+    filtered.forEach((c,idx)=>{
+        let stClass = c.status==='Đã nhận quà'?'status-received':(c.status==='Chưa nhận quà'?'status-pending':'status-not-received');
+        let card = document.createElement('div');
+        card.className = 'gold-card rounded-xl p-3 shadow';
+        card.innerHTML = `<div class="flex justify-between"><span class="font-black text-lg">${escapeHtml(c.name)}</span><span class="text-sm font-bold">#${idx+1}</span></div>
+        <div class="grid grid-cols-2 gap-2 mt-1 text-sm"><span>💼 ${escapeHtml(c.advisor||'-')}</span><span class="text-right">💰 ${new Intl.NumberFormat('vi-VN').format((c.investment_fee||0)*1e6)}₫</span></div>
+        <div class="flex justify-between mt-1"><span>🎁 ${escapeHtml(c.gift||'-')}</span><span>💎 ${new Intl.NumberFormat('vi-VN').format(c.gift_value||0)}₫</span></div>
+        <div class="flex justify-between items-center mt-2"><span class="px-2 py-0.5 rounded-full text-xs text-white ${stClass}">${c.status}</span><div class="flex gap-2"><button onclick="markAsReceived('${c.__backendId}')" class="p-1 bg-green-200 rounded">✓</button><button onclick="openEdit('${c.__backendId}')" class="p-1 bg-amber-200 rounded">✎</button><button onclick="openDelete('${c.__backendId}')" class="p-1 bg-red-200 rounded">🗑</button></div></div>`;
+        mobileDiv.appendChild(card);
+    });
+    lucide.createIcons();
+}
+
+window.markAsReceived = async (id) => {
+    let c = allCustomers.find(x=>x.__backendId===id);
+    if(c){
+        let newStatus = c.status === 'Đã nhận quà' ? 'Chưa nhận quà' : 'Đã nhận quà';
+        let res = await apiCall('saveCustomer', {...c, status: newStatus});
+        if(res.success) { await loadAll(); showToast(`Trạng thái: ${newStatus}`); }
+        else alert('Lỗi cập nhật');
+    }
+};
+window.openEdit = (id) => { let c = allCustomers.find(x=>x.__backendId===id); if(c) openModal(c); };
+window.openDelete = (id) => { deletingId = id; document.getElementById('delete-name').innerText = 'Xóa khách hàng này?'; document.getElementById('delete-overlay').classList.remove('hidden'); };
+let deletingId = null;
+document.getElementById('btn-delete-confirm').onclick = async ()=>{
+    if(deletingId){
+        let c = allCustomers.find(x=>x.__backendId===deletingId);
+        await apiCall('deleteCustomer', c);
+        await loadAll();
+        document.getElementById('delete-overlay').classList.add('hidden');
+        showToast('Đã xóa');
+        deletingId = null;
+    }
+};
+document.getElementById('btn-delete-cancel').onclick = ()=> document.getElementById('delete-overlay').classList.add('hidden');
+
+function openModal(record=null){
+    editingId = record ? record.__backendId : null;
+    document.getElementById('modal-title').innerText = record ? 'Sửa khách hàng' : 'Thêm khách';
+    document.getElementById('f-name').value = record ? record.name : '';
+    document.getElementById('f-advisor').value = record ? record.advisor : '';
+    document.getElementById('f-fee').value = record ? record.investment_fee : '';
+    document.getElementById('f-note').value = record ? record.note : '';
+    document.getElementById('f-status').value = record ? record.status : 'Chưa nhận quà';
+    if(!record) autoFillGift();
+    else { document.getElementById('f-gift').value = record.gift||''; document.getElementById('f-gift-value').value = record.gift_value||0; }
+    document.getElementById('modal-overlay').classList.remove('hidden');
+    updateStatusBtns();
+}
+function autoFillGift(){
+    let fee = parseFloat(document.getElementById('f-fee').value)||0;
+    let g = getGiftByFee(fee);
+    document.getElementById('f-gift').value = g.name;
+    document.getElementById('f-gift-value').value = g.value;
+}
+document.getElementById('f-fee').addEventListener('input', autoFillGift);
+function updateStatusBtns(){
+    let st = document.getElementById('f-status').value;
+    let pending = document.getElementById('status-pending-btn');
+    let not = document.getElementById('status-not-received-btn');
+    if(st === 'Chưa nhận quà'){ pending.classList.add('btn-gold'); not.classList.remove('btn-gold'); }
+    else { not.classList.add('btn-gold'); pending.classList.remove('btn-gold'); }
+}
+document.getElementById('status-pending-btn').onclick = ()=>{ document.getElementById('f-status').value='Chưa nhận quà'; updateStatusBtns(); };
+document.getElementById('status-not-received-btn').onclick = ()=>{ document.getElementById('f-status').value='Không nhận quà'; updateStatusBtns(); };
+document.getElementById('customer-form').onsubmit = async (e)=>{
+    e.preventDefault();
+    let obj = {
+        name: document.getElementById('f-name').value,
+        advisor: document.getElementById('f-advisor').value,
+        investment_fee: parseFloat(document.getElementById('f-fee').value)||0,
+        gift: document.getElementById('f-gift').value,
+        gift_value: parseFloat(document.getElementById('f-gift-value').value)||0,
+        status: document.getElementById('f-status').value,
+        note: document.getElementById('f-note').value,
+        __backendId: editingId
+    };
+    let res = await apiCall('saveCustomer', obj);
+    if(res.success){ await loadAll(); closeModal(); showToast('Đã lưu'); }
+    else alert('Lỗi lưu');
+};
+function closeModal(){ document.getElementById('modal-overlay').classList.add('hidden'); editingId=null; }
+document.getElementById('btn-close-modal').onclick = closeModal;
+document.getElementById('btn-cancel').onclick = closeModal;
+
+async function renderTiersSettings(){
+    let container = document.getElementById('gift-tiers-container');
+    if(!container) return;
+    container.innerHTML = '';
+    if(giftTiers.length===0) container.innerHTML = '<p class="text-center text-amber-600">Chưa có cấu hình quà</p>';
+    giftTiers.forEach((tier, idx)=>{
+        let div = document.createElement('div');
+        div.className = 'p-3 border border-amber-300 rounded-lg mb-2 bg-amber-50';
+        div.innerHTML = `<div class="flex gap-2 mb-2"><input type="number" placeholder="Từ (triệu)" value="${tier.min_fee}" class="tier-min w-1/3 p-1 border rounded" data-idx="${idx}"><input type="number" placeholder="Đến (triệu)" value="${tier.max_fee}" class="tier-max w-1/3 p-1 border rounded" data-idx="${idx}"><input placeholder="Tên quà" value="${escapeHtml(tier.gift_name)}" class="tier-name flex-1 p-1 border rounded" data-idx="${idx}"></div><div class="flex gap-2"><input type="number" placeholder="Giá trị VND" value="${tier.gift_value}" class="tier-val w-2/3 p-1 border rounded" data-idx="${idx}"><button class="remove-tier bg-red-700 text-white px-2 rounded" data-idx="${idx}">Xóa</button></div>`;
+        container.appendChild(div);
+    });
+    attachTierEvents();
+}
+function attachTierEvents(){
+    document.querySelectorAll('.tier-min, .tier-max, .tier-name, .tier-val').forEach(el => {
+        el.removeEventListener('change', tierChangeHandler);
+        el.addEventListener('change', tierChangeHandler);
+    });
+    document.querySelectorAll('.remove-tier').forEach(btn => {
+        btn.removeEventListener('click', removeTierHandler);
+        btn.addEventListener('click', removeTierHandler);
+    });
+}
+async function tierChangeHandler(e){
+    let idx = e.target.dataset.idx;
+    let field = e.target.classList.contains('tier-min') ? 'min_fee' : (e.target.classList.contains('tier-max') ? 'max_fee' : (e.target.classList.contains('tier-name') ? 'gift_name' : 'gift_value'));
+    let val = (field === 'min_fee' || field === 'max_fee' || field === 'gift_value') ? parseFloat(e.target.value)||0 : e.target.value;
+    giftTiers[idx][field] = val;
+    await apiCall('saveGiftTiers', giftTiers);
+    await loadAll();
+}
+async function removeTierHandler(e){
+    let idx = e.target.dataset.idx;
+    giftTiers.splice(idx,1);
+    await apiCall('saveGiftTiers', giftTiers);
+    await loadAll();
+}
+document.getElementById('add-tier-btn').onclick = async ()=>{
+    giftTiers.push({ min_fee:0, max_fee:10, gift_name:'Quà mới', gift_value:500000 });
+    await apiCall('saveGiftTiers', giftTiers);
+    await loadAll();
+};
+document.getElementById('btn-settings').onclick = ()=>{
+    document.getElementById('s-event-name').value = eventInfo.name;
+    document.getElementById('s-event-date').value = eventInfo.date;
+    document.getElementById('s-event-location').value = eventInfo.location;
+    renderTiersSettings();
+    document.getElementById('settings-overlay').classList.remove('hidden');
+};
+document.getElementById('close-settings-btn').onclick = ()=>document.getElementById('settings-overlay').classList.add('hidden');
+document.getElementById('settings-close').onclick = ()=>document.getElementById('settings-overlay').classList.add('hidden');
+async function saveEventSettings(){
+    await apiCall('saveEventInfo', { name: document.getElementById('s-event-name').value, date: document.getElementById('s-event-date').value, location: document.getElementById('s-event-location').value });
+    await loadAll();
+}
+document.getElementById('s-event-name').addEventListener('change', saveEventSettings);
+document.getElementById('s-event-date').addEventListener('change', saveEventSettings);
+document.getElementById('s-event-location').addEventListener('change', saveEventSettings);
+
+document.getElementById('search-input').addEventListener('input', renderList);
+document.getElementById('filter-status').addEventListener('change', renderList);
+window.addEventListener('resize', ()=>renderList());
+
+function showToast(msg){
+    let t = document.createElement('div');
+    t.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-full z-50 text-sm';
+    t.innerText = msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 2500);
+}
+function escapeHtml(str){
+    if(!str) return '';
+    return str.replace(/[&<>]/g, function(m){
+        if(m==='&') return '&amp;';
+        if(m==='<') return '&lt;';
+        if(m==='>') return '&gt;';
+        return m;
+    });
+}
+loadAll();
+</script>
+</body>
+</html>
