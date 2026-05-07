@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Check, Pencil, Settings, Plus,
-  Users, DollarSign, Gift, ChevronDown, ChevronUp, Diamond, Sparkles, Dices
+  Users, DollarSign, Gift, ChevronDown, ChevronUp, Diamond, Sparkles, Dices,
+  Pause, Play
 } from 'lucide-react';
 import Link from 'next/link';
 import { useInvestmentStore } from '@/lib/investment-store';
@@ -38,6 +39,8 @@ function StatusBadge({ status }: { status: string }) {
 export default function InvestmentApp() {
   const store = useInvestmentStore();
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
+  const [autoScroll, setAutoScroll] = useState(false);
+  const tableBodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     store.loadAll();
@@ -46,6 +49,32 @@ export default function InvestmentApp() {
   const filtered = store.getFilteredCustomers();
   const stats = store.getStats();
   const isEmpty = filtered.length === 0;
+
+  // Auto-scroll for desktop table (bottom to top)
+  useEffect(() => {
+    const el = tableBodyRef.current;
+    if (!el || !autoScroll) return;
+    let scrollPos = el.scrollHeight;
+    el.scrollTop = scrollPos;
+    const speed = 0.5;
+    let animId: number;
+    const scroll = () => {
+      scrollPos -= speed;
+      if (scrollPos <= 0) {
+        scrollPos = el.scrollHeight;
+      }
+      el.scrollTop = scrollPos;
+      animId = requestAnimationFrame(scroll);
+    };
+    animId = requestAnimationFrame(scroll);
+    return () => cancelAnimationFrame(animId);
+  }, [autoScroll, filtered]);
+
+  useEffect(() => {
+    if (!autoScroll && tableBodyRef.current) {
+      tableBodyRef.current.scrollTop = 0;
+    }
+  }, [autoScroll]);
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/40 overflow-hidden">
@@ -125,7 +154,7 @@ export default function InvestmentApp() {
       </div>
 
       {/* === SCROLLABLE TABLE AREA (desktop) === */}
-      <div className="flex-1 min-h-0 px-3 md:px-5 pt-2.5 pb-1 hidden md:block">
+      <div className="flex-1 min-h-0 px-3 md:px-5 pt-2.5 pb-1 hidden md:flex md:flex-col">
         {store.isLoading ? (
           <div className="flex flex-col items-center justify-center h-full">
             <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }} className="w-10 h-10 border-4 border-amber-300 border-t-amber-600 rounded-full" />
@@ -153,53 +182,61 @@ export default function InvestmentApp() {
                 </tr>
               </thead>
             </table>
-            {/* Scrollable body */}
-            <div className="flex-1 overflow-y-auto">
+            {/* Scrollable body - with duplicated rows for seamless auto-scroll */}
+            <div
+              ref={tableBodyRef}
+              className={`flex-1 overflow-y-auto ${autoScroll ? 'overflow-y-hidden' : ''}`}
+            >
               <table className="w-full border-collapse">
                 <tbody>
-                  {filtered.map((c, idx) => (
-                    <motion.tr
-                      key={c.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.25, delay: idx * 0.02 }}
-                      className="border-b border-amber-100 hover:bg-amber-50/60 transition-colors duration-100"
-                    >
-                      <td className="px-2 py-1.5 text-center font-bold text-slate-400 text-sm w-12">{idx + 1}</td>
-                      <td className="px-2 py-1.5 font-semibold text-slate-500 text-sm whitespace-nowrap">{titleCase(c.name)}</td>
-                      <td className="px-2 py-1.5 text-slate-500 text-sm whitespace-nowrap">{titleCase(c.advisor) || '—'}</td>
-                      <td className="px-2 py-1.5 text-right font-mono text-emerald-700 font-semibold text-sm whitespace-nowrap">
-                        {formatVND(c.investmentFee * 1e6)}
-                      </td>
-                      <td className="px-2 py-1.5 text-right font-semibold text-rose-700 text-sm">
-                        <span className="inline-flex items-end justify-end gap-1 flex-wrap">
-                          <Gift className="w-4 h-4 text-rose-400 flex-shrink-0" />
-                          <span className="leading-tight">{c.gift || '—'}</span>
-                        </span>
-                      </td>
-                      <td className="px-2 py-1.5 text-right font-mono text-rose-700 font-semibold text-sm whitespace-nowrap">
-                        {formatVND(c.giftValue)}
-                      </td>
-                      <td className="p-2 w-20">
-                        <div className="flex flex-col items-center gap-1">
-                          <StatusBadge status={c.status} />
-                          <motion.button
-                            whileHover={{ scale: 1.15 }}
-                            whileTap={{ scale: 0.85 }}
-                            onClick={() => store.toggleReceivedStatus(c.id)}
-                            className={`p-1 rounded-md transition-colors ${
-                              c.status === 'Đã nhận quà'
-                                ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700'
-                                : 'bg-slate-100 hover:bg-slate-200 text-slate-500'
-                            }`}
-                            title={c.status === 'Đã nhận quà' ? 'Chưa nhận quà' : 'Đã nhận quà'}
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                          </motion.button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
+                  {/* If auto-scrolling, duplicate for seamless loop */}
+                  {(autoScroll ? [filtered, filtered] : [filtered]).flat().map((c, idx) => {
+                    const realIdx = idx % filtered.length;
+                    const realC = filtered[realIdx];
+                    return (
+                      <motion.tr
+                        key={`${realC.id}-${idx}`}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.25, delay: realIdx * 0.02 }}
+                        className="border-b border-amber-100 hover:bg-amber-50/60 transition-colors duration-100"
+                      >
+                        <td className="px-2 py-1.5 text-center font-bold text-slate-400 text-sm w-12">{realIdx + 1}</td>
+                        <td className="px-2 py-1.5 font-semibold text-slate-500 text-sm whitespace-nowrap">{titleCase(realC.name)}</td>
+                        <td className="px-2 py-1.5 text-slate-500 text-sm whitespace-nowrap">{titleCase(realC.advisor) || '—'}</td>
+                        <td className="px-2 py-1.5 text-right font-mono text-emerald-700 font-semibold text-sm whitespace-nowrap">
+                          {formatVND(realC.investmentFee * 1e6)}
+                        </td>
+                        <td className="px-2 py-1.5 text-right font-semibold text-rose-700 text-sm">
+                          <span className="inline-flex items-end justify-end gap-1 flex-wrap">
+                            <Gift className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                            <span className="leading-tight">{realC.gift || '—'}</span>
+                          </span>
+                        </td>
+                        <td className="px-2 py-1.5 text-right font-mono text-rose-700 font-semibold text-sm whitespace-nowrap">
+                          {formatVND(realC.giftValue)}
+                        </td>
+                        <td className="p-2 w-20">
+                          <div className="flex flex-col items-center gap-1">
+                            <StatusBadge status={realC.status} />
+                            <motion.button
+                              whileHover={{ scale: 1.15 }}
+                              whileTap={{ scale: 0.85 }}
+                              onClick={() => store.toggleReceivedStatus(realC.id)}
+                              className={`p-1 rounded-md transition-colors ${
+                                realC.status === 'Đã nhận quà'
+                                  ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700'
+                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-500'
+                              }`}
+                              title={realC.status === 'Đã nhận quà' ? 'Chưa nhận quà' : 'Đã nhận quà'}
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </motion.button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -282,9 +319,9 @@ export default function InvestmentApp() {
         )}
       </div>
 
-      {/* === FIXED BOTTOM: SEARCH & FILTER === */}
+      {/* === FIXED BOTTOM: SEARCH, FILTER & SCROLL TOGGLE === */}
       <div className="flex-shrink-0 px-3 md:px-5 py-2 bg-white/80 backdrop-blur-md border-t border-amber-200 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
-        <div className="max-w-7xl mx-auto flex gap-2">
+        <div className="max-w-7xl mx-auto flex gap-2 items-center">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-amber-500" />
             <input
@@ -305,6 +342,20 @@ export default function InvestmentApp() {
             <option value="Chưa nhận quà">Chưa nhận</option>
             <option value="Không nhận quà">Không nhận</option>
           </select>
+          {/* Auto-scroll toggle (desktop only) */}
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setAutoScroll(!autoScroll)}
+            className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all ${
+              autoScroll
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                : 'bg-white/90 border-amber-200 text-slate-400 hover:text-amber-700'
+            }`}
+            title={autoScroll ? 'Tắt cuộn tự động' : 'Bật cuộn tự động'}
+          >
+            {autoScroll ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+            <span className="text-xs">{autoScroll ? 'Dừng cuộn' : 'Cuộn tự động'}</span>
+          </motion.button>
         </div>
       </div>
     </div>
