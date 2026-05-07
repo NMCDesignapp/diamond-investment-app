@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Settings, Plus, Trash2, X, Trophy, Users, Gift, Crown, Star, Dices
+  ArrowLeft, Settings, Plus, Trash2, X, Trophy, Users, Gift, Crown, Star, Dices, Diamond
 } from 'lucide-react';
 import Link from 'next/link';
 import { useInvestmentStore } from '@/lib/investment-store';
@@ -30,7 +30,7 @@ class ConfettiSystem {
   private particles: Array<{
     x: number; y: number; vx: number; vy: number;
     color: string; size: number; rotation: number;
-    rotationSpeed: number; opacity: number;
+    rotationSpeed: number; opacity: number; shape: 'rect' | 'circle' | 'star';
   }> = [];
   private animFrame: number = 0;
   private running = false;
@@ -44,8 +44,14 @@ class ConfettiSystem {
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
     this.running = true;
-    const colors = ['#d4a843', '#f5d870', '#ffe066', '#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#6ab04c'];
-    for (let i = 0; i < 200; i++) {
+    const colors = [
+      '#f59e0b', '#fbbf24', '#fcd34d', '#ff6b6b', '#4ecdc4',
+      '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#6ab04c',
+      '#e74c3c', '#9b59b6', '#3498db', '#1abc9c', '#e67e22',
+      '#fd79a8', '#a29bfe', '#00b894', '#fdcb6e', '#6c5ce7',
+    ];
+    const shapes: Array<'rect' | 'circle' | 'star'> = ['rect', 'circle', 'star'];
+    for (let i = 0; i < 250; i++) {
       this.particles.push({
         x: Math.random() * this.canvas.width,
         y: -Math.random() * this.canvas.height * 0.5,
@@ -56,6 +62,7 @@ class ConfettiSystem {
         rotation: Math.random() * 360,
         rotationSpeed: (Math.random() - 0.5) * 10,
         opacity: 1,
+        shape: shapes[Math.floor(Math.random() * shapes.length)],
       });
     }
     this.animate();
@@ -66,6 +73,28 @@ class ConfettiSystem {
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
     this.particles = [];
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  private drawStar(cx: number, cy: number, spikes: number, outerRadius: number, innerRadius: number) {
+    let rot = Math.PI / 2 * 3;
+    let x = cx;
+    let y = cy;
+    const step = Math.PI / spikes;
+    this.ctx.beginPath();
+    this.ctx.moveTo(cx, cy - outerRadius);
+    for (let i = 0; i < spikes; i++) {
+      x = cx + Math.cos(rot) * outerRadius;
+      y = cy + Math.sin(rot) * outerRadius;
+      this.ctx.lineTo(x, y);
+      rot += step;
+      x = cx + Math.cos(rot) * innerRadius;
+      y = cy + Math.sin(rot) * innerRadius;
+      this.ctx.lineTo(x, y);
+      rot += step;
+    }
+    this.ctx.lineTo(cx, cy - outerRadius);
+    this.ctx.closePath();
+    this.ctx.fill();
   }
 
   private animate = () => {
@@ -87,7 +116,15 @@ class ConfettiSystem {
       this.ctx.rotate((p.rotation * Math.PI) / 180);
       this.ctx.globalAlpha = p.opacity;
       this.ctx.fillStyle = p.color;
-      this.ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      if (p.shape === 'rect') {
+        this.ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      } else if (p.shape === 'circle') {
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+        this.ctx.fill();
+      } else {
+        this.drawStar(0, 0, 5, p.size / 2, p.size / 4);
+      }
       this.ctx.restore();
     }
     if (alive) {
@@ -117,7 +154,6 @@ export default function LuckyDrawPage() {
   const customerListRef = useRef<HTMLDivElement>(null);
 
   // State
-  // prizes is now derived from localPrizeOverrides / store.giftTiers (see below)
   const [currentPrizeIndex, setCurrentPrizeIndex] = useState(0);
   const [drawMode, setDrawMode] = useState<DrawMode>('customer');
   const [winners, setWinners] = useState<Winner[]>([]);
@@ -230,7 +266,7 @@ export default function LuckyDrawPage() {
       div.textContent = name;
       div.style.cssText = `
         height: 60px; display: flex; align-items: center; justify-content: center;
-        font-size: 20px; font-weight: 700; color: #e8d5a3; white-space: nowrap;
+        font-size: 20px; font-weight: 700; color: #78350f; white-space: nowrap;
         padding: 0 20px; text-align: center;
       `;
       trackRef.current.appendChild(div);
@@ -411,7 +447,7 @@ export default function LuckyDrawPage() {
   const canSpin = !isSpinning && drawItems.length > 0 && currentPrize && currentPrize.remaining > 0;
 
   return (
-    <div className="h-screen flex overflow-hidden" style={{ background: '#0f1b30' }}>
+    <div className="h-screen flex flex-col md:flex-row overflow-hidden bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/40">
       {/* Confetti Canvas */}
       <canvas
         ref={confettiCanvasRef}
@@ -419,51 +455,121 @@ export default function LuckyDrawPage() {
         style={{ width: '100vw', height: '100vh' }}
       />
 
-      {/* === SIDEBAR === */}
-      <div className="flex-shrink-0 flex flex-col border-r border-amber-900/30" style={{ width: '310px', background: 'linear-gradient(180deg, #0d1629 0%, #0f1b30 100%)' }}>
+      {/* Decorative background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-amber-200/20 to-yellow-100/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -left-20 w-72 h-72 bg-gradient-to-tr from-amber-100/15 to-orange-100/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-to-tl from-orange-100/10 to-amber-100/10 rounded-full blur-3xl" />
+      </div>
+
+      {/* === MOBILE TOP BAR (hidden on md+) === */}
+      <div className="md:hidden flex-shrink-0">
+        <div className="relative overflow-hidden rounded-b-2xl shadow-lg">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 opacity-95" />
+          <div className="relative px-4 py-3 flex items-center justify-between">
+            <Link href="/" title="Quay lại">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="p-1.5 hover:bg-amber-800/10 rounded-lg transition-all"
+              >
+                <ArrowLeft className="w-4 h-4 text-amber-900/70" />
+              </motion.button>
+            </Link>
+            <div className="flex items-center gap-2">
+              <motion.div
+                animate={{ rotate: [0, 8, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <Diamond className="w-4 h-4 text-amber-900/60" />
+              </motion.div>
+              <h1 className="text-sm font-black uppercase tracking-wider text-amber-900">
+                Quay Số May Mắn
+              </h1>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => { setSettingsOpen(true); setSettingsAuthenticated(false); }}
+              className="p-1.5 hover:bg-amber-800/10 rounded-lg transition-all"
+              title="Cài đặt"
+            >
+              <Settings className="w-4 h-4 text-amber-900/70" />
+            </motion.button>
+          </div>
+          {/* Mobile draw mode toggle */}
+          <div className="relative px-4 pb-2">
+            <div className="flex gap-1 p-1 rounded-lg bg-amber-500/20">
+              <button
+                onClick={() => setDrawMode('customer')}
+                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-bold uppercase transition-all ${
+                  drawMode === 'customer'
+                    ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
+                    : 'text-amber-800/60 hover:text-amber-800/80'
+                }`}
+              >
+                Khách hàng
+              </button>
+              <button
+                onClick={() => setDrawMode('advisor')}
+                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-bold uppercase transition-all ${
+                  drawMode === 'advisor'
+                    ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
+                    : 'text-amber-800/60 hover:text-amber-800/80'
+                }`}
+              >
+                TVV
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* === SIDEBAR (desktop only) === */}
+      <div className="hidden md:flex flex-shrink-0 flex-col w-[310px] bg-white/95 backdrop-blur-sm border-r-2 border-amber-200 shadow-lg">
         {/* Back button + Title */}
-        <div className="p-4 border-b border-amber-900/30">
+        <div className="p-4 border-b border-amber-200">
           <div className="flex items-center gap-2 mb-3">
             <Link href="/" title="Quay lại">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                className="p-1.5 hover:bg-amber-800/20 rounded-lg transition-all"
+                className="p-1.5 hover:bg-amber-100 rounded-lg transition-all"
               >
-                <ArrowLeft className="w-4 h-4 text-amber-400/70" />
+                <ArrowLeft className="w-4 h-4 text-amber-700" />
               </motion.button>
             </Link>
-            <h1
-              className="text-xl font-black uppercase tracking-wider flex-1 text-center"
-              style={{
-                background: 'linear-gradient(135deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              Quay Số May Mắn
-            </h1>
+            <div className="flex items-center gap-2 flex-1 justify-center">
+              <motion.div
+                animate={{ rotate: [0, 8, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <Diamond className="w-5 h-5 text-amber-900/60" />
+              </motion.div>
+              <h1 className="text-lg font-black uppercase tracking-wider text-amber-900">
+                Quay Số May Mắn
+              </h1>
+            </div>
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => { setSettingsOpen(true); setSettingsAuthenticated(false); }}
-              className="p-1.5 hover:bg-amber-800/20 rounded-lg transition-all"
+              className="p-1.5 hover:bg-amber-100 rounded-lg transition-all"
               title="Cài đặt"
             >
-              <Settings className="w-4 h-4 text-amber-400/70" />
+              <Settings className="w-4 h-4 text-amber-700" />
             </motion.button>
           </div>
 
           {/* Draw mode toggle */}
-          <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'rgba(212, 168, 67, 0.1)' }}>
+          <div className="flex gap-1 p-1 rounded-lg bg-amber-100/80">
             <button
               onClick={() => setDrawMode('customer')}
               className={`flex-1 px-3 py-1.5 rounded-md text-xs font-bold uppercase transition-all ${
                 drawMode === 'customer'
-                  ? 'text-amber-900 shadow-md'
-                  : 'text-amber-400/60 hover:text-amber-400/80'
+                  ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
+                  : 'text-slate-500 hover:text-amber-700'
               }`}
-              style={drawMode === 'customer' ? { background: 'linear-gradient(135deg, #d4a843, #f5d870)' } : {}}
             >
               Khách hàng
             </button>
@@ -471,10 +577,9 @@ export default function LuckyDrawPage() {
               onClick={() => setDrawMode('advisor')}
               className={`flex-1 px-3 py-1.5 rounded-md text-xs font-bold uppercase transition-all ${
                 drawMode === 'advisor'
-                  ? 'text-amber-900 shadow-md'
-                  : 'text-amber-400/60 hover:text-amber-400/80'
+                  ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
+                  : 'text-slate-500 hover:text-amber-700'
               }`}
-              style={drawMode === 'advisor' ? { background: 'linear-gradient(135deg, #d4a843, #f5d870)' } : {}}
             >
               TVV
             </button>
@@ -482,32 +587,32 @@ export default function LuckyDrawPage() {
         </div>
 
         {/* Prize List */}
-        <div className="p-4 border-b border-amber-900/30">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400/60 mb-2 flex items-center gap-1.5">
+        <div className="p-4 border-b border-amber-200">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-2 flex items-center gap-1.5">
             <Trophy className="w-3.5 h-3.5" /> Giải thưởng
           </h3>
-          <div className="space-y-1 max-h-40 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#d4a843 transparent' }}>
+          <div className="space-y-1 max-h-40 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#f59e0b transparent' }}>
             {prizes.length === 0 ? (
-              <p className="text-amber-400/40 text-xs italic text-center py-2">Chưa có giải thưởng</p>
+              <p className="text-slate-400 text-xs italic text-center py-2">Chưa có giải thưởng</p>
             ) : (
               prizes.map((prize, idx) => (
                 <motion.div
                   key={prize.id}
                   onClick={() => { if (!isSpinning) setCurrentPrizeIndex(idx); }}
-                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer transition-all ${
+                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer transition-all border ${
                     idx === currentPrizeIndex
-                      ? 'bg-amber-400/15 border border-amber-400/30'
-                      : 'hover:bg-amber-400/5 border border-transparent'
+                      ? 'bg-amber-50 border-amber-300 shadow-sm'
+                      : 'bg-white border-amber-100 hover:bg-amber-50/50 hover:border-amber-200'
                   }`}
                 >
-                  <span className="text-amber-400/80 flex-shrink-0">{getPrizeIcon(idx)}</span>
-                  <span className={`text-sm font-semibold flex-1 truncate ${idx === currentPrizeIndex ? 'text-amber-300' : 'text-amber-400/70'}`}>
+                  <span className="text-amber-700 flex-shrink-0">{getPrizeIcon(idx)}</span>
+                  <span className={`text-sm font-semibold flex-1 truncate ${idx === currentPrizeIndex ? 'text-amber-900' : 'text-slate-600'}`}>
                     {prize.name}
                   </span>
                   <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${
                     prize.remaining > 0
-                      ? 'bg-emerald-400/15 text-emerald-400'
-                      : 'bg-red-400/15 text-red-400'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-rose-100 text-rose-700'
                   }`}>
                     {prize.remaining}/{prize.quantity}
                   </span>
@@ -519,15 +624,15 @@ export default function LuckyDrawPage() {
 
         {/* Customer/Advisor List */}
         <div className="p-4 flex-1 min-h-0 flex flex-col">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400/60 mb-2 flex items-center gap-1.5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-2 flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5" /> {drawMode === 'customer' ? 'Khách hàng' : 'Tư vấn viên'}
           </h3>
           <div className="flex items-center gap-3 mb-2 text-xs">
-            <span className="text-amber-400/60">
-              Tổng: <span className="text-amber-300 font-bold">{drawMode === 'customer' ? store.customers.length : [...new Set(store.customers.map(c => c.advisor).filter(Boolean))].length}</span>
+            <span className="text-slate-500">
+              Tổng: <span className="text-amber-800 font-bold">{drawMode === 'customer' ? store.customers.length : [...new Set(store.customers.map(c => c.advisor).filter(Boolean))].length}</span>
             </span>
-            <span className="text-amber-400/60">
-              Còn: <span className="text-emerald-400 font-bold">{drawItems.length}</span>
+            <span className="text-slate-500">
+              Còn: <span className="text-emerald-700 font-bold">{drawItems.length}</span>
             </span>
           </div>
           <div
@@ -535,17 +640,17 @@ export default function LuckyDrawPage() {
             onMouseEnter={() => setScrollPaused(true)}
             onMouseLeave={() => setScrollPaused(false)}
             className="flex-1 min-h-0 overflow-y-auto space-y-0.5 pr-1"
-            style={{ scrollbarWidth: 'thin', scrollbarColor: '#d4a843 transparent' }}
+            style={{ scrollbarWidth: 'thin', scrollbarColor: '#f59e0b transparent' }}
           >
             {drawItems.length === 0 ? (
-              <p className="text-amber-400/40 text-xs italic text-center py-4">Không có người tham gia</p>
+              <p className="text-slate-400 text-xs italic text-center py-4">Không có người tham gia</p>
             ) : (
               drawItems.map((item) => (
-                <div key={item.id} className="flex items-center gap-2 px-2 py-1 rounded text-xs hover:bg-amber-400/5 transition-colors">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 flex-shrink-0" />
-                  <span className="text-amber-200/80 truncate font-medium">{item.name}</span>
+                <div key={item.id} className="flex items-center gap-2 px-2 py-1 rounded text-xs hover:bg-amber-50 transition-colors">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                  <span className="text-slate-700 truncate font-medium">{item.name}</span>
                   {drawMode === 'customer' && item.advisor && (
-                    <span className="text-amber-400/40 ml-auto truncate text-[10px]">{item.advisor}</span>
+                    <span className="text-slate-400 ml-auto truncate text-[10px]">{item.advisor}</span>
                   )}
                 </div>
               ))
@@ -554,44 +659,49 @@ export default function LuckyDrawPage() {
         </div>
 
         {/* Winner Count */}
-        <div className="p-3 border-t border-amber-900/30 text-center">
-          <span className="text-amber-400/60 text-xs">Đã trao giải: </span>
-          <span className="text-amber-300 font-bold text-sm">{winners.length}</span>
+        <div className="p-3 border-t border-amber-200 text-center bg-amber-50/50">
+          <span className="text-slate-500 text-xs">Đã trao giải: </span>
+          <span className="text-amber-900 font-bold text-sm">{winners.length}</span>
         </div>
       </div>
 
       {/* === MAIN AREA === */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ background: 'radial-gradient(ellipse at center, #162544 0%, #0f1b30 70%)' }}>
-        {/* Title */}
-        <div className="text-center pt-6 pb-4 flex-shrink-0">
-          <h2
-            className="text-3xl md:text-4xl font-black uppercase tracking-wider"
-            style={{
-              background: 'linear-gradient(135deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              textShadow: 'none',
-            }}
-          >
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        {/* Title (desktop) */}
+        <div className="hidden md:block text-center pt-6 pb-4 flex-shrink-0">
+          <h2 className="text-3xl md:text-4xl font-black uppercase tracking-wider text-amber-900">
             Chương Trình Quay Số
           </h2>
           {currentPrize && (
             <div className="mt-2 flex items-center justify-center gap-2">
-              <Crown className="w-5 h-5 text-amber-400" />
-              <span className="text-amber-300 font-bold text-lg">{currentPrize.name}</span>
-              <span className="text-amber-400/50 text-sm">(còn {currentPrize.remaining})</span>
+              <Crown className="w-5 h-5 text-amber-600" />
+              <span className="text-amber-800 font-bold text-lg">{currentPrize.name}</span>
+              <span className="text-slate-500 text-sm">(còn {currentPrize.remaining})</span>
             </div>
           )}
         </div>
 
+        {/* Mobile prize indicator */}
+        {currentPrize && (
+          <div className="md:hidden flex items-center justify-center gap-2 pt-2 pb-1 px-4">
+            <Crown className="w-4 h-4 text-amber-600" />
+            <span className="text-amber-800 font-bold text-sm">{currentPrize.name}</span>
+            <span className="text-slate-500 text-xs">(còn {currentPrize.remaining})</span>
+          </div>
+        )}
+
         {/* Slot Machine */}
-        <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-4">
+        <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-4 py-2">
           <div
-            className="relative w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl"
+            className={`relative w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl transition-shadow duration-1000 ${
+              canSpin ? 'animate-pulse-shadow' : ''
+            }`}
             style={{
-              background: 'linear-gradient(180deg, #1a2d4a 0%, #0f1b30 100%)',
-              border: '2px solid rgba(212, 168, 67, 0.3)',
-              boxShadow: '0 0 60px rgba(212, 168, 67, 0.1), inset 0 0 60px rgba(0,0,0,0.3)',
+              background: 'linear-gradient(180deg, #fffbeb 0%, #fef3c7 50%, #fffbeb 100%)',
+              border: '2px solid #f59e0b',
+              boxShadow: canSpin
+                ? '0 0 30px rgba(245, 158, 11, 0.3), inset 0 0 30px rgba(245, 158, 11, 0.05)'
+                : '0 0 15px rgba(245, 158, 11, 0.1), inset 0 0 15px rgba(245, 158, 11, 0.02)',
             }}
           >
             {/* Top decoration */}
@@ -602,23 +712,23 @@ export default function LuckyDrawPage() {
               {/* Highlight lines */}
               <div className="absolute inset-0 pointer-events-none z-10">
                 {/* Top fade */}
-                <div className="absolute top-0 left-0 right-0 h-16" style={{ background: 'linear-gradient(to bottom, #0f1b30, transparent)' }} />
+                <div className="absolute top-0 left-0 right-0 h-16" style={{ background: 'linear-gradient(to bottom, #fffbeb, transparent)' }} />
                 {/* Bottom fade */}
-                <div className="absolute bottom-0 left-0 right-0 h-16" style={{ background: 'linear-gradient(to top, #0f1b30, transparent)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-16" style={{ background: 'linear-gradient(to top, #fffbeb, transparent)' }} />
                 {/* Center highlight */}
                 <div
                   className="absolute left-0 right-0 h-[60px]"
-                  style={{ top: '120px', borderTop: '2px solid rgba(212, 168, 67, 0.5)', borderBottom: '2px solid rgba(212, 168, 67, 0.5)', background: 'rgba(212, 168, 67, 0.05)' }}
+                  style={{ top: '120px', borderTop: '2px solid rgba(245, 158, 11, 0.5)', borderBottom: '2px solid rgba(245, 158, 11, 0.5)', background: 'rgba(245, 158, 11, 0.08)' }}
                 />
                 {/* Side markers */}
                 <div className="absolute left-2 top-[120px] flex flex-col items-center" style={{ height: '60px' }}>
                   <div className="flex-1 flex items-center">
-                    <div className="w-0 h-0" style={{ borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderLeft: '10px solid #d4a843' }} />
+                    <div className="w-0 h-0" style={{ borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderLeft: '10px solid #f59e0b' }} />
                   </div>
                 </div>
                 <div className="absolute right-2 top-[120px] flex flex-col items-center" style={{ height: '60px' }}>
                   <div className="flex-1 flex items-center">
-                    <div className="w-0 h-0" style={{ borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderRight: '10px solid #d4a843' }} />
+                    <div className="w-0 h-0" style={{ borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderRight: '10px solid #f59e0b' }} />
                   </div>
                 </div>
               </div>
@@ -628,7 +738,7 @@ export default function LuckyDrawPage() {
                 {/* Slot items will be dynamically inserted here */}
                 {!isSpinning && !showResult && (
                   <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <p className="text-amber-400/40 text-lg font-medium">
+                    <p className="text-slate-400 text-lg font-medium">
                       {drawItems.length === 0 ? 'Không có người tham gia' : 'Nhấn để bắt đầu quay số'}
                     </p>
                   </div>
@@ -646,13 +756,15 @@ export default function LuckyDrawPage() {
             whileTap={canSpin ? { scale: 0.95 } : {}}
             onClick={handleSlotClick}
             disabled={!canSpin && !isSpinning}
-            className="mt-6 px-8 py-3 rounded-xl font-bold text-lg uppercase tracking-wider shadow-lg transition-all"
+            className={`mt-6 px-8 py-3 rounded-xl font-bold text-lg uppercase tracking-wider shadow-lg transition-all min-h-[48px] ${
+              canSpin ? 'animate-pulse-glow' : ''
+            }`}
             style={{
               background: canSpin || isSpinning
-                ? 'linear-gradient(135deg, #d4a843, #f5d870, #ffe066)'
-                : 'rgba(212, 168, 67, 0.15)',
-              color: canSpin || isSpinning ? '#0f1b30' : 'rgba(212, 168, 67, 0.4)',
-              border: '2px solid rgba(212, 168, 67, 0.3)',
+                ? 'linear-gradient(135deg, #f59e0b, #fbbf24, #f59e0b)'
+                : '#fef3c7',
+              color: canSpin || isSpinning ? '#78350f' : '#d4a843',
+              border: '2px solid rgba(245, 158, 11, 0.5)',
               cursor: canSpin || isSpinning ? 'pointer' : 'not-allowed',
             }}
           >
@@ -667,24 +779,21 @@ export default function LuckyDrawPage() {
         <AnimatePresence>
           {showResult && currentWinner && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.9 }}
+              transition={{ type: 'spring', duration: 0.5 }}
               className="flex-shrink-0 px-4 pb-4"
             >
               <div
-                className="max-w-xl mx-auto rounded-xl p-4 text-center"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(212, 168, 67, 0.15), rgba(245, 216, 112, 0.1))',
-                  border: '1px solid rgba(212, 168, 67, 0.3)',
-                }}
+                className="max-w-xl mx-auto rounded-xl p-5 text-center bg-white/95 backdrop-blur-sm border-2 border-amber-300 shadow-lg"
               >
-                <p className="text-amber-400/60 text-xs uppercase tracking-wider mb-1">Chúc mừng người trúng giải</p>
-                <p className="text-2xl font-black text-amber-300 mb-1">{currentWinner.customerName}</p>
+                <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Chúc mừng người trúng giải</p>
+                <p className="text-2xl font-black text-amber-900 mb-1">{currentWinner.customerName}</p>
                 {drawMode === 'customer' && currentWinner.advisor && (
-                  <p className="text-amber-400/50 text-sm">TVV: {currentWinner.advisor}</p>
+                  <p className="text-slate-500 text-sm">TVV: {currentWinner.advisor}</p>
                 )}
-                <p className="text-amber-400 font-semibold mt-1">🏆 {currentWinner.prizeName}</p>
+                <p className="text-amber-700 font-semibold mt-1">🏆 {currentWinner.prizeName}</p>
               </div>
             </motion.div>
           )}
@@ -694,28 +803,23 @@ export default function LuckyDrawPage() {
         {winners.length > 0 && (
           <div className="flex-shrink-0 px-4 pb-4">
             <div
-              className="max-w-xl mx-auto rounded-xl p-3 max-h-32 overflow-y-auto"
-              style={{
-                background: 'rgba(15, 27, 48, 0.8)',
-                border: '1px solid rgba(212, 168, 67, 0.15)',
-                scrollbarWidth: 'thin',
-                scrollbarColor: '#d4a843 transparent',
-              }}
+              className="max-w-xl mx-auto rounded-xl p-3 max-h-32 overflow-y-auto bg-white/95 backdrop-blur-sm border-2 border-amber-200 shadow-md"
+              style={{ scrollbarWidth: 'thin', scrollbarColor: '#f59e0b transparent' }}
             >
-              <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400/60 mb-2 flex items-center gap-1.5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-2 flex items-center gap-1.5">
                 <Trophy className="w-3 h-3" /> Kết quả ({winners.length})
               </h4>
               <div className="space-y-1">
                 {winners.map((w, idx) => (
                   <div key={`${w.id}-${idx}`} className="flex items-center gap-2 text-xs">
-                    <span className="text-amber-400/50 font-mono w-5">#{idx + 1}</span>
-                    <span className="text-amber-200/80 font-semibold">{w.customerName}</span>
-                    <span className="text-amber-400/40">—</span>
-                    <span className="text-amber-300/70">{w.prizeName}</span>
+                    <span className="text-slate-400 font-mono w-5">#{idx + 1}</span>
+                    <span className="text-slate-700 font-semibold">{w.customerName}</span>
+                    <span className="text-slate-300">—</span>
+                    <span className="text-amber-700">{w.prizeName}</span>
                     {drawMode === 'customer' && w.advisor && (
                       <>
-                        <span className="text-amber-400/40">—</span>
-                        <span className="text-amber-400/40">{w.advisor}</span>
+                        <span className="text-slate-300">—</span>
+                        <span className="text-slate-400">{w.advisor}</span>
                       </>
                     )}
                   </div>
@@ -733,7 +837,7 @@ export default function LuckyDrawPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
             onClick={() => { setSettingsOpen(false); setSettingsAuthenticated(false); }}
           >
             <motion.div
@@ -741,12 +845,11 @@ export default function LuckyDrawPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', duration: 0.4 }}
-              className="w-full max-w-lg max-h-[85vh] overflow-auto rounded-2xl"
-              style={{ background: '#1a2d4a', border: '2px solid rgba(212, 168, 67, 0.3)' }}
+              className="w-full max-w-lg max-h-[85vh] overflow-auto rounded-2xl bg-white border-2 border-amber-200 shadow-2xl"
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="relative overflow-hidden p-4 flex justify-between items-center" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }}>
+              <div className="relative overflow-hidden p-4 flex justify-between items-center bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 rounded-t-2xl">
                 <h2 className="text-xl font-bold text-amber-900">Cài đặt Quay Số</h2>
                 <button
                   onClick={() => { setSettingsOpen(false); setSettingsAuthenticated(false); }}
@@ -759,31 +862,25 @@ export default function LuckyDrawPage() {
               {!settingsAuthenticated ? (
                 /* Password screen */
                 <div className="p-6 text-center">
-                  <div className="mb-4 p-4 rounded-xl" style={{ background: 'rgba(212, 168, 67, 0.1)', border: '1px solid rgba(212, 168, 67, 0.2)' }}>
-                    <Settings className="w-10 h-10 text-amber-400/60 mx-auto mb-3" />
-                    <p className="text-amber-300/80 text-sm mb-3">Nhập mật khẩu để tiếp tục</p>
+                  <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
+                    <Settings className="w-10 h-10 text-amber-500 mx-auto mb-3" />
+                    <p className="text-slate-600 text-sm mb-3">Nhập mật khẩu để tiếp tục</p>
                     <input
                       type="password"
                       value={settingsPassword}
                       onChange={e => setSettingsPassword(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleSettingsAuth()}
                       placeholder="Mật khẩu"
-                      className="w-full p-3 rounded-lg text-center font-mono text-lg tracking-widest outline-none transition-all"
-                      style={{
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        border: '2px solid rgba(212, 168, 67, 0.3)',
-                        color: '#f5d870',
-                      }}
+                      className="w-full p-3 rounded-lg text-center font-mono text-lg tracking-widest outline-none transition-all border-2 border-amber-200 focus:border-amber-400 bg-white text-amber-900"
                       autoFocus
                     />
                     {settingsPassword && settingsPassword !== '0969774224' && (
-                      <p className="text-red-400 text-xs mt-2">Mật khẩu không đúng</p>
+                      <p className="text-rose-500 text-xs mt-2">Mật khẩu không đúng</p>
                     )}
                   </div>
                   <button
                     onClick={handleSettingsAuth}
-                    className="px-6 py-2.5 rounded-lg font-bold transition-all"
-                    style={{ background: 'linear-gradient(135deg, #d4a843, #f5d870)', color: '#0f1b30' }}
+                    className="px-6 py-2.5 rounded-lg font-bold transition-all bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md hover:shadow-lg"
                   >
                     Xác nhận
                   </button>
@@ -792,17 +889,16 @@ export default function LuckyDrawPage() {
                 /* Authenticated settings */
                 <div className="p-5 space-y-4">
                   {/* Tabs */}
-                  <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'rgba(212, 168, 67, 0.1)' }}>
+                  <div className="flex gap-1 p-1 rounded-lg bg-amber-100/80">
                     {(['general', 'prizes', 'customers'] as const).map(tab => (
                       <button
                         key={tab}
                         onClick={() => setSettingsTab(tab)}
                         className={`flex-1 px-3 py-1.5 rounded-md text-xs font-bold uppercase transition-all ${
                           settingsTab === tab
-                            ? 'text-amber-900 shadow-md'
-                            : 'text-amber-400/60 hover:text-amber-400/80'
+                            ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
+                            : 'text-slate-500 hover:text-amber-700'
                         }`}
-                        style={settingsTab === tab ? { background: 'linear-gradient(135deg, #d4a843, #f5d870)' } : {}}
                       >
                         {tab === 'general' ? 'Chung' : tab === 'prizes' ? 'Giải thưởng' : 'Khách hàng'}
                       </button>
@@ -812,31 +908,30 @@ export default function LuckyDrawPage() {
                   {/* General tab */}
                   {settingsTab === 'general' && (
                     <div className="space-y-4">
-                      <div className="p-3 rounded-xl" style={{ background: 'rgba(212, 168, 67, 0.08)', border: '1px solid rgba(212, 168, 67, 0.15)' }}>
-                        <h4 className="text-amber-300/80 text-sm font-semibold mb-2">Thống kê</h4>
+                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
+                        <h4 className="text-amber-800 text-sm font-semibold mb-2">Thống kê</h4>
                         <div className="space-y-1.5 text-xs">
                           <div className="flex justify-between">
-                            <span className="text-amber-400/60">Tổng khách hàng:</span>
-                            <span className="text-amber-300 font-bold">{store.customers.length}</span>
+                            <span className="text-slate-500">Tổng khách hàng:</span>
+                            <span className="text-amber-800 font-bold">{store.customers.length}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-amber-400/60">Tổng TVV:</span>
-                            <span className="text-amber-300 font-bold">{[...new Set(store.customers.map(c => c.advisor).filter(Boolean))].length}</span>
+                            <span className="text-slate-500">Tổng TVV:</span>
+                            <span className="text-amber-800 font-bold">{[...new Set(store.customers.map(c => c.advisor).filter(Boolean))].length}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-amber-400/60">Số giải đã trao:</span>
-                            <span className="text-amber-300 font-bold">{winners.length}</span>
+                            <span className="text-slate-500">Số giải đã trao:</span>
+                            <span className="text-amber-800 font-bold">{winners.length}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-amber-400/60">Còn lại:</span>
-                            <span className="text-emerald-400 font-bold">{drawItems.length}</span>
+                            <span className="text-slate-500">Còn lại:</span>
+                            <span className="text-emerald-700 font-bold">{drawItems.length}</span>
                           </div>
                         </div>
                       </div>
                       <button
                         onClick={handleResetWinners}
-                        className="w-full px-4 py-2.5 rounded-lg font-bold text-sm transition-all hover:opacity-90"
-                        style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444' }}
+                        className="w-full px-4 py-2.5 rounded-lg font-bold text-sm transition-all hover:opacity-90 bg-rose-50 border-2 border-rose-200 text-rose-600"
                       >
                         Đặt lại toàn bộ kết quả
                       </button>
@@ -849,10 +944,9 @@ export default function LuckyDrawPage() {
                       {editPrizes.map((prize, idx) => (
                         <div
                           key={prize.id}
-                          className="p-3 rounded-xl flex items-center gap-2"
-                          style={{ background: 'rgba(212, 168, 67, 0.08)', border: '1px solid rgba(212, 168, 67, 0.15)' }}
+                          className="p-3 rounded-xl flex items-center gap-2 bg-amber-50 border border-amber-200"
                         >
-                          <span className="text-amber-400/60 flex-shrink-0">{getPrizeIcon(idx)}</span>
+                          <span className="text-amber-600 flex-shrink-0">{getPrizeIcon(idx)}</span>
                           <input
                             value={prize.name}
                             onChange={e => {
@@ -860,59 +954,51 @@ export default function LuckyDrawPage() {
                               updated[idx] = { ...updated[idx], name: e.target.value };
                               setEditPrizes(updated);
                             }}
-                            className="flex-1 px-2 py-1 rounded text-sm outline-none"
-                            style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(212, 168, 67, 0.2)', color: '#f5d870' }}
+                            className="flex-1 px-2 py-1 rounded text-sm outline-none border-2 border-amber-200 focus:border-amber-400 bg-white text-slate-800"
                           />
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleUpdatePrizeQty(prize.id, Math.max(0, prize.quantity - 1))}
-                              className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold transition-all"
-                              style={{ background: 'rgba(212, 168, 67, 0.15)', color: '#d4a843' }}
+                              className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold transition-all bg-amber-100 text-amber-700 hover:bg-amber-200"
                             >
                               -
                             </button>
-                            <span className="text-amber-300 font-bold text-sm w-6 text-center">{prize.quantity}</span>
+                            <span className="text-amber-900 font-bold text-sm w-6 text-center">{prize.quantity}</span>
                             <button
                               onClick={() => handleUpdatePrizeQty(prize.id, prize.quantity + 1)}
-                              className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold transition-all"
-                              style={{ background: 'rgba(212, 168, 67, 0.15)', color: '#d4a843' }}
+                              className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold transition-all bg-amber-100 text-amber-700 hover:bg-amber-200"
                             >
                               +
                             </button>
                           </div>
                           <button
                             onClick={() => handleRemovePrize(prize.id)}
-                            className="p-1 rounded transition-all hover:opacity-80"
-                            style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}
+                            className="p-1 rounded transition-all hover:opacity-80 bg-rose-100 text-rose-600"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       ))}
                       <div
-                        className="p-3 rounded-xl flex items-center gap-2"
-                        style={{ background: 'rgba(212, 168, 67, 0.05)', border: '1px dashed rgba(212, 168, 67, 0.3)' }}
+                        className="p-3 rounded-xl flex items-center gap-2 bg-amber-50/50 border-2 border-dashed border-amber-300"
                       >
-                        <Plus className="w-4 h-4 text-amber-400/50" />
+                        <Plus className="w-4 h-4 text-amber-400" />
                         <input
                           value={newPrizeName}
                           onChange={e => setNewPrizeName(e.target.value)}
                           placeholder="Tên giải thưởng"
-                          className="flex-1 px-2 py-1 rounded text-sm outline-none"
-                          style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(212, 168, 67, 0.2)', color: '#f5d870' }}
+                          className="flex-1 px-2 py-1 rounded text-sm outline-none border-2 border-amber-200 focus:border-amber-400 bg-white text-slate-800"
                         />
                         <input
                           type="number"
                           value={newPrizeQty}
                           onChange={e => setNewPrizeQty(e.target.value)}
                           min="1"
-                          className="w-14 px-2 py-1 rounded text-sm text-center outline-none"
-                          style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(212, 168, 67, 0.2)', color: '#f5d870' }}
+                          className="w-14 px-2 py-1 rounded text-sm text-center outline-none border-2 border-amber-200 focus:border-amber-400 bg-white text-slate-800"
                         />
                         <button
                           onClick={handleAddPrize}
-                          className="px-3 py-1 rounded-lg text-xs font-bold transition-all"
-                          style={{ background: 'linear-gradient(135deg, #d4a843, #f5d870)', color: '#0f1b30' }}
+                          className="px-3 py-1 rounded-lg text-xs font-bold transition-all bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-sm"
                         >
                           Thêm
                         </button>
@@ -922,22 +1008,22 @@ export default function LuckyDrawPage() {
 
                   {/* Customers tab */}
                   {settingsTab === 'customers' && (
-                    <div className="space-y-2 max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#d4a843 transparent' }}>
-                      <p className="text-amber-400/50 text-xs italic mb-2">
+                    <div className="space-y-2 max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#f59e0b transparent' }}>
+                      <p className="text-slate-400 text-xs italic mb-2">
                         Danh sách khách hàng từ hệ thống chính. Sẽ không hiển thị khách hàng đã trúng giải.
                       </p>
                       {store.customers.map(c => (
                         <div
                           key={c.id}
-                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs"
+                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs border"
                           style={{
-                            background: wonCustomerIds.has(c.id) ? 'rgba(239, 68, 68, 0.1)' : 'rgba(212, 168, 67, 0.05)',
-                            border: `1px solid ${wonCustomerIds.has(c.id) ? 'rgba(239, 68, 68, 0.2)' : 'rgba(212, 168, 67, 0.1)'}`,
+                            background: wonCustomerIds.has(c.id) ? '#fff1f2' : '#fffbeb',
+                            borderColor: wonCustomerIds.has(c.id) ? '#fecdd3' : '#fde68a',
                           }}
                         >
-                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${wonCustomerIds.has(c.id) ? 'bg-red-400/60' : 'bg-emerald-400/60'}`} />
-                          <span className={`${wonCustomerIds.has(c.id) ? 'text-red-400/60 line-through' : 'text-amber-200/80'} font-medium truncate`}>{c.name}</span>
-                          <span className="text-amber-400/40 ml-auto truncate">{c.advisor}</span>
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${wonCustomerIds.has(c.id) ? 'bg-rose-400' : 'bg-emerald-500'}`} />
+                          <span className={`${wonCustomerIds.has(c.id) ? 'text-rose-400 line-through' : 'text-slate-700'} font-medium truncate`}>{c.name}</span>
+                          <span className="text-slate-400 ml-auto truncate">{c.advisor}</span>
                         </div>
                       ))}
                     </div>
@@ -946,8 +1032,7 @@ export default function LuckyDrawPage() {
                   {/* Save button */}
                   <button
                     onClick={handleSaveSettings}
-                    className="w-full py-2.5 rounded-lg font-bold transition-all hover:opacity-90"
-                    style={{ background: 'linear-gradient(135deg, #d4a843, #f5d870)', color: '#0f1b30' }}
+                    className="w-full py-2.5 rounded-lg font-bold transition-all hover:opacity-90 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md"
                   >
                     Lưu & Đóng
                   </button>
@@ -957,6 +1042,32 @@ export default function LuckyDrawPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Custom CSS for animations */}
+      <style jsx global>{`
+        @keyframes pulse-glow {
+          0%, 100% {
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.3), 0 0 20px rgba(245, 158, 11, 0.1);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.5), 0 0 40px rgba(245, 158, 11, 0.2);
+          }
+        }
+        .animate-pulse-glow {
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
+        @keyframes pulse-shadow {
+          0%, 100% {
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.2), inset 0 0 30px rgba(245, 158, 11, 0.03);
+          }
+          50% {
+            box-shadow: 0 0 50px rgba(245, 158, 11, 0.35), inset 0 0 40px rgba(245, 158, 11, 0.06);
+          }
+        }
+        .animate-pulse-shadow {
+          animation: pulse-shadow 2.5s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
