@@ -1,0 +1,2291 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quay Số May Mắn</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1b30;
+            --bg2: #16233a;
+            --card: #1e2f4a;
+            --card2: #263a58;
+            --border: #2d4262;
+            --gold: #d4a843;
+            --gold-light: #f5d870;
+            --gold-dark: #b08b30;
+            --accent: #ffe066;
+            --fg: #f0f4f8;
+            --fg-muted: #8899aa;
+            --danger: #e84057;
+            --success: #3dd68c;
+            --item-h: 90px; /* Đồng bộ với JS ITEM_H */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .bg-effects {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-effects .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(160px);
+            animation: orbFloat 14s ease-in-out infinite alternate;
+        }
+        .bg-effects .orb:nth-child(1) {
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(245, 216, 112, 0.18), rgba(212, 168, 67, 0.08));
+            top: -200px;
+            right: -150px;
+        }
+        .bg-effects .orb:nth-child(2) {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15), rgba(15, 23, 42, 0.06));
+            bottom: -200px;
+            left: -150px;
+            animation-delay: -4s;
+            animation-duration: 16s;
+        }
+        .bg-effects .orb:nth-child(3) {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(245, 216, 112, 0.1), rgba(30, 64, 175, 0.08));
+            top: 30%;
+            left: 40%;
+            animation-delay: -8s;
+            animation-duration: 20s;
+        }
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(40px, -25px) scale(1.1); }
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(30, 58, 138, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 30%, rgba(245, 216, 112, 0.07) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 90%, rgba(15, 23, 42, 0.12) 0%, transparent 50%),
+                linear-gradient(180deg, #0f1b30 0%, #14233d 30%, #0f1b30 70%, #0b1425 100%);
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 310px 1fr;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+        }
+        .sidebar-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 14px 12px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .sidebar-top h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .gear-btn {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--fg-muted);
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+        }
+
+        .panel-section {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .panel-section+.panel-section {
+            border-top: 1px solid var(--border);
+        }
+        .panel-header {
+            padding: 12px 14px 6px;
+            flex-shrink: 0;
+        }
+        .panel-header h2 {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--gold-light);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .prize-list-wrap {
+            flex-shrink: 0;
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 2px 8px;
+        }
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: default;
+        }
+        .list-item:hover { background: var(--card); }
+        .list-item .item-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--card2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--gold);
+        }
+        .list-item .item-name {
+            flex: 1;
+            font-size: 0.92rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .list-item .item-qty {
+            font-size: 0.75rem;
+            color: var(--gold);
+            background: var(--card2);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .list-item.won { opacity: 0.35; text-decoration: line-through; }
+        .list-item.won .item-num { background: var(--success); color: var(--bg); }
+        .prize-item .item-num {
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold)) !important;
+            color: var(--bg) !important;
+        }
+        .prize-item.selected-prize {
+            background: rgba(212, 168, 67, 0.15) !important;
+            border-left: 3px solid var(--gold);
+        }
+
+        .panel-count {
+            padding: 8px 14px;
+            border-top: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--fg-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+        .panel-count .cnt { color: var(--gold); font-weight: 600; }
+
+        .customer-section {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .customer-scroll-wrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .customer-scroll-wrap::before,
+        .customer-scroll-wrap::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            z-index: 5;
+            pointer-events: none;
+        }
+        .customer-scroll-wrap::before {
+            top: 0;
+            height: 30px;
+            background: linear-gradient(180deg, var(--bg2), transparent);
+        }
+        .customer-scroll-wrap::after {
+            bottom: 0;
+            height: 30px;
+            background: linear-gradient(0deg, var(--bg2), transparent);
+        }
+        .customer-scroll-track { will-change: transform; }
+        .cs-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+        }
+        .cs-item .cs-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--card2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            color: var(--gold);
+        }
+        .cs-item .cs-name {
+            flex: 1;
+            font-size: 0.92rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: rgba(240, 244, 248, 0.75);
+        }
+        .cs-item.winner-flash {
+            background: rgba(212, 168, 67, 0.25) !important;
+        }
+        .cs-item.winner-flash .cs-name { color: var(--gold-light); font-weight: 600; }
+
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 24px 32px 18px;
+            overflow: hidden;
+        }
+
+        .main-title-top {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 16px;
+            letter-spacing: 8px;
+            background: linear-gradient(135deg, var(--accent), var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            flex-shrink: 0;
+            filter: drop-shadow(0 0 30px rgba(245, 216, 112, 0.15));
+        }
+
+        .draw-stage {
+            width: 100%;
+            max-width: 1000px; /* Rộng */
+            margin: 12px auto 0;
+            flex-shrink: 0;
+        }
+
+        .slot-machine {
+            position: relative;
+            overflow: hidden;
+            border-radius: 32px;
+            background: linear-gradient(180deg, #1e2f4a, #172840, #101e34, #0c182c);
+            border: 2px solid #3a5a8a;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 0 rgba(0, 0, 0, 0.3), 0 4px 0 rgba(0, 0, 0, 0.2), 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 70px rgba(30, 58, 138, 0.2), inset 0 2px 6px rgba(255, 255, 255, 0.05), inset 0 -4px 12px rgba(0, 0, 0, 0.5);
+            transition: border-color 0.5s, box-shadow 0.5s;
+        }
+        .slot-machine::before {
+            content: '';
+            position: absolute;
+            inset: 5px;
+            border-radius: 27px;
+            border: 1px solid rgba(212, 168, 67, 0.08);
+            pointer-events: none;
+            z-index: 5;
+        }
+        .slot-machine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(245, 216, 112, 0.12) 50%, transparent 60%);
+            z-index: 0;
+            pointer-events: none;
+            animation: shine 3s infinite linear;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .slot-machine.spinning::after { opacity: 1; }
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        .slot-machine.spinning {
+            border-color: var(--gold);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 4px 0 rgba(0, 0, 0, 0.2), 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 120px rgba(245, 216, 112, 0.35), inset 0 2px 6px rgba(255, 255, 255, 0.05), inset 0 -4px 12px rgba(0, 0, 0, 0.5);
+        }
+        .slot-machine.won {
+            border-color: var(--accent);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 4px 0 rgba(0, 0, 0, 0.2), 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 130px rgba(255, 224, 102, 0.45), inset 0 2px 6px rgba(255, 255, 255, 0.06), inset 0 -4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .machine-title {
+            text-align: center;
+            padding: 14px 20px 8px;
+            position: relative;
+            z-index: 2;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 6px;
+        }
+
+        .slot-viewport {
+            position: relative;
+            width: calc(100% - 60px);
+            margin: 0 30px;
+            height: 450px; /* 5 dòng x 90px = 450px */
+            overflow: hidden;
+            border-radius: 24px;
+            background: radial-gradient(ellipse at center, #0e1b30, #080e1e);
+            border: 1px solid rgba(45, 74, 122, 0.25);
+            box-shadow: inset 0 8px 28px rgba(0, 0, 0, 0.8), inset 0 -8px 28px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            z-index: 10;
+            transition: box-shadow 0.3s;
+        }
+        .slot-viewport:hover {
+            box-shadow: inset 0 8px 28px rgba(0, 0, 0, 0.8), inset 0 -8px 28px rgba(0, 0, 0, 0.5), 0 0 35px rgba(245, 216, 112, 0.2);
+        }
+        .slot-viewport:active { transform: scale(0.99); }
+
+        .slot-highlight {
+            position: absolute;
+            left: 0;
+            right: 0;
+            z-index: 3;
+            pointer-events: none;
+            top: 50%;
+            transform: translateY(-50%);
+            height: var(--item-h);
+            border-top: 2px solid rgba(245, 216, 112, 0.7);
+            border-bottom: 2px solid rgba(245, 216, 112, 0.7);
+            background: linear-gradient(180deg, rgba(245, 216, 112, 0), rgba(245, 216, 112, 0.12) 25%, rgba(245, 216, 112, 0.22) 50%, rgba(245, 216, 112, 0.12) 75%, rgba(245, 216, 112, 0));
+        }
+        .slot-fade-top,
+        .slot-fade-bottom {
+            position: absolute;
+            left: 0;
+            right: 0;
+            z-index: 4;
+            pointer-events: none;
+        }
+        .slot-fade-top {
+            top: 0;
+            height: 90px;
+            background: linear-gradient(180deg, rgba(8, 14, 30, 0.98), rgba(8, 14, 30, 0.5) 50%, rgba(8, 14, 30, 0));
+        }
+        .slot-fade-bottom {
+            bottom: 0;
+            height: 90px;
+            background: linear-gradient(0deg, rgba(8, 14, 30, 0.98), rgba(8, 14, 30, 0.5) 50%, rgba(8, 14, 30, 0));
+        }
+
+        .slot-track {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            will-change: transform;
+            z-index: 2;
+        }
+        .slot-item {
+            height: var(--item-h);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            white-space: nowrap;
+            padding: 0 24px;
+        }
+        .sz-center {
+            font-size: 3rem !important;
+            color: var(--accent) !important;
+            text-shadow: 0 0 40px rgba(245, 216, 112, 0.7), 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+        }
+        .sz-1 { font-size: 1.7rem !important; color: rgba(240, 244, 248, 0.55) !important; }
+        .sz-2 { font-size: 1.2rem !important; color: rgba(240, 244, 248, 0.3) !important; }
+        .sz-spin { font-size: 1.9rem; color: rgba(240, 244, 248, 0.5); }
+
+        .slot-machine.won .sz-center {
+            animation: winnerGlow 2s ease infinite;
+        }
+        @keyframes winnerGlow {
+            0%, 100% { text-shadow: 0 0 30px rgba(245, 216, 112, 0.5), 0 2px 4px rgba(0, 0, 0, 0.5); }
+            50% { text-shadow: 0 0 70px rgba(255, 224, 102, 0.9), 0 0 90px rgba(245, 216, 112, 0.4), 0 2px 4px rgba(0, 0, 0, 0.5); }
+        }
+
+        .machine-prize {
+            text-align: center;
+            padding: 12px 20px 18px;
+            position: relative;
+            z-index: 2;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gold-light);
+            min-height: 44px;
+        }
+
+        .results-section {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            margin-top: 28px;
+        }
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+        }
+        .results-header h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: var(--gold-light);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .results-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 3px;
+        }
+        .result-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 1.1rem;
+            animation: resultSlide 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .result-card .r-order {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--bg);
+        }
+        .result-card .r-prize-inline { color: var(--gold-light); }
+
+        .confetti-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .toast {
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.84rem;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+            animation: toastIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: none; }
+        }
+
+        /* Modal giữ nguyên */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 900;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 92%;
+            max-width: 500px;
+            max-height: 82vh;
+            display: flex;
+            flex-direction: column;
+            animation: modalIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.92) translateY(16px); }
+            to { opacity: 1; transform: none; }
+        }
+        .modal-top { padding: 18px 20px 0; display: flex; justify-content: space-between; }
+        .modal-close { background: none; border: none; color: var(--fg-muted); font-size: 1rem; cursor: pointer; }
+        .modal-tabs { display: flex; padding: 12px 20px 0; }
+        .modal-tab {
+            flex: 1;
+            padding: 9px;
+            text-align: center;
+            font-size: 0.84rem;
+            color: var(--fg-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            background: none;
+            font-family: inherit;
+        }
+        .modal-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+        .tab-content { display: none; padding: 14px 20px; overflow-y: auto; flex: 1; }
+        .tab-content.active { display: flex; flex-direction: column; gap: 10px; }
+        .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+        .modal-footer button {
+            padding: 8px 24px;
+            border-radius: 7px;
+            border: none;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            color: var(--bg);
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .pwd-input {
+            width: 100%;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            color: var(--fg);
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 4px;
+            font-family: inherit;
+        }
+        .pwd-submit {
+            width: 100%;
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            color: var(--bg);
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+        }
+        .shake { animation: shake 0.4s ease; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-effects"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+    <canvas class="confetti-canvas" id="confettiCanvas"></canvas>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Modal Mật khẩu -->
+    <div class="modal-overlay" id="modalPassword">
+        <div class="modal" style="max-width:380px">
+            <div class="modal-top"><h3>🔒 Xác thực</h3><button class="modal-close" onclick="closePasswordModal()"><i class="fas fa-times"></i></button></div>
+            <div style="padding:20px">
+                <p style="font-size:.85rem;color:var(--fg-muted);margin-bottom:14px;text-align:center">Nhập mật khẩu để truy cập cài đặt</p>
+                <input type="password" class="pwd-input" id="passwordInput" placeholder="••••••••••" onkeydown="if(event.key==='Enter')checkPassword()">
+                <p class="pwd-error" id="passwordError"></p>
+                <button class="pwd-submit" onclick="checkPassword()"><i class="fas fa-unlock"></i> Vào cài đặt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cài đặt -->
+    <div class="modal-overlay" id="modalSettings">
+        <div class="modal">
+            <div class="modal-top"><h3>⚙️ Cài đặt</h3><button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button></div>
+            <div class="modal-tabs">
+                <button class="modal-tab active" onclick="switchTab('general',this)">Chung</button>
+                <button class="modal-tab" onclick="switchTab('prizes',this)">Giải thưởng</button>
+                <button class="modal-tab" onclick="switchTab('customers',this)">Khách hàng</button>
+            </div>
+            <div class="tab-content active" id="tabGeneral">
+                <div class="title-setting"><label>Tiêu đề chương trình</label><input id="sTitleInput" value="CHƯƠNG TRÌNH QUAY SỐ" oninput="updateTitle()"></div>
+                <div class="title-setting"><label>Tiêu đề phụ</label><input id="sSubTitleInput" value="QUAY SỐ MAY MẮN" oninput="updateSubTitle()"></div>
+            </div>
+            <div class="tab-content" id="tabPrizes">
+                <div class="form-row"><input id="sPrizeName" placeholder="Tên giải thưởng..."><input class="qty-input" id="sPrizeQty" value="1" min="1"><button class="add-btn" onclick="addPrizeFromSettings()">+</button></div>
+                <div class="settings-list" id="sPrizeList"></div>
+            </div>
+            <div class="tab-content" id="tabCustomers">
+                <div class="form-row"><input id="sCustomerName" placeholder="Tên khách hàng..."><button class="add-btn" onclick="addCustomerFromSettings()">+</button></div>
+                <textarea id="sCustomerBatch" placeholder="Nhập nhanh, mỗi dòng một tên..."></textarea>
+                <button onclick="batchCustomersFromSettings()">Nhập tất cả</button>
+                <div class="settings-list" id="sCustomerList"></div>
+            </div>
+            <div class="modal-footer"><button onclick="closeModal()">Xong</button></div>
+        </div>
+    </div>
+
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-top"><h1>QUAY SỐ MAY MẮN</h1><button class="gear-btn" onclick="openPasswordModal()"><i class="fas fa-cog"></i></button></div>
+            <div class="panel-section">
+                <div class="panel-header"><h2><i class="fas fa-gift"></i> Giải thưởng</h2></div>
+                <div class="prize-list-wrap" id="prizeListWrap"></div>
+                <div class="panel-count"><span>Tổng: <span class="cnt" id="prizeCount">0</span></span><span>Còn: <span class="cnt" id="prizeRemain">0</span></span></div>
+            </div>
+            <div class="panel-section customer-section">
+                <div class="panel-header"><h2><i class="fas fa-users"></i> Khách hàng</h2></div>
+                <div class="customer-scroll-wrap" id="customerScrollWrap"><div class="customer-scroll-track" id="customerTrack"></div></div>
+                <div class="panel-count"><span>Tổng: <span class="cnt" id="customerCount">0</span></span><span>Còn: <span class="cnt" id="customerRemain">0</span></span></div>
+            </div>
+        </aside>
+        <main class="main-area">
+            <div class="main-title-top" id="mainTitleTop">CHƯƠNG TRÌNH QUAY SỐ</div>
+            <div class="draw-stage">
+                <div class="slot-machine" id="slotMachine">
+                    <div class="machine-title" id="machineTitle">QUAY SỐ MAY MẮN</div>
+                    <div class="slot-viewport" id="slotViewport">
+                        <div class="slot-highlight"></div>
+                        <div class="slot-fade-top"></div>
+                        <div class="slot-fade-bottom"></div>
+                        <div class="slot-track" id="slotTrack"></div>
+                    </div>
+                    <div class="machine-prize" id="machinePrize"></div>
+                </div>
+            </div>
+            <div class="results-section">
+                <div class="results-header"><h3><i class="fas fa-trophy"></i> Kết quả</h3><button onclick="clearResults()"><i class="fas fa-trash-alt"></i> Xoá</button></div>
+                <div class="results-list" id="resultsList"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        (function() {
+            // Dữ liệu
+            let customers = [],
+                prizes = [],
+                results = [];
+            let wonCustomerIds = new Set(),
+                wonPrizeIds = new Set();
+            let selectedPrizeId = null,
+                isSpinning = false,
+                idCounter = 0;
+            const ITEM_H = 90; // Phải khớp với --item-h
+            const VISIBLE = 5;
+            const CENTER = 2;
+            const MARGIN = 3;
+            const CS_ITEM_H = 38;
+            const SETTINGS_PASSWORD = '0969774224';
+
+            const sampleCustomers = [
+                'Nguyễn Minh Anh', 'Trần Đức Anh', 'Lê Thu Hương', 'Phạm Văn Bình',
+                'Hoàng Thị Cẩm', 'Vũ Đình Công', 'Đặng Minh Đức', 'Bùi Thị Hoa',
+                'Ngô Quang Huy', 'Lý Thị Lan', 'Trịnh Văn Mạnh', 'Phan Thị Nga',
+                'Đỗ Quốc Phong', 'Hồ Thị Quỳnh', 'Dương Văn Sơn', 'Vũ Thị Trang',
+                'Lưu Hoàng Long', 'Tạ Minh Khôi', 'Cao Thị Yến', 'Trần Văn Đạt'
+            ];
+            const samplePrizes = [
+                { name: 'iPhone 15 Pro Max', qty: 1 }, { name: 'Samsung Galaxy S24 Ultra', qty: 1 },
+                { name: 'TV OLED 55 inch', qty: 1 }, { name: 'Laptop MacBook Air M3', qty: 1 },
+                { name: 'AirPods Pro 2', qty: 2 }, { name: 'Voucher 5.000.000đ', qty: 2 },
+                { name: 'Voucher 2.000.000đ', qty: 3 }, { name: 'Loa JBL Charge 5', qty: 1 }
+            ];
+
+            // DOM
+            const prizeListWrap = document.getElementById('prizeListWrap');
+            const customerTrack = document.getElementById('customerTrack');
+            const slotTrack = document.getElementById('slotTrack');
+            const slotMachine = document.getElementById('slotMachine');
+            const slotViewport = document.getElementById('slotViewport');
+            const machinePrize = document.getElementById('machinePrize');
+            const resultsList = document.getElementById('resultsList');
+            const mainTitle = document.getElementById('mainTitleTop');
+            const machineTitle = document.getElementById('machineTitle');
+
+            function getAvail() { return customers.filter(c => !wonCustomerIds.has(c.id)); }
+
+            function renderPrizes() {
+                prizeListWrap.innerHTML = '';
+                prizes.forEach((p, i) => {
+                    const won = p.remaining <= 0,
+                        sel = selectedPrizeId === p.id;
+                    const div = document.createElement('div');
+                    div.className = 'list-item prize-item' + (won ? ' won' : '') + (sel ? ' selected-prize' : '');
+                    div.style.cursor = won ? 'default' : 'pointer';
+                    div.innerHTML = `<span class="item-num">${won ? '✓' : i+1}</span><span class="item-name">${p.name}</span><span class="item-qty">x${p.remaining}</span>`;
+                    if (!won) div.onclick = () => selectPrize(p.id);
+                    prizeListWrap.appendChild(div);
+                });
+            }
+
+            function buildCustomerScroll() {
+                customerTrack.getAnimations().forEach(a => a.cancel());
+                customerTrack.innerHTML = '';
+                const avail = getAvail();
+                if (!avail.length) {
+                    customerTrack.innerHTML = '<div class="cs-item" style="opacity:0.4;justify-content:center">Chưa có khách hàng</div>';
+                    return;
+                }
+                for (let r = 0; r < 3; r++) {
+                    avail.forEach((c, i) => {
+                        const d = document.createElement('div');
+                        d.className = 'cs-item';
+                        d.setAttribute('data-cid', c.id);
+                        d.innerHTML = `<span class="cs-num">${i+1}</span><span class="cs-name">${c.name}</span>`;
+                        customerTrack.appendChild(d);
+                    });
+                }
+                const h = avail.length * CS_ITEM_H;
+                customerTrack.animate([
+                    { transform: 'translateY(0)' },
+                    { transform: `translateY(${-h}px)` }
+                ], { duration: avail.length * 1400, iterations: Infinity, easing: 'linear' });
+            }
+
+            function highlightCustomerScroll(winnerId) {
+                customerTrack.getAnimations().forEach(a => a.pause());
+                customerTrack.querySelectorAll(`[data-cid="${winnerId}"]`).forEach(el => el.classList.add('winner-flash'));
+                setTimeout(buildCustomerScroll, 3500);
+            }
+
+            function updateCounts() {
+                document.getElementById('customerCount').textContent = customers.length;
+                document.getElementById('customerRemain').textContent = customers.length - wonCustomerIds.size;
+                const tp = prizes.reduce((s, p) => s + p.total, 0);
+                const rp = prizes.reduce((s, p) => s + p.remaining, 0);
+                document.getElementById('prizeCount').textContent = tp;
+                document.getElementById('prizeRemain').textContent = rp;
+            }
+
+            function selectPrize(id) {
+                if (prizes.find(p => p.id === id).remaining <= 0) return;
+                selectedPrizeId = selectedPrizeId === id ? null : id;
+                renderPrizes();
+            }
+
+            function buildSlotItems() {
+                slotTrack.innerHTML = '';
+                slotTrack.style.transition = 'none';
+                slotTrack.style.transform = 'translateY(0)';
+                const avail = getAvail();
+                const sizes = ['sz-2', 'sz-1', 'sz-center', 'sz-1', 'sz-2'];
+                if (!avail.length) {
+                    for (let i = 0; i < 5; i++) {
+                        const d = document.createElement('div');
+                        d.className = 'slot-item ' + sizes[i];
+                        d.textContent = i === CENTER ? '?' : '';
+                        slotTrack.appendChild(d);
+                    }
+                    return;
+                }
+                for (let i = 0; i < 5; i++) {
+                    const c = avail[Math.floor(Math.random() * avail.length)];
+                    const d = document.createElement('div');
+                    d.className = 'slot-item ' + sizes[i];
+                    d.textContent = c.name;
+                    slotTrack.appendChild(d);
+                }
+            }
+
+            // QUAY SỐ
+            let spinTimer = null;
+            const spinDuration = 20000; // 20s nếu không bấm dừng
+            let currentWinner = null;
+
+            function startSpin() {
+                if (isSpinning || !selectedPrizeId) return;
+                const avail = getAvail();
+                if (!avail.length) {
+                    showToast('Không còn khách hàng!', 'error');
+                    return;
+                }
+                isSpinning = true;
+                slotMachine.classList.add('spinning');
+                slotMachine.classList.remove('won');
+                machinePrize.innerHTML = `🎁 ${prizes.find(p=>p.id===selectedPrizeId).name}`;
+
+                const loops = 15;
+                slotTrack.innerHTML = '';
+                // Thêm margin trên
+                for (let i = 0; i < MARGIN; i++) {
+                    const d = document.createElement('div'); d.className = 'slot-item sz-spin'; d.textContent = ''; slotTrack.appendChild(d);
+                }
+                // Các vòng quay
+                for (let l = 0; l < loops; l++) {
+                    const shuffled = [...avail].sort(() => Math.random() - 0.5);
+                    shuffled.forEach(c => {
+                        const d = document.createElement('div'); d.className = 'slot-item sz-spin'; d.textContent = c.name; slotTrack.appendChild(d);
+                    });
+                }
+                // Thêm padding dưới
+                for (let i = 0; i < MARGIN; i++) {
+                    const d = document.createElement('div'); d.className = 'slot-item sz-spin'; d.textContent = avail[Math.floor(Math.random()*avail.length)].name; slotTrack.appendChild(d);
+                }
+
+                const totalItems = slotTrack.children.length;
+                const targetY = -(totalItems - CENTER - 3) * ITEM_H;
+                slotTrack.style.transition = 'none';
+                slotTrack.style.transform = 'translateY(0)';
+                void slotTrack.offsetHeight;
+                slotTrack.style.transition = `transform ${spinDuration}ms linear`;
+                slotTrack.style.transform = `translateY(${targetY}px)`;
+
+                spinTimer = setTimeout(() => {
+                    if (isSpinning) stopSpin(true);
+                }, spinDuration);
+            }
+
+            function stopSpin(automatic = false) {
+                if (!isSpinning) return;
+                clearTimeout(spinTimer);
+                const avail = getAvail();
+                currentWinner = avail[Math.floor(Math.random() * avail.length)];
+                const prize = prizes.find(p => p.id === selectedPrizeId);
+
+                // Lấy vị trí hiện tại của track
+                const style = getComputedStyle(slotTrack);
+                const matrix = new DOMMatrixReadOnly(style.transform);
+                let currentY = matrix.m42; // giá trị âm (px)
+
+                // Dừng transition đang chạy
+                slotTrack.style.transition = 'none';
+                slotTrack.style.transform = `translateY(${currentY}px)`;
+
+                // Tính index hiện tại (làm tròn để chính xác)
+                const currentIndex = Math.round(-currentY / ITEM_H);
+                const items = slotTrack.querySelectorAll('.slot-item');
+                let targetIndex = -1;
+
+                // Tìm item winner gần nhất phía sau (hoặc tại) currentIndex
+                for (let i = currentIndex; i < items.length; i++) {
+                    if (items[i].textContent === currentWinner.name) {
+                        targetIndex = i;
+                        break;
+                    }
+                }
+                // Nếu không tìm thấy (hiếm), lấy một item phía trước
+                if (targetIndex === -1) {
+                    targetIndex = currentIndex + 5;
+                    if (targetIndex >= items.length) targetIndex = items.length - 1;
+                }
+
+                // Tính offset để item đó vào giữa
+                const finalY = -(targetIndex - CENTER) * ITEM_H;
+
+                void slotTrack.offsetHeight;
+                slotTrack.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                slotTrack.style.transform = `translateY(${finalY}px)`;
+
+                setTimeout(() => {
+                    slotMachine.classList.remove('spinning');
+                    slotMachine.classList.add('won');
+                    highlightCustomerScroll(currentWinner.id);
+                    wonCustomerIds.add(currentWinner.id);
+                    prize.remaining--;
+                    if (prize.remaining <= 0) wonPrizeIds.add(prize.id);
+                    results.unshift({ customer: currentWinner.name, prize: prize.name });
+                    renderResults();
+                    renderPrizes();
+                    selectedPrizeId = null;
+                    const next = prizes.find(p => p.remaining > 0);
+                    if (next) {
+                        selectedPrizeId = next.id;
+                        renderPrizes();
+                    }
+                    updateCounts();
+                    isSpinning = false;
+                    launchConfetti();
+                    showToast(`${currentWinner.name} trúng ${prize.name}!`, 'success');
+                    buildSlotItems();
+                }, 650);
+            }
+
+            // Sự kiện click vào viewport
+            slotViewport.addEventListener('click', () => {
+                if (!selectedPrizeId) {
+                    showToast('Vui lòng chọn một giải thưởng trước!', 'error');
+                    return;
+                }
+                if (!isSpinning) {
+                    startSpin();
+                } else {
+                    stopSpin();
+                }
+            });
+
+            function renderResults() {
+                if (!results.length) { resultsList.innerHTML = ''; return; }
+                resultsList.innerHTML = '';
+                results.forEach((r, i) => {
+                    const d = document.createElement('div');
+                    d.className = 'result-card';
+                    d.innerHTML = `<span class="r-order">${results.length - i}</span><span class="r-text">${r.customer} <span class="r-prize-inline">- ${r.prize}</span></span>`;
+                    resultsList.appendChild(d);
+                });
+            }
+
+            window.clearResults = function() {
+                results = [];
+                wonCustomerIds.clear();
+                wonPrizeIds.clear();
+                prizes.forEach(p => p.remaining = p.total);
+                selectedPrizeId = null;
+                machinePrize.innerHTML = '';
+                slotMachine.classList.remove('won');
+                renderPrizes();
+                renderResults();
+                updateCounts();
+                buildCustomerScroll();
+                buildSlotItems();
+                showToast('Đã xoá tất cả kết quả', 'success');
+            };
+
+            // Confetti
+            const cCanvas = document.getElementById('confettiCanvas'),
+                cCtx = cCanvas.getContext('2d');
+            let cParts = [],
+                cRunning = false;
+            function resizeC() { cCanvas.width = innerWidth; cCanvas.height = innerHeight; }
+            addEventListener('resize', resizeC);
+            resizeC();
+            function launchConfetti() {
+                cParts = [];
+                const colors = ['#f5d870', '#ffe066', '#3b82f6', '#3dd68c', '#ff6b35', '#fff', '#d4a843'];
+                for (let i = 0; i < 200; i++) cParts.push({
+                    x: Math.random() * cCanvas.width,
+                    y: -20 - Math.random() * 200,
+                    w: 4 + Math.random() * 7,
+                    h: 3 + Math.random() * 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: 2.5 + Math.random() * 3.5,
+                    rot: Math.random() * 360,
+                    rotS: (Math.random() - 0.5) * 11,
+                    opacity: 1,
+                    shape: Math.random() > 0.5 ? 'rect' : 'circle'
+                });
+                if (!cRunning) { cRunning = true; animC(); }
+            }
+            function animC() {
+                cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height);
+                let alive = false;
+                cParts.forEach(p => {
+                    if (p.opacity <= 0) return;
+                    alive = true;
+                    p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.vx *= 0.99; p.rot += p.rotS;
+                    if (p.y > cCanvas.height - 50) p.opacity -= 0.02;
+                    cCtx.save(); cCtx.globalAlpha = Math.max(0, p.opacity);
+                    cCtx.translate(p.x, p.y); cCtx.rotate(p.rot * Math.PI / 180);
+                    cCtx.fillStyle = p.color;
+                    if (p.shape === 'rect') cCtx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+                    else { cCtx.beginPath(); cCtx.arc(0, 0, Math.max(1, p.w/2), 0, 2*Math.PI); cCtx.fill(); }
+                    cCtx.restore();
+                });
+                if (alive) requestAnimationFrame(animC);
+                else { cRunning = false; cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height); }
+            }
+
+            function showToast(msg, type = 'success') {
+                const c = document.getElementById('toastContainer'), t = document.createElement('div');
+                t.className = 'toast ' + type;
+                t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
+                c.appendChild(t);
+                setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(30px)'; t.style.transition = '0.3s'; setTimeout(() => t.remove(), 300); }, 2800);
+            }
+
+            // Modal functions
+            window.openPasswordModal = () => {
+                document.getElementById('modalPassword').classList.add('active');
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordError').textContent = '';
+                setTimeout(() => document.getElementById('passwordInput').focus(), 150);
+            };
+            window.closePasswordModal = () => document.getElementById('modalPassword').classList.remove('active');
+            window.checkPassword = () => {
+                const inp = document.getElementById('passwordInput'), err = document.getElementById('passwordError');
+                if (inp.value === SETTINGS_PASSWORD) { closePasswordModal(); openSettings('general'); }
+                else {
+                    err.textContent = 'Sai mật khẩu!';
+                    inp.style.borderColor = 'var(--danger)'; inp.classList.add('shake');
+                    setTimeout(() => { inp.style.borderColor = ''; inp.classList.remove('shake'); }, 500);
+                }
+            };
+            window.closeModal = () => document.getElementById('modalSettings').classList.remove('active');
+            window.switchTab = (tab, btn) => {
+                document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById({general:'tabGeneral', prizes:'tabPrizes', customers:'tabCustomers'}[tab]).classList.add('active');
+            };
+            window.updateTitle = () => mainTitle.textContent = document.getElementById('sTitleInput').value.trim() || 'CHƯƠNG TRÌNH QUAY SỐ';
+            window.updateSubTitle = () => machineTitle.textContent = document.getElementById('sSubTitleInput').value.trim() || 'QUAY SỐ MAY MẮN';
+            window.addPrizeFromSettings = () => {
+                const n = document.getElementById('sPrizeName'), q = document.getElementById('sPrizeQty');
+                const name = n.value.trim(), qty = parseInt(q.value) || 1;
+                if (!name) return;
+                prizes.push({ id: ++idCounter, name, total: qty, remaining: qty });
+                n.value = ''; q.value = '1';
+                renderSettingsPrizes(); renderPrizes(); updateCounts(); buildSlotItems();
+            };
+            window.addCustomerFromSettings = () => {
+                const name = document.getElementById('sCustomerName').value.trim();
+                if (!name) return;
+                customers.push({ id: ++idCounter, name });
+                document.getElementById('sCustomerName').value = '';
+                renderSettingsCustomers(); updateCounts(); buildCustomerScroll(); buildSlotItems();
+            };
+            window.batchCustomersFromSettings = () => {
+                const text = document.getElementById('sCustomerBatch').value.trim();
+                if (!text) return;
+                const names = text.split('\n').map(s => s.trim()).filter(Boolean);
+                names.forEach(n => customers.push({ id: ++idCounter, name: n }));
+                document.getElementById('sCustomerBatch').value = '';
+                renderSettingsCustomers(); updateCounts(); buildCustomerScroll(); buildSlotItems();
+            };
+            window.removePrizeS = (id) => {
+                if (wonPrizeIds.has(id)) return;
+                if (selectedPrizeId === id) selectedPrizeId = null;
+                prizes = prizes.filter(p => p.id !== id);
+                renderSettingsPrizes(); renderPrizes(); updateCounts(); buildSlotItems();
+            };
+            window.removeCustomerS = (id) => {
+                if (wonCustomerIds.has(id)) return;
+                customers = customers.filter(c => c.id !== id);
+                renderSettingsCustomers(); updateCounts(); buildCustomerScroll(); buildSlotItems();
+            };
+
+            function renderSettingsPrizes() {
+                const l = document.getElementById('sPrizeList'); l.innerHTML = '';
+                prizes.forEach(p => {
+                    const d = document.createElement('div'); d.className = 's-item';
+                    d.innerHTML = `<span class="s-name">${p.name}</span><span class="s-qty">x${p.total}</span><button class="s-del" onclick="removePrizeS(${p.id})"><i class="fas fa-trash-alt"></i></button>`;
+                    l.appendChild(d);
+                });
+            }
+            function renderSettingsCustomers() {
+                const l = document.getElementById('sCustomerList'); l.innerHTML = '';
+                customers.forEach(c => {
+                    const d = document.createElement('div'); d.className = 's-item';
+                    d.innerHTML = `<span class="s-name">${c.name}</span><button class="s-del" onclick="removeCustomerS(${c.id})"><i class="fas fa-trash-alt"></i></button>`;
+                    l.appendChild(d);
+                });
+            }
+            function openSettings(tab) {
+                document.getElementById('modalSettings').classList.add('active');
+                const tabs = document.querySelectorAll('.modal-tab');
+                let idx = tab === 'prizes' ? 1 : tab === 'customers' ? 2 : 0;
+                switchTab(['general','prizes','customers'][idx], tabs[idx]);
+                renderSettingsPrizes(); renderSettingsCustomers();
+                document.getElementById('sTitleInput').value = mainTitle.textContent;
+                document.getElementById('sSubTitleInput').value = machineTitle.textContent;
+            }
+
+            document.getElementById('modalPassword').addEventListener('click', e => { if (e.target.id === 'modalPassword') closePasswordModal(); });
+            document.getElementById('modalSettings').addEventListener('click', e => { if (e.target.id === 'modalSettings') closeModal(); });
+
+            // Khởi tạo
+            function initData() {
+                sampleCustomers.forEach(n => customers.push({ id: ++idCounter, name: n }));
+                samplePrizes.forEach(p => prizes.push({ id: ++idCounter, name: p.name, total: p.qty, remaining: p.qty }));
+                renderPrizes(); updateCounts(); buildCustomerScroll(); buildSlotItems();
+            }
+            initData();
+        })();
+    </script>
+</body>
+</html>            height: 100vh;
+            overflow: hidden;
+        }
+
+        .bg-effects {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-effects .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(160px);
+            animation: orbFloat 14s ease-in-out infinite alternate;
+        }
+        .bg-effects .orb:nth-child(1) {
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(245, 216, 112, 0.18), rgba(212, 168, 67, 0.08));
+            top: -200px;
+            right: -150px;
+        }
+        .bg-effects .orb:nth-child(2) {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15), rgba(15, 23, 42, 0.06));
+            bottom: -200px;
+            left: -150px;
+            animation-delay: -4s;
+            animation-duration: 16s;
+        }
+        .bg-effects .orb:nth-child(3) {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(245, 216, 112, 0.1), rgba(30, 64, 175, 0.08));
+            top: 30%;
+            left: 40%;
+            animation-delay: -8s;
+            animation-duration: 20s;
+        }
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(40px, -25px) scale(1.1); }
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(30, 58, 138, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 30%, rgba(245, 216, 112, 0.07) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 90%, rgba(15, 23, 42, 0.12) 0%, transparent 50%),
+                linear-gradient(180deg, #0f1b30 0%, #14233d 30%, #0f1b30 70%, #0b1425 100%);
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 310px 1fr;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+        }
+        .sidebar-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 14px 12px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .sidebar-top h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .gear-btn {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--fg-muted);
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+        }
+
+        .panel-section {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .panel-section+.panel-section {
+            border-top: 1px solid var(--border);
+        }
+        .panel-header {
+            padding: 12px 14px 6px;
+            flex-shrink: 0;
+        }
+        .panel-header h2 {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--gold-light);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .prize-list-wrap {
+            flex-shrink: 0;
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 2px 8px;
+        }
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: default;
+        }
+        .list-item:hover { background: var(--card); }
+        .list-item .item-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--card2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--gold);
+        }
+        .list-item .item-name {
+            flex: 1;
+            font-size: 0.92rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .list-item .item-qty {
+            font-size: 0.75rem;
+            color: var(--gold);
+            background: var(--card2);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .list-item.won { opacity: 0.35; text-decoration: line-through; }
+        .list-item.won .item-num { background: var(--success); color: var(--bg); }
+        .prize-item .item-num {
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold)) !important;
+            color: var(--bg) !important;
+        }
+        .prize-item.selected-prize {
+            background: rgba(212, 168, 67, 0.15) !important;
+            border-left: 3px solid var(--gold);
+        }
+
+        .panel-count {
+            padding: 8px 14px;
+            border-top: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--fg-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+        .panel-count .cnt { color: var(--gold); font-weight: 600; }
+
+        .customer-section {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .customer-scroll-wrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .customer-scroll-wrap::before,
+        .customer-scroll-wrap::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            z-index: 5;
+            pointer-events: none;
+        }
+        .customer-scroll-wrap::before {
+            top: 0;
+            height: 30px;
+            background: linear-gradient(180deg, var(--bg2), transparent);
+        }
+        .customer-scroll-wrap::after {
+            bottom: 0;
+            height: 30px;
+            background: linear-gradient(0deg, var(--bg2), transparent);
+        }
+        .customer-scroll-track { will-change: transform; }
+        .cs-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+        }
+        .cs-item .cs-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--card2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            color: var(--gold);
+        }
+        .cs-item .cs-name {
+            flex: 1;
+            font-size: 0.92rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: rgba(240, 244, 248, 0.75);
+        }
+        .cs-item.winner-flash {
+            background: rgba(212, 168, 67, 0.25) !important;
+        }
+        .cs-item.winner-flash .cs-name { color: var(--gold-light); font-weight: 600; }
+
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 24px 32px 18px;
+            overflow: hidden;
+        }
+
+        .main-title-top {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 16px;
+            letter-spacing: 8px;
+            background: linear-gradient(135deg, var(--accent), var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            flex-shrink: 0;
+            filter: drop-shadow(0 0 30px rgba(245, 216, 112, 0.15));
+        }
+
+        .draw-stage {
+            width: 100%;
+            max-width: 1000px; /* Rộng hơn nhiều */
+            margin: 12px auto 0;
+            flex-shrink: 0;
+        }
+
+        .slot-machine {
+            position: relative;
+            overflow: hidden;
+            border-radius: 32px;
+            background: linear-gradient(180deg, #1e2f4a, #172840, #101e34, #0c182c);
+            border: 2px solid #3a5a8a;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 0 rgba(0, 0, 0, 0.3), 0 4px 0 rgba(0, 0, 0, 0.2), 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 70px rgba(30, 58, 138, 0.2), inset 0 2px 6px rgba(255, 255, 255, 0.05), inset 0 -4px 12px rgba(0, 0, 0, 0.5);
+            transition: border-color 0.5s, box-shadow 0.5s;
+        }
+        .slot-machine::before {
+            content: '';
+            position: absolute;
+            inset: 5px;
+            border-radius: 27px;
+            border: 1px solid rgba(212, 168, 67, 0.08);
+            pointer-events: none;
+            z-index: 5;
+        }
+        .slot-machine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(245, 216, 112, 0.12) 50%, transparent 60%);
+            z-index: 0;
+            pointer-events: none;
+            animation: shine 3s infinite linear;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .slot-machine.spinning::after { opacity: 1; }
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        .slot-machine.spinning {
+            border-color: var(--gold);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 4px 0 rgba(0, 0, 0, 0.2), 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 120px rgba(245, 216, 112, 0.35), inset 0 2px 6px rgba(255, 255, 255, 0.05), inset 0 -4px 12px rgba(0, 0, 0, 0.5);
+        }
+        .slot-machine.won {
+            border-color: var(--accent);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 4px 0 rgba(0, 0, 0, 0.2), 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 130px rgba(255, 224, 102, 0.45), inset 0 2px 6px rgba(255, 255, 255, 0.06), inset 0 -4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .machine-title {
+            text-align: center;
+            padding: 14px 20px 8px;
+            position: relative;
+            z-index: 2;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 6px;
+        }
+
+        .slot-viewport {
+            position: relative;
+            width: calc(100% - 60px);
+            margin: 0 30px;
+            height: 520px; /* Cao hơn nữa */
+            overflow: hidden;
+            border-radius: 24px;
+            background: radial-gradient(ellipse at center, #0e1b30, #080e1e);
+            border: 1px solid rgba(45, 74, 122, 0.25);
+            box-shadow: inset 0 8px 28px rgba(0, 0, 0, 0.8), inset 0 -8px 28px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            z-index: 10; /* Đảm bảo nhận click */
+            transition: box-shadow 0.3s;
+        }
+        .slot-viewport:hover {
+            box-shadow: inset 0 8px 28px rgba(0, 0, 0, 0.8), inset 0 -8px 28px rgba(0, 0, 0, 0.5), 0 0 35px rgba(245, 216, 112, 0.2);
+        }
+        .slot-viewport:active { transform: scale(0.99); }
+
+        .slot-highlight {
+            position: absolute;
+            left: 0;
+            right: 0;
+            z-index: 3;
+            pointer-events: none;
+            top: 50%;
+            transform: translateY(-50%);
+            height: var(--item-h);
+            border-top: 2px solid rgba(245, 216, 112, 0.7);
+            border-bottom: 2px solid rgba(245, 216, 112, 0.7);
+            background: linear-gradient(180deg, rgba(245, 216, 112, 0), rgba(245, 216, 112, 0.12) 25%, rgba(245, 216, 112, 0.22) 50%, rgba(245, 216, 112, 0.12) 75%, rgba(245, 216, 112, 0));
+        }
+        .slot-fade-top,
+        .slot-fade-bottom {
+            position: absolute;
+            left: 0;
+            right: 0;
+            z-index: 4;
+            pointer-events: none;
+        }
+        .slot-fade-top {
+            top: 0;
+            height: 100px;
+            background: linear-gradient(180deg, rgba(8, 14, 30, 0.98), rgba(8, 14, 30, 0.5) 50%, rgba(8, 14, 30, 0));
+        }
+        .slot-fade-bottom {
+            bottom: 0;
+            height: 100px;
+            background: linear-gradient(0deg, rgba(8, 14, 30, 0.98), rgba(8, 14, 30, 0.5) 50%, rgba(8, 14, 30, 0));
+        }
+
+        .slot-track {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            will-change: transform;
+            z-index: 2;
+        }
+        .slot-item {
+            height: var(--item-h);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            white-space: nowrap;
+            padding: 0 24px;
+        }
+        .sz-center {
+            font-size: 3.2rem !important;
+            color: var(--accent) !important;
+            text-shadow: 0 0 40px rgba(245, 216, 112, 0.7), 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+        }
+        .sz-1 { font-size: 1.8rem !important; color: rgba(240, 244, 248, 0.55) !important; }
+        .sz-2 { font-size: 1.3rem !important; color: rgba(240, 244, 248, 0.3) !important; }
+        .sz-spin { font-size: 2rem; color: rgba(240, 244, 248, 0.5); }
+
+        .slot-machine.won .sz-center {
+            animation: winnerGlow 2s ease infinite;
+        }
+        @keyframes winnerGlow {
+            0%, 100% { text-shadow: 0 0 30px rgba(245, 216, 112, 0.5), 0 2px 4px rgba(0, 0, 0, 0.5); }
+            50% { text-shadow: 0 0 70px rgba(255, 224, 102, 0.9), 0 0 90px rgba(245, 216, 112, 0.4), 0 2px 4px rgba(0, 0, 0, 0.5); }
+        }
+
+        .machine-prize {
+            text-align: center;
+            padding: 12px 20px 18px;
+            position: relative;
+            z-index: 2;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gold-light);
+            min-height: 44px;
+        }
+
+        .results-section {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            margin-top: 28px;
+        }
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+        }
+        .results-header h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: var(--gold-light);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .results-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 3px;
+        }
+        .result-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 1.1rem;
+            animation: resultSlide 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .result-card .r-order {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--bg);
+        }
+        .result-card .r-prize-inline { color: var(--gold-light); }
+
+        .confetti-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .toast {
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.84rem;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+            animation: toastIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: none; }
+        }
+
+        /* Modal giữ nguyên */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 900;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 92%;
+            max-width: 500px;
+            max-height: 82vh;
+            display: flex;
+            flex-direction: column;
+            animation: modalIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.92) translateY(16px); }
+            to { opacity: 1; transform: none; }
+        }
+        .modal-top { padding: 18px 20px 0; display: flex; justify-content: space-between; }
+        .modal-close { background: none; border: none; color: var(--fg-muted); font-size: 1rem; cursor: pointer; }
+        .modal-tabs { display: flex; padding: 12px 20px 0; }
+        .modal-tab {
+            flex: 1;
+            padding: 9px;
+            text-align: center;
+            font-size: 0.84rem;
+            color: var(--fg-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            background: none;
+            font-family: inherit;
+        }
+        .modal-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+        .tab-content { display: none; padding: 14px 20px; overflow-y: auto; flex: 1; }
+        .tab-content.active { display: flex; flex-direction: column; gap: 10px; }
+        .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+        .modal-footer button {
+            padding: 8px 24px;
+            border-radius: 7px;
+            border: none;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            color: var(--bg);
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .pwd-input {
+            width: 100%;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            color: var(--fg);
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 4px;
+            font-family: inherit;
+        }
+        .pwd-submit {
+            width: 100%;
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            color: var(--bg);
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+        }
+        .shake { animation: shake 0.4s ease; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-effects"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+    <canvas class="confetti-canvas" id="confettiCanvas"></canvas>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Modal Mật khẩu -->
+    <div class="modal-overlay" id="modalPassword">
+        <div class="modal" style="max-width:380px">
+            <div class="modal-top"><h3>🔒 Xác thực</h3><button class="modal-close" onclick="closePasswordModal()"><i class="fas fa-times"></i></button></div>
+            <div style="padding:20px">
+                <p style="font-size:.85rem;color:var(--fg-muted);margin-bottom:14px;text-align:center">Nhập mật khẩu để truy cập cài đặt</p>
+                <input type="password" class="pwd-input" id="passwordInput" placeholder="••••••••••" onkeydown="if(event.key==='Enter')checkPassword()">
+                <p class="pwd-error" id="passwordError"></p>
+                <button class="pwd-submit" onclick="checkPassword()"><i class="fas fa-unlock"></i> Vào cài đặt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cài đặt -->
+    <div class="modal-overlay" id="modalSettings">
+        <div class="modal">
+            <div class="modal-top"><h3>⚙️ Cài đặt</h3><button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button></div>
+            <div class="modal-tabs">
+                <button class="modal-tab active" onclick="switchTab('general',this)">Chung</button>
+                <button class="modal-tab" onclick="switchTab('prizes',this)">Giải thưởng</button>
+                <button class="modal-tab" onclick="switchTab('customers',this)">Khách hàng</button>
+            </div>
+            <div class="tab-content active" id="tabGeneral">
+                <div class="title-setting"><label>Tiêu đề chương trình</label><input id="sTitleInput" value="CHƯƠNG TRÌNH QUAY SỐ" oninput="updateTitle()"></div>
+                <div class="title-setting"><label>Tiêu đề phụ</label><input id="sSubTitleInput" value="QUAY SỐ MAY MẮN" oninput="updateSubTitle()"></div>
+            </div>
+            <div class="tab-content" id="tabPrizes">
+                <div class="form-row"><input id="sPrizeName" placeholder="Tên giải thưởng..."><input class="qty-input" id="sPrizeQty" value="1" min="1"><button class="add-btn" onclick="addPrizeFromSettings()">+</button></div>
+                <div class="settings-list" id="sPrizeList"></div>
+            </div>
+            <div class="tab-content" id="tabCustomers">
+                <div class="form-row"><input id="sCustomerName" placeholder="Tên khách hàng..."><button class="add-btn" onclick="addCustomerFromSettings()">+</button></div>
+                <textarea id="sCustomerBatch" placeholder="Nhập nhanh, mỗi dòng một tên..."></textarea>
+                <button onclick="batchCustomersFromSettings()">Nhập tất cả</button>
+                <div class="settings-list" id="sCustomerList"></div>
+            </div>
+            <div class="modal-footer"><button onclick="closeModal()">Xong</button></div>
+        </div>
+    </div>
+
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-top"><h1>QUAY SỐ MAY MẮN</h1><button class="gear-btn" onclick="openPasswordModal()"><i class="fas fa-cog"></i></button></div>
+            <div class="panel-section">
+                <div class="panel-header"><h2><i class="fas fa-gift"></i> Giải thưởng</h2></div>
+                <div class="prize-list-wrap" id="prizeListWrap"></div>
+                <div class="panel-count"><span>Tổng: <span class="cnt" id="prizeCount">0</span></span><span>Còn: <span class="cnt" id="prizeRemain">0</span></span></div>
+            </div>
+            <div class="panel-section customer-section">
+                <div class="panel-header"><h2><i class="fas fa-users"></i> Khách hàng</h2></div>
+                <div class="customer-scroll-wrap" id="customerScrollWrap"><div class="customer-scroll-track" id="customerTrack"></div></div>
+                <div class="panel-count"><span>Tổng: <span class="cnt" id="customerCount">0</span></span><span>Còn: <span class="cnt" id="customerRemain">0</span></span></div>
+            </div>
+        </aside>
+        <main class="main-area">
+            <div class="main-title-top" id="mainTitleTop">CHƯƠNG TRÌNH QUAY SỐ</div>
+            <div class="draw-stage">
+                <div class="slot-machine" id="slotMachine">
+                    <div class="machine-title" id="machineTitle">QUAY SỐ MAY MẮN</div>
+                    <div class="slot-viewport" id="slotViewport">
+                        <div class="slot-highlight"></div>
+                        <div class="slot-fade-top"></div>
+                        <div class="slot-fade-bottom"></div>
+                        <div class="slot-track" id="slotTrack"></div>
+                    </div>
+                    <div class="machine-prize" id="machinePrize"></div>
+                </div>
+            </div>
+            <div class="results-section">
+                <div class="results-header"><h3><i class="fas fa-trophy"></i> Kết quả</h3><button onclick="clearResults()"><i class="fas fa-trash-alt"></i> Xoá</button></div>
+                <div class="results-list" id="resultsList"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        (function() {
+            // Dữ liệu
+            let customers = [],
+                prizes = [],
+                results = [];
+            let wonCustomerIds = new Set(),
+                wonPrizeIds = new Set();
+            let selectedPrizeId = null,
+                isSpinning = false,
+                idCounter = 0;
+            const ITEM_H = 90; // Phải khớp với --item-h trong CSS
+            const VISIBLE = 5,
+                CENTER = 2,
+                MARGIN = 3;
+            const CS_ITEM_H = 38;
+            const SETTINGS_PASSWORD = '0969774224';
+
+            const sampleCustomers = [
+                'Nguyễn Minh Anh', 'Trần Đức Anh', 'Lê Thu Hương', 'Phạm Văn Bình',
+                'Hoàng Thị Cẩm', 'Vũ Đình Công', 'Đặng Minh Đức', 'Bùi Thị Hoa',
+                'Ngô Quang Huy', 'Lý Thị Lan', 'Trịnh Văn Mạnh', 'Phan Thị Nga',
+                'Đỗ Quốc Phong', 'Hồ Thị Quỳnh', 'Dương Văn Sơn', 'Vũ Thị Trang',
+                'Lưu Hoàng Long', 'Tạ Minh Khôi', 'Cao Thị Yến', 'Trần Văn Đạt'
+            ];
+            const samplePrizes = [
+                { name: 'iPhone 15 Pro Max', qty: 1 }, { name: 'Samsung Galaxy S24 Ultra', qty: 1 },
+                { name: 'TV OLED 55 inch', qty: 1 }, { name: 'Laptop MacBook Air M3', qty: 1 },
+                { name: 'AirPods Pro 2', qty: 2 }, { name: 'Voucher 5.000.000đ', qty: 2 },
+                { name: 'Voucher 2.000.000đ', qty: 3 }, { name: 'Loa JBL Charge 5', qty: 1 }
+            ];
+
+            // DOM
+            const prizeListWrap = document.getElementById('prizeListWrap');
+            const customerTrack = document.getElementById('customerTrack');
+            const slotTrack = document.getElementById('slotTrack');
+            const slotMachine = document.getElementById('slotMachine');
+            const slotViewport = document.getElementById('slotViewport');
+            const machinePrize = document.getElementById('machinePrize');
+            const resultsList = document.getElementById('resultsList');
+            const mainTitle = document.getElementById('mainTitleTop');
+            const machineTitle = document.getElementById('machineTitle');
+
+            function getAvail() { return customers.filter(c => !wonCustomerIds.has(c.id)); }
+
+            function renderPrizes() {
+                prizeListWrap.innerHTML = '';
+                prizes.forEach((p, i) => {
+                    const won = p.remaining <= 0,
+                        sel = selectedPrizeId === p.id;
+                    const div = document.createElement('div');
+                    div.className = 'list-item prize-item' + (won ? ' won' : '') + (sel ? ' selected-prize' : '');
+                    div.style.cursor = won ? 'default' : 'pointer';
+                    div.innerHTML = `<span class="item-num">${won ? '✓' : i+1}</span><span class="item-name">${p.name}</span><span class="item-qty">x${p.remaining}</span>`;
+                    if (!won) div.onclick = () => selectPrize(p.id);
+                    prizeListWrap.appendChild(div);
+                });
+            }
+
+            function buildCustomerScroll() {
+                customerTrack.getAnimations().forEach(a => a.cancel());
+                customerTrack.innerHTML = '';
+                const avail = getAvail();
+                if (!avail.length) {
+                    customerTrack.innerHTML = '<div class="cs-item" style="opacity:0.4;justify-content:center">Chưa có khách hàng</div>';
+                    return;
+                }
+                for (let r = 0; r < 3; r++) {
+                    avail.forEach((c, i) => {
+                        const d = document.createElement('div');
+                        d.className = 'cs-item';
+                        d.setAttribute('data-cid', c.id);
+                        d.innerHTML = `<span class="cs-num">${i+1}</span><span class="cs-name">${c.name}</span>`;
+                        customerTrack.appendChild(d);
+                    });
+                }
+                const h = avail.length * CS_ITEM_H;
+                customerTrack.animate([
+                    { transform: 'translateY(0)' },
+                    { transform: `translateY(${-h}px)` }
+                ], { duration: avail.length * 1400, iterations: Infinity, easing: 'linear' });
+            }
+
+            function highlightCustomerScroll(winnerId) {
+                customerTrack.getAnimations().forEach(a => a.pause());
+                customerTrack.querySelectorAll(`[data-cid="${winnerId}"]`).forEach(el => el.classList.add('winner-flash'));
+                setTimeout(buildCustomerScroll, 3500);
+            }
+
+            function updateCounts() {
+                document.getElementById('customerCount').textContent = customers.length;
+                document.getElementById('customerRemain').textContent = customers.length - wonCustomerIds.size;
+                const tp = prizes.reduce((s, p) => s + p.total, 0);
+                const rp = prizes.reduce((s, p) => s + p.remaining, 0);
+                document.getElementById('prizeCount').textContent = tp;
+                document.getElementById('prizeRemain').textContent = rp;
+            }
+
+            function selectPrize(id) {
+                if (prizes.find(p => p.id === id).remaining <= 0) return;
+                selectedPrizeId = selectedPrizeId === id ? null : id;
+                renderPrizes();
+            }
+
+            function buildSlotItems() {
+                slotTrack.innerHTML = '';
+                slotTrack.style.transition = 'none';
+                slotTrack.style.transform = 'translateY(0)';
+                const avail = getAvail();
+                const sizes = ['sz-2', 'sz-1', 'sz-center', 'sz-1', 'sz-2'];
+                if (!avail.length) {
+                    for (let i = 0; i < 5; i++) {
+                        const d = document.createElement('div');
+                        d.className = 'slot-item ' + sizes[i];
+                        d.textContent = i === CENTER ? '?' : '';
+                        slotTrack.appendChild(d);
+                    }
+                    return;
+                }
+                for (let i = 0; i < 5; i++) {
+                    const c = avail[Math.floor(Math.random() * avail.length)];
+                    const d = document.createElement('div');
+                    d.className = 'slot-item ' + sizes[i];
+                    d.textContent = c.name;
+                    slotTrack.appendChild(d);
+                }
+            }
+
+            // QUAY SỐ MỚI
+            let spinTimer = null;
+            let spinDuration = 20000; // 20 giây nếu không bấm dừng
+            let currentWinner = null;
+
+            function startSpin() {
+                if (isSpinning || !selectedPrizeId) return;
+                const avail = getAvail();
+                if (!avail.length) {
+                    showToast('Không còn khách hàng!', 'error');
+                    return;
+                }
+                isSpinning = true;
+                slotMachine.classList.add('spinning');
+                slotMachine.classList.remove('won');
+                machinePrize.innerHTML = `🎁 ${prizes.find(p=>p.id===selectedPrizeId).name}`;
+
+                const loops = 15; // nhiều vòng
+                slotTrack.innerHTML = '';
+                for (let i = 0; i < MARGIN; i++) {
+                    const d = document.createElement('div'); d.className = 'slot-item sz-spin'; d.textContent = ''; slotTrack.appendChild(d);
+                }
+                for (let l = 0; l < loops; l++) {
+                    const shuffled = [...avail].sort(() => Math.random() - 0.5);
+                    shuffled.forEach(c => {
+                        const d = document.createElement('div'); d.className = 'slot-item sz-spin'; d.textContent = c.name; slotTrack.appendChild(d);
+                    });
+                }
+                // padding cuối
+                for (let i = 0; i < MARGIN; i++) {
+                    const d = document.createElement('div'); d.className = 'slot-item sz-spin'; d.textContent = avail[Math.floor(Math.random()*avail.length)].name; slotTrack.appendChild(d);
+                }
+
+                const totalItems = slotTrack.children.length;
+                const targetY = -(totalItems - CENTER - 3) * ITEM_H;
+                slotTrack.style.transition = 'none';
+                slotTrack.style.transform = 'translateY(0)';
+                void slotTrack.offsetHeight;
+                slotTrack.style.transition = `transform ${spinDuration}ms linear`;
+                slotTrack.style.transform = `translateY(${targetY}px)`;
+
+                spinStartTime = Date.now();
+                spinTimer = setTimeout(() => {
+                    if (isSpinning) stopSpin(true);
+                }, spinDuration);
+            }
+
+            function stopSpin(automatic = false) {
+                if (!isSpinning) return;
+                clearTimeout(spinTimer);
+                const avail = getAvail();
+                currentWinner = avail[Math.floor(Math.random() * avail.length)];
+                const prize = prizes.find(p => p.id === selectedPrizeId);
+
+                // Lấy vị trí hiện tại
+                const computed = getComputedStyle(slotTrack);
+                const matrix = new DOMMatrixReadOnly(computed.transform);
+                let currentY = matrix.m42;
+                slotTrack.style.transition = 'none';
+                slotTrack.style.transform = `translateY(${currentY}px)`;
+
+                // Tìm instance của winner gần nhất phía trước
+                const items = slotTrack.querySelectorAll('.slot-item');
+                let targetIndex = -1;
+                const currentIdx = Math.floor(-currentY / ITEM_H);
+                for (let i = currentIdx; i < items.length; i++) {
+                    if (items[i].textContent === currentWinner.name) {
+                        targetIndex = i;
+                        break;
+                    }
+                }
+                if (targetIndex === -1) {
+                    targetIndex = currentIdx + 5;
+                }
+                const finalY = -(targetIndex - CENTER) * ITEM_H;
+
+                void slotTrack.offsetHeight;
+                slotTrack.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                slotTrack.style.transform = `translateY(${finalY}px)`;
+
+                setTimeout(() => {
+                    slotMachine.classList.remove('spinning');
+                    slotMachine.classList.add('won');
+                    highlightCustomerScroll(currentWinner.id);
+                    wonCustomerIds.add(currentWinner.id);
+                    prize.remaining--;
+                    if (prize.remaining <= 0) wonPrizeIds.add(prize.id);
+                    results.unshift({ customer: currentWinner.name, prize: prize.name });
+                    renderResults();
+                    renderPrizes();
+                    selectedPrizeId = null;
+                    const next = prizes.find(p => p.remaining > 0);
+                    if (next) {
+                        selectedPrizeId = next.id;
+                        renderPrizes();
+                    }
+                    updateCounts();
+                    isSpinning = false;
+                    launchConfetti();
+                    showToast(`${currentWinner.name} trúng ${prize.name}!`, 'success');
+                    buildSlotItems();
+                }, 650);
+            }
+
+            // Sự kiện click trực tiếp vào viewport
+            slotViewport.addEventListener('click', function(e) {
+                // Đảm bảo không có gì chặn
+                if (!selectedPrizeId) {
+                    showToast('Vui lòng chọn một giải thưởng trước!', 'error');
+                    return;
+                }
+                if (!isSpinning) {
+                    startSpin();
+                } else {
+                    stopSpin();
+                }
+            });
+
+            function renderResults() {
+                if (!results.length) { resultsList.innerHTML = ''; return; }
+                resultsList.innerHTML = '';
+                results.forEach((r, i) => {
+                    const d = document.createElement('div');
+                    d.className = 'result-card';
+                    d.innerHTML = `<span class="r-order">${results.length - i}</span><span class="r-text">${r.customer} <span class="r-prize-inline">- ${r.prize}</span></span>`;
+                    resultsList.appendChild(d);
+                });
+            }
+
+            window.clearResults = function() {
+                results = [];
+                wonCustomerIds.clear();
+                wonPrizeIds.clear();
+                prizes.forEach(p => p.remaining = p.total);
+                selectedPrizeId = null;
+                machinePrize.innerHTML = '';
+                slotMachine.classList.remove('won');
+                renderPrizes();
+                renderResults();
+                updateCounts();
+                buildCustomerScroll();
+                buildSlotItems();
+                showToast('Đã xoá tất cả kết quả', 'success');
+            };
+
+            // Confetti
+            const cCanvas = document.getElementById('confettiCanvas'),
+                cCtx = cCanvas.getContext('2d');
+            let cParts = [],
+                cRunning = false;
+            function resizeC() { cCanvas.width = innerWidth; cCanvas.height = innerHeight; }
+            addEventListener('resize', resizeC);
+            resizeC();
+            function launchConfetti() {
+                cParts = [];
+                const colors = ['#f5d870', '#ffe066', '#3b82f6', '#3dd68c', '#ff6b35', '#fff', '#d4a843'];
+                for (let i = 0; i < 200; i++) cParts.push({
+                    x: Math.random() * cCanvas.width,
+                    y: -20 - Math.random() * 200,
+                    w: 4 + Math.random() * 7,
+                    h: 3 + Math.random() * 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: 2.5 + Math.random() * 3.5,
+                    rot: Math.random() * 360,
+                    rotS: (Math.random() - 0.5) * 11,
+                    opacity: 1,
+                    shape: Math.random() > 0.5 ? 'rect' : 'circle'
+                });
+                if (!cRunning) { cRunning = true; animC(); }
+            }
+            function animC() {
+                cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height);
+                let alive = false;
+                cParts.forEach(p => {
+                    if (p.opacity <= 0) return;
+                    alive = true;
+                    p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.vx *= 0.99; p.rot += p.rotS;
+                    if (p.y > cCanvas.height - 50) p.opacity -= 0.02;
+                    cCtx.save(); cCtx.globalAlpha = Math.max(0, p.opacity);
+                    cCtx.translate(p.x, p.y); cCtx.rotate(p.rot * Math.PI / 180);
+                    cCtx.fillStyle = p.color;
+                    if (p.shape === 'rect') cCtx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+                    else { cCtx.beginPath(); cCtx.arc(0, 0, Math.max(1, p.w/2), 0, 2*Math.PI); cCtx.fill(); }
+                    cCtx.restore();
+                });
+                if (alive) requestAnimationFrame(animC);
+                else { cRunning = false; cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height); }
+            }
+
+            function showToast(msg, type = 'success') {
+                const c = document.getElementById('toastContainer'), t = document.createElement('div');
+                t.className = 'toast ' + type;
+                t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
+                c.appendChild(t);
+                setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(30px)'; t.style.transition = '0.3s'; setTimeout(() => t.remove(), 300); }, 2800);
+            }
+
+            // Modal functions
+            window.openPasswordModal = () => {
+                document.getElementById('modalPassword').classList.add('active');
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordError').textContent = '';
+                setTimeout(() => document.getElementById('passwordInput').focus(), 150);
+            };
+            window.closePasswordModal = () => document.getElementById('modalPassword').classList.remove('active');
+            window.checkPassword = () => {
+                const inp = document.getElementById('passwordInput'), err = document.getElementById('passwordError');
+                if (inp.value === SETTINGS_PASSWORD) { closePasswordModal(); openSettings('general'); }
+                else {
+                    err.textContent = 'Sai mật khẩu!';
+                    inp.style.borderColor = 'var(--danger)'; inp.classList.add('shake');
+                    setTimeout(() => { inp.style.borderColor = ''; inp.classList.remove('shake'); }, 500);
+                }
+            };
+            window.closeModal = () => document.getElementById('modalSettings').classList.remove('active');
+            window.switchTab = (tab, btn) => {
+                document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById({general:'tabGeneral', prizes:'tabPrizes', customers:'tabCustomers'}[tab]).classList.add('active');
+            };
+            window.updateTitle = () => mainTitle.textContent = document.getElementById('sTitleInput').value.trim() || 'CHƯƠNG TRÌNH QUAY SỐ';
+            window.updateSubTitle = () => machineTitle.textContent = document.getElementById('sSubTitleInput').value.trim() || 'QUAY SỐ MAY MẮN';
+            window.addPrizeFromSettings = () => {
+                const n = document.getElementById('sPrizeName'), q = document.getElementById('sPrizeQty');
+                const name = n.value.trim(), qty = parseInt(q.value) || 1;
+                if (!name) return;
+                prizes.push({ id: ++idCounter, name, total: qty, remaining: qty });
+                n.value = ''; q.value = '1';
+                renderSettingsPrizes(); renderPrizes(); updateCounts(); buildSlotItems();
+            };
+            window.addCustomerFromSettings = () => {
+                const name = document.getElementById('sCustomerName').value.trim();
+                if (!name) return;
+                customers.push({ id: ++idCounter, name });
+                document.getElementById('sCustomerName').value = '';
+                renderSettingsCustomers(); updateCounts(); buildCustomerScroll(); buildSlotItems();
+            };
+            window.batchCustomersFromSettings = () => {
+                const text = document.getElementById('sCustomerBatch').value.trim();
+                if (!text) return;
+                const names = text.split('\n').map(s => s.trim()).filter(Boolean);
+                names.forEach(n => customers.push({ id: ++idCounter, name: n }));
+                document.getElementById('sCustomerBatch').value = '';
+                renderSettingsCustomers(); updateCounts(); buildCustomerScroll(); buildSlotItems();
+            };
+            window.removePrizeS = (id) => {
+                if (wonPrizeIds.has(id)) return;
+                if (selectedPrizeId === id) selectedPrizeId = null;
+                prizes = prizes.filter(p => p.id !== id);
+                renderSettingsPrizes(); renderPrizes(); updateCounts(); buildSlotItems();
+            };
+            window.removeCustomerS = (id) => {
+                if (wonCustomerIds.has(id)) return;
+                customers = customers.filter(c => c.id !== id);
+                renderSettingsCustomers(); updateCounts(); buildCustomerScroll(); buildSlotItems();
+            };
+
+            function renderSettingsPrizes() {
+                const l = document.getElementById('sPrizeList'); l.innerHTML = '';
+                prizes.forEach(p => {
+                    const d = document.createElement('div'); d.className = 's-item';
+                    d.innerHTML = `<span class="s-name">${p.name}</span><span class="s-qty">x${p.total}</span><button class="s-del" onclick="removePrizeS(${p.id})"><i class="fas fa-trash-alt"></i></button>`;
+                    l.appendChild(d);
+                });
+            }
+            function renderSettingsCustomers() {
+                const l = document.getElementById('sCustomerList'); l.innerHTML = '';
+                customers.forEach(c => {
+                    const d = document.createElement('div'); d.className = 's-item';
+                    d.innerHTML = `<span class="s-name">${c.name}</span><button class="s-del" onclick="removeCustomerS(${c.id})"><i class="fas fa-trash-alt"></i></button>`;
+                    l.appendChild(d);
+                });
+            }
+            function openSettings(tab) {
+                document.getElementById('modalSettings').classList.add('active');
+                const tabs = document.querySelectorAll('.modal-tab');
+                let idx = tab === 'prizes' ? 1 : tab === 'customers' ? 2 : 0;
+                switchTab(['general','prizes','customers'][idx], tabs[idx]);
+                renderSettingsPrizes(); renderSettingsCustomers();
+                document.getElementById('sTitleInput').value = mainTitle.textContent;
+                document.getElementById('sSubTitleInput').value = machineTitle.textContent;
+            }
+
+            document.getElementById('modalPassword').addEventListener('click', e => { if (e.target.id === 'modalPassword') closePasswordModal(); });
+            document.getElementById('modalSettings').addEventListener('click', e => { if (e.target.id === 'modalSettings') closeModal(); });
+
+            // Khởi tạo
+            function initData() {
+                sampleCustomers.forEach(n => customers.push({ id: ++idCounter, name: n }));
+                samplePrizes.forEach(p => prizes.push({ id: ++idCounter, name: p.name, total: p.qty, remaining: p.qty }));
+                renderPrizes(); updateCounts(); buildCustomerScroll(); buildSlotItems();
+            }
+            initData();
+        })();
+    </script>
+</body>
+</html>

@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Check, Pencil, Settings, Plus,
-  Users, DollarSign, Gift, ChevronDown, ChevronUp, Diamond, Sparkles
+  Users, DollarSign, Gift, ChevronDown, ChevronUp, Diamond, Sparkles, Dices
 } from 'lucide-react';
+import Link from 'next/link';
 import { useInvestmentStore } from '@/lib/investment-store';
 import { CustomerFormModal } from '@/components/investment-app/CustomerFormModal';
 import { SettingsModal } from '@/components/investment-app/SettingsModal';
@@ -81,7 +82,18 @@ export default function InvestmentApp() {
           </div>
           {/* Right: small icon buttons */}
           <div className="flex-1 flex flex-col items-end gap-1 pt-0.5">
-            <SettingsModal />
+            <div className="flex items-center gap-0.5">
+              <Link href="/lucky-draw" title="Quay số may mắn">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="p-0.5 hover:bg-amber-800/10 rounded transition-all"
+                >
+                  <Dices className="w-3.5 h-3.5 text-amber-900/50" />
+                </motion.button>
+              </Link>
+              <SettingsModal />
+            </div>
             <CustomerFormModal />
           </div>
         </div>
