@@ -145,12 +145,15 @@ export function SettingsModal() {
                     Thông tin sự kiện
                   </h3>
                   <div className="space-y-2.5">
-                    <input
-                      value={eventForm.name}
-                      onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })}
-                      placeholder="Tên sự kiện"
-                      className="w-full p-2.5 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
-                    />
+                    <div>
+                      <label className="text-xs font-semibold text-amber-700 mb-1 block">Tiêu đề chương trình</label>
+                      <input
+                        value={eventForm.name}
+                        onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })}
+                        placeholder="Tiêu đề chương trình (hiển thị trên trang quay số)"
+                        className="w-full p-2.5 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                      />
+                    </div>
                     <input
                       value={eventForm.date}
                       onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}

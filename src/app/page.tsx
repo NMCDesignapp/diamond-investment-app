@@ -61,7 +61,7 @@ export default function InvestmentApp() {
     const scroll = () => {
       scrollPos -= speed;
       if (scrollPos <= 0) {
-        scrollPos = el.scrollHeight;
+        scrollPos = el.scrollHeight / 2; // half because we duplicate content
       }
       el.scrollTop = scrollPos;
       animId = requestAnimationFrame(scroll);
@@ -342,11 +342,11 @@ export default function InvestmentApp() {
             <option value="Chưa nhận quà">Chưa nhận</option>
             <option value="Không nhận quà">Không nhận</option>
           </select>
-          {/* Auto-scroll toggle (desktop only) */}
+          {/* Auto-scroll toggle */}
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => setAutoScroll(!autoScroll)}
-            className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all ${
+            className={`flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all ${
               autoScroll
                 ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
                 : 'bg-white/90 border-amber-200 text-slate-400 hover:text-amber-700'
@@ -354,7 +354,7 @@ export default function InvestmentApp() {
             title={autoScroll ? 'Tắt cuộn tự động' : 'Bật cuộn tự động'}
           >
             {autoScroll ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-            <span className="text-xs">{autoScroll ? 'Dừng cuộn' : 'Cuộn tự động'}</span>
+            <span className="text-xs hidden md:inline">{autoScroll ? 'Dừng cuộn' : 'Cuộn tự động'}</span>
           </motion.button>
         </div>
       </div>

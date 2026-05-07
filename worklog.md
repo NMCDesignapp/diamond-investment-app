@@ -55,3 +55,27 @@ Stage Summary:
 - Search/filter fixed at bottom
 - Table headers uppercase, centered, proper sizing
 - Names auto-capitalized, gift icon added, columns merged as requested
+---
+Task ID: 3
+Agent: main
+Task: Redesign lucky-draw page layout, add auto-scroll for both pages, add program title setting
+
+Work Log:
+- Read all current code files: lucky-draw/page.tsx, page.tsx, SettingsModal.tsx, investment-store.ts, globals.css
+- Analyzed uploaded screenshots using VLM
+- Completely rewrote lucky-draw page with proper mobile/desktop layouts
+- Mobile: Wheel on top, customer list in bottom 1/3 of screen
+- Desktop: Much bigger slot machine (110px item height vs 70px), wider columns (280px gift column), bolder text (text-lg for names, text-base for gifts), bigger spin button (text-2xl, px-16 py-4), max-w-5xl container
+- Added continuous bottom-to-top auto-scroll with toggle button on both pages
+- Fixed seamless loop: scrollPos resets to scrollHeight/2 (half because content is duplicated)
+- Mobile auto-scroll toggle now visible on main page (was desktop-only before)
+- Added "Tiêu đề chương trình" labeled input in SettingsModal with description placeholder
+- Both pages have auto-scroll enabled by default with Pause/Play toggle
+- Build successful, both pages render correctly
+
+Stage Summary:
+- Lucky-draw page redesigned with mobile-first layout (wheel top, table bottom 1/3)
+- Desktop version significantly enlarged for projection viewing
+- Auto-scroll with toggle available on both main page and lucky-draw page
+- Program title setting added to Settings modal
+- All changes compile and render correctly
