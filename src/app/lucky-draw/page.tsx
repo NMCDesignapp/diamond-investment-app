@@ -548,41 +548,66 @@ export default function LuckyDrawPage() {
         </div>
       </div>
 
-      {/* === MOBILE LAYOUT === */}
+      {/* === MOBILE LAYOUT - Compact controller view === */}
       <div className="flex-1 min-h-0 flex flex-col md:hidden">
-        {/* Slot machine area - takes remaining space above the table */}
-        <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-3 py-1.5">
-          {/* Mobile: compact prize indicator */}
-          {currentPrize && (
-            <div className="flex items-center justify-center gap-1.5 mb-1.5">
-              <Crown className="w-3.5 h-3.5 text-amber-600" />
-              <span className="text-amber-800 font-bold text-sm">{currentPrize.name}</span>
-              <span className="text-slate-500 text-xs">(còn {currentPrize.remaining})</span>
-            </div>
-          )}
+        {/* Slot machine area - compact for phone control */}
+        <div className="flex-shrink-0 flex flex-col items-center px-3 pt-1.5 pb-1">
+          {/* Prize indicator row with spin button */}
+          <div className="w-full max-w-md flex items-center justify-between mb-1">
+            {currentPrize && (
+              <div className="flex items-center gap-1">
+                <Crown className="w-3 h-3 text-amber-600" />
+                <span className="text-amber-800 font-bold text-xs">{currentPrize.name}</span>
+                <span className="text-slate-400 text-[10px]">({currentPrize.remaining})</span>
+              </div>
+            )}
+            {/* Spin button - inline compact */}
+            <motion.button
+              whileHover={canSpin ? { scale: 1.05 } : {}}
+              whileTap={canSpin ? { scale: 0.95 } : {}}
+              onClick={handleSlotClick}
+              disabled={!canSpin && !isSpinning}
+              className={`px-4 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider shadow-md transition-all ${
+                canSpin ? 'animate-pulse-glow' : ''
+              }`}
+              style={{
+                background: canSpin || isSpinning
+                  ? 'linear-gradient(135deg, #f59e0b, #fbbf24, #f59e0b)'
+                  : '#fef3c7',
+                color: canSpin || isSpinning ? '#78350f' : '#d4a843',
+                border: '2px solid rgba(245, 158, 11, 0.5)',
+                cursor: canSpin || isSpinning ? 'pointer' : 'not-allowed',
+              }}
+            >
+              {isSpinning
+                ? (isStopping ? 'Dừng...' : 'Nhấn dừng!')
+                : (drawItems.length === 0 ? '---' : (!currentPrize || currentPrize.remaining <= 0 ? 'Hết giải' : 'Quay số'))
+              }
+            </motion.button>
+          </div>
 
-          {/* Slot Machine */}
+          {/* Slot Machine - compact */}
           <div
-            className={`relative w-full max-w-md rounded-2xl overflow-hidden shadow-2xl transition-shadow duration-1000 ${
+            className={`relative w-full max-w-md rounded-xl overflow-hidden shadow-xl transition-shadow duration-1000 ${
               canSpin ? 'animate-pulse-shadow' : ''
             }`}
             style={{
               background: 'linear-gradient(180deg, #fffbeb 0%, #fef3c7 50%, #fffbeb 100%)',
-              border: '3px solid #f59e0b',
+              border: '2px solid #f59e0b',
               boxShadow: canSpin
-                ? '0 0 30px rgba(245, 158, 11, 0.35), inset 0 0 30px rgba(245, 158, 11, 0.06)'
-                : '0 0 15px rgba(245, 158, 11, 0.12), inset 0 0 15px rgba(245, 158, 11, 0.03)',
+                ? '0 0 20px rgba(245, 158, 11, 0.3), inset 0 0 20px rgba(245, 158, 11, 0.05)'
+                : '0 0 10px rgba(245, 158, 11, 0.1), inset 0 0 10px rgba(245, 158, 11, 0.02)',
             }}
           >
             {/* Top decoration */}
-            <div className="h-2 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
+            <div className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
 
-            {/* Slot viewport */}
+            {/* Slot viewport - compact 2 items visible */}
             <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 3}px` }}>
               {/* Highlight lines */}
               <div className="absolute inset-0 pointer-events-none z-10">
-                <div className="absolute top-0 left-0 right-0 h-14" style={{ background: 'linear-gradient(to bottom, #fffbeb, transparent)' }} />
-                <div className="absolute bottom-0 left-0 right-0 h-14" style={{ background: 'linear-gradient(to top, #fffbeb, transparent)' }} />
+                <div className="absolute top-0 left-0 right-0 h-10" style={{ background: 'linear-gradient(to bottom, #fffbeb, transparent)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-10" style={{ background: 'linear-gradient(to top, #fffbeb, transparent)' }} />
                 <div
                   className="absolute left-0 right-0"
                   style={{
@@ -593,11 +618,11 @@ export default function LuckyDrawPage() {
                     background: 'rgba(245, 158, 11, 0.08)',
                   }}
                 />
-                <div className="absolute left-2 top-1/2 -translate-y-1/2">
-                  <div className="w-0 h-0" style={{ borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderLeft: '10px solid #f59e0b' }} />
+                <div className="absolute left-1.5 top-1/2 -translate-y-1/2">
+                  <div className="w-0 h-0" style={{ borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '8px solid #f59e0b' }} />
                 </div>
-                <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                  <div className="w-0 h-0" style={{ borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderRight: '10px solid #f59e0b' }} />
+                <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+                  <div className="w-0 h-0" style={{ borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderRight: '8px solid #f59e0b' }} />
                 </div>
               </div>
 
@@ -605,8 +630,8 @@ export default function LuckyDrawPage() {
               <div ref={trackRef} className="absolute left-0 right-0" style={{ top: '0' }}>
                 {!isSpinning && !showResult && (
                   <div style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 3}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <p className="text-slate-400 text-base font-medium">
-                      {drawItems.length === 0 ? 'Không có người tham gia' : 'Nhấn để bắt đầu quay số'}
+                    <p className="text-slate-400 text-sm font-medium">
+                      {drawItems.length === 0 ? 'Không có người tham gia' : 'Nhấn "Quay số" để bắt đầu'}
                     </p>
                   </div>
                 )}
@@ -614,32 +639,8 @@ export default function LuckyDrawPage() {
             </div>
 
             {/* Bottom decoration */}
-            <div className="h-2 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
+            <div className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
           </div>
-
-          {/* Spin button - mobile */}
-          <motion.button
-            whileHover={canSpin ? { scale: 1.05 } : {}}
-            whileTap={canSpin ? { scale: 0.95 } : {}}
-            onClick={handleSlotClick}
-            disabled={!canSpin && !isSpinning}
-            className={`mt-2 px-6 py-2 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg transition-all min-h-[40px] ${
-              canSpin ? 'animate-pulse-glow' : ''
-            }`}
-            style={{
-              background: canSpin || isSpinning
-                ? 'linear-gradient(135deg, #f59e0b, #fbbf24, #f59e0b)'
-                : '#fef3c7',
-              color: canSpin || isSpinning ? '#78350f' : '#d4a843',
-              border: '2px solid rgba(245, 158, 11, 0.5)',
-              cursor: canSpin || isSpinning ? 'pointer' : 'not-allowed',
-            }}
-          >
-            {isSpinning
-              ? (isStopping ? 'Đang dừng...' : 'Nhấn để dừng!')
-              : (drawItems.length === 0 ? 'Không có người chơi' : (!currentPrize || currentPrize.remaining <= 0 ? 'Hết giải thưởng' : 'Bắt đầu quay'))
-            }
-          </motion.button>
         </div>
 
         {/* Winner result overlay - mobile */}
@@ -650,32 +651,32 @@ export default function LuckyDrawPage() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.9 }}
               transition={{ type: 'spring', duration: 0.5 }}
-              className="flex-shrink-0 px-3 pb-1.5"
+              className="flex-shrink-0 px-3 pb-1"
             >
-              <div className="max-w-md mx-auto rounded-xl p-3 text-center bg-white/95 backdrop-blur-sm border-2 border-amber-300 shadow-lg">
-                <p className="text-slate-500 text-[10px] uppercase tracking-wider mb-0.5">Chúc mừng người trúng giải</p>
-                <p className="text-xl font-black text-amber-900">{currentWinner.customerName}</p>
+              <div className="max-w-md mx-auto rounded-xl p-2.5 text-center bg-white/95 backdrop-blur-sm border-2 border-amber-300 shadow-lg">
+                <p className="text-slate-500 text-[9px] uppercase tracking-wider mb-0.5">Chúc mừng người trúng giải</p>
+                <p className="text-lg font-black text-amber-900">{currentWinner.customerName}</p>
                 {drawMode === 'customer' && currentWinner.advisor && (
-                  <p className="text-slate-500 text-xs">TVV: {currentWinner.advisor}</p>
+                  <p className="text-slate-400 text-[10px] italic">TVV {currentWinner.advisor}</p>
                 )}
-                <p className="text-amber-700 font-semibold mt-0.5 text-sm">🏆 {currentWinner.prizeName}</p>
+                <p className="text-amber-700 font-semibold text-xs">🏆 {currentWinner.prizeName}</p>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* === BOTTOM TABLE: 1/3 screen on mobile === */}
-        <div className="flex-shrink-0 border-t-2 border-amber-300 bg-white/95 backdrop-blur-sm" style={{ height: '33vh', minHeight: '120px' }}>
+        {/* === BOTTOM TABLE: ~50% screen on mobile - bigger for control === */}
+        <div className="flex-1 min-h-0 border-t-2 border-amber-300 bg-white/95 backdrop-blur-sm flex flex-col">
           {/* Table header */}
-          <div className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 flex items-center px-3 py-1.5">
+          <div className="flex-shrink-0 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 flex items-center px-3 py-1.5">
             <div className="flex-1 flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5 text-amber-900" />
-              <span className="text-amber-900 font-extrabold text-xs uppercase">Khách Hàng</span>
+              <span className="text-amber-900 font-extrabold text-xs uppercase">DS Tham Dự</span>
               <span className="text-amber-900/60 text-[10px] ml-0.5">({allCustomers.length})</span>
             </div>
-            <div className="flex items-center gap-1 min-w-[100px] justify-end">
-              <Gift className="w-3.5 h-3.5 text-amber-900" />
-              <span className="text-amber-900 font-extrabold text-xs uppercase">Quà Tặng</span>
+            <div className="flex items-center gap-1 min-w-[80px] justify-end">
+              <Gift className="w-3 h-3 text-amber-900" />
+              <span className="text-amber-900 font-extrabold text-[10px] uppercase">Quà</span>
             </div>
             <motion.button
               whileTap={{ scale: 0.9 }}
@@ -687,11 +688,10 @@ export default function LuckyDrawPage() {
             </motion.button>
           </div>
 
-          {/* Scrollable body */}
+          {/* Scrollable body - takes remaining space */}
           <div
             ref={customerTableRef}
-            className="overflow-hidden"
-            style={{ height: 'calc(33vh - 32px)', minHeight: '88px' }}
+            className="flex-1 overflow-hidden"
           >
             {[0, 1].map(dup => (
               <div key={dup}>
@@ -700,14 +700,14 @@ export default function LuckyDrawPage() {
                   return (
                     <div
                       key={`${c.id}-${dup}`}
-                      className={`flex items-center px-3 py-1.5 border-b border-amber-100/60 transition-colors ${
-                        isWon ? 'bg-amber-50/50 opacity-60' : ''
+                      className={`flex items-center px-3 py-1 border-b border-amber-100/60 transition-colors ${
+                        isWon ? 'bg-amber-50/50 opacity-50' : ''
                       }`}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-slate-400 font-mono text-[10px] w-5 flex-shrink-0">{idx + 1}</span>
-                          <span className={`text-sm font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                          <span className={`text-[13px] font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
                             {titleCase(c.name)}{c.investmentFee > 0 && <span className="font-normal text-slate-500"> - {c.investmentFee}tr</span>}
                           </span>
                         </div>
@@ -717,8 +717,8 @@ export default function LuckyDrawPage() {
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center min-w-[100px] justify-end">
-                        <span className={`text-xs font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-rose-700'}`}>
+                      <div className="flex items-center min-w-[80px] justify-end">
+                        <span className={`text-[11px] font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-rose-700'}`}>
                           {c.gift || '—'}
                         </span>
                       </div>
