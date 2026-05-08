@@ -704,11 +704,18 @@ export default function LuckyDrawPage() {
                         isWon ? 'bg-amber-50/50 opacity-60' : ''
                       }`}
                     >
-                      <div className="flex-1 flex items-center gap-1.5 min-w-0">
-                        <span className="text-slate-400 font-mono text-[10px] w-5 flex-shrink-0">{idx + 1}</span>
-                        <span className={`text-sm font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
-                          {titleCase(c.name)}
-                        </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-slate-400 font-mono text-[10px] w-5 flex-shrink-0">{idx + 1}</span>
+                          <span className={`text-sm font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                            {titleCase(c.name)}{c.investmentFee > 0 && <span className="font-normal text-slate-500"> - {c.investmentFee}tr</span>}
+                          </span>
+                        </div>
+                        {c.advisor && (
+                          <div className="pl-[30px]">
+                            <span className={`text-[10px] italic ${isWon ? 'text-slate-300' : 'text-slate-400'}`}>TVV {titleCase(c.advisor)}</span>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center min-w-[100px] justify-end">
                         <span className={`text-xs font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-rose-700'}`}>
@@ -883,13 +890,17 @@ export default function LuckyDrawPage() {
                         isWon ? 'bg-amber-50/50 opacity-60' : ''
                       }`}
                     >
-                      <div className="flex-1 flex items-center gap-3 min-w-0">
-                        <span className="text-slate-400 font-mono text-sm w-8 flex-shrink-0">{idx + 1}</span>
-                        <span className={`text-lg font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
-                          {titleCase(c.name)}
-                        </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3">
+                          <span className="text-slate-400 font-mono text-sm w-8 flex-shrink-0">{idx + 1}</span>
+                          <span className={`text-lg font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                            {titleCase(c.name)}{c.investmentFee > 0 && <span className="font-semibold text-slate-500"> - {c.investmentFee}tr</span>}
+                          </span>
+                        </div>
                         {c.advisor && (
-                          <span className="text-slate-400 text-sm truncate">- {titleCase(c.advisor)}</span>
+                          <div className="pl-[44px]">
+                            <span className={`text-sm italic ${isWon ? 'text-slate-300' : 'text-slate-400'}`}>TVV {titleCase(c.advisor)}</span>
+                          </div>
                         )}
                       </div>
                       <div className="flex items-center gap-2 min-w-[280px] justify-end">
