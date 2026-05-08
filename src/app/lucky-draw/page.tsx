@@ -481,34 +481,34 @@ export default function LuckyDrawPage() {
               {store.eventInfo.name || 'Quay Số May Mắn'}
             </h1>
           </div>
-          <div className="flex items-center gap-1">
-            {/* Auto-scroll toggle */}
+          <div className="flex items-center gap-1.5">
+            {/* Auto-scroll toggle - bigger for mobile */}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setAutoScroll(!autoScroll)}
-              className={`p-1.5 rounded-lg transition-all ${autoScroll ? 'bg-emerald-500/20 text-emerald-700' : 'hover:bg-amber-800/10 text-amber-900/50'}`}
+              className={`p-2 md:p-1.5 rounded-lg transition-all ${autoScroll ? 'bg-emerald-500/20 text-emerald-700' : 'hover:bg-amber-800/10 text-amber-900/50'}`}
               title={autoScroll ? 'Tắt cuộn tự động' : 'Bật cuộn tự động'}
             >
-              {autoScroll ? <Pause className="w-4 h-4 md:w-5 md:h-5" /> : <Play className="w-4 h-4 md:w-5 md:h-5" />}
+              {autoScroll ? <Pause className="w-5 h-5 md:w-5 md:h-5" /> : <Play className="w-5 h-5 md:w-5 md:h-5" />}
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => { setSettingsOpen(true); setSettingsAuthenticated(false); }}
-              className="p-1.5 hover:bg-amber-800/10 rounded-lg transition-all"
+              className="p-2 md:p-1.5 hover:bg-amber-800/10 rounded-lg transition-all"
               title="Cài đặt"
             >
-              <Settings className="w-4 h-4 md:w-5 md:h-5 text-amber-900/70" />
+              <Settings className="w-5 h-5 md:w-5 md:h-5 text-amber-900/70" />
             </motion.button>
           </div>
         </div>
         {/* Draw mode + Prize selector row */}
         <div className="relative px-3 pb-2 md:px-6 md:pb-3 flex items-center gap-2">
-          <div className="flex gap-1 p-1 rounded-lg bg-amber-500/20">
+          <div className="flex gap-1.5 p-1.5 rounded-lg bg-amber-500/20">
             <button
               onClick={() => setDrawMode('customer')}
-              className={`px-2 md:px-4 py-1 md:py-1.5 rounded-md text-[11px] md:text-sm font-bold uppercase transition-all ${
+              className={`px-3 md:px-4 py-2 md:py-1.5 rounded-lg text-sm md:text-sm font-bold uppercase transition-all ${
                 drawMode === 'customer'
                   ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
                   : 'text-amber-800/60 hover:text-amber-800/80'
@@ -518,7 +518,7 @@ export default function LuckyDrawPage() {
             </button>
             <button
               onClick={() => setDrawMode('advisor')}
-              className={`px-2 md:px-4 py-1 md:py-1.5 rounded-md text-[11px] md:text-sm font-bold uppercase transition-all ${
+              className={`px-3 md:px-4 py-2 md:py-1.5 rounded-lg text-sm md:text-sm font-bold uppercase transition-all ${
                 drawMode === 'advisor'
                   ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
                   : 'text-amber-800/60 hover:text-amber-800/80'
@@ -534,7 +534,7 @@ export default function LuckyDrawPage() {
                 <button
                   key={prize.id}
                   onClick={() => { if (!isSpinning) setCurrentPrizeIndex(idx); }}
-                  className={`flex-shrink-0 px-2 md:px-4 py-1 md:py-1.5 rounded-md text-[11px] md:text-sm font-bold transition-all border ${
+                  className={`flex-shrink-0 px-3 md:px-4 py-2 md:py-1.5 rounded-lg text-sm md:text-sm font-bold transition-all border ${
                     idx === currentPrizeIndex
                       ? 'bg-amber-400/30 border-amber-400 text-amber-900'
                       : 'border-amber-300/30 text-amber-800/50 hover:text-amber-800/80'
@@ -561,13 +561,13 @@ export default function LuckyDrawPage() {
                 <span className="text-slate-400 text-[10px]">({currentPrize.remaining})</span>
               </div>
             )}
-            {/* Spin button - inline compact */}
+            {/* Spin button - bigger for easy tapping */}
             <motion.button
               whileHover={canSpin ? { scale: 1.05 } : {}}
               whileTap={canSpin ? { scale: 0.95 } : {}}
               onClick={handleSlotClick}
               disabled={!canSpin && !isSpinning}
-              className={`px-4 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider shadow-md transition-all ${
+              className={`px-5 py-2.5 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg transition-all ${
                 canSpin ? 'animate-pulse-glow' : ''
               }`}
               style={{
@@ -577,11 +577,12 @@ export default function LuckyDrawPage() {
                 color: canSpin || isSpinning ? '#78350f' : '#d4a843',
                 border: '2px solid rgba(245, 158, 11, 0.5)',
                 cursor: canSpin || isSpinning ? 'pointer' : 'not-allowed',
+                minHeight: '44px',
               }}
             >
               {isSpinning
-                ? (isStopping ? 'Dừng...' : 'Nhấn dừng!')
-                : (drawItems.length === 0 ? '---' : (!currentPrize || currentPrize.remaining <= 0 ? 'Hết giải' : 'Quay số'))
+                ? (isStopping ? '⏹ Dừng' : '⏸ Nhấn dừng!')
+                : (drawItems.length === 0 ? '---' : (!currentPrize || currentPrize.remaining <= 0 ? 'Hết giải' : '🎲 Quay số'))
               }
             </motion.button>
           </div>
@@ -667,24 +668,20 @@ export default function LuckyDrawPage() {
 
         {/* === BOTTOM TABLE: ~50% screen on mobile - bigger for control === */}
         <div className="flex-1 min-h-0 border-t-2 border-amber-300 bg-white/95 backdrop-blur-sm flex flex-col">
-          {/* Table header */}
-          <div className="flex-shrink-0 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 flex items-center px-3 py-1.5">
+          {/* Table header - bigger buttons for mobile */}
+          <div className="flex-shrink-0 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 flex items-center px-3 py-2">
             <div className="flex-1 flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-amber-900" />
-              <span className="text-amber-900 font-extrabold text-xs uppercase">DS Tham Dự</span>
-              <span className="text-amber-900/60 text-[10px] ml-0.5">({allCustomers.length})</span>
-            </div>
-            <div className="flex items-center gap-1 min-w-[80px] justify-end">
-              <Gift className="w-3 h-3 text-amber-900" />
-              <span className="text-amber-900 font-extrabold text-[10px] uppercase">Quà</span>
+              <Users className="w-4 h-4 text-amber-900" />
+              <span className="text-amber-900 font-extrabold text-sm uppercase">DS Tham Dự</span>
+              <span className="text-amber-900/60 text-xs ml-0.5">({allCustomers.length})</span>
             </div>
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setAutoScroll(!autoScroll)}
-              className={`ml-2 p-1 rounded-md transition-all ${autoScroll ? 'bg-emerald-500/20 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}
+              className={`ml-2 p-1.5 rounded-md transition-all ${autoScroll ? 'bg-emerald-500/20 text-emerald-700' : 'bg-amber-500/30 text-amber-900/60'}`}
               title={autoScroll ? 'Tắt cuộn' : 'Bật cuộn'}
             >
-              {autoScroll ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+              {autoScroll ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             </motion.button>
           </div>
 
@@ -700,27 +697,32 @@ export default function LuckyDrawPage() {
                   return (
                     <div
                       key={`${c.id}-${dup}`}
-                      className={`flex items-center px-3 py-1 border-b border-amber-100/60 transition-colors ${
+                      className={`flex items-center px-3 py-2 border-b border-amber-100/60 transition-colors ${
                         isWon ? 'bg-amber-50/50 opacity-50' : ''
                       }`}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-slate-400 font-mono text-[10px] w-5 flex-shrink-0">{idx + 1}</span>
-                          <span className={`text-[13px] font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
-                            {titleCase(c.name)}{c.investmentFee > 0 && <span className="font-normal text-slate-500"> - {c.investmentFee}tr</span>}
+                          <span className="text-slate-400 font-mono text-xs w-6 flex-shrink-0">{idx + 1}</span>
+                          <span className={`text-base font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                            {titleCase(c.name)}
                           </span>
                         </div>
                         {c.advisor && (
-                          <div className="pl-[30px]">
-                            <span className={`text-[10px] italic ${isWon ? 'text-slate-300' : 'text-slate-400'}`}>TVV {titleCase(c.advisor)}</span>
+                          <div className="pl-[32px]">
+                            <span className={`text-xs italic ${isWon ? 'text-slate-300' : 'text-slate-400'}`}>TVV {titleCase(c.advisor)}</span>
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center min-w-[80px] justify-end">
-                        <span className={`text-[11px] font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-rose-700'}`}>
+                      <div className="flex flex-col items-end min-w-[100px] gap-0.5">
+                        <span className={`text-sm font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-rose-700'}`}>
                           {c.gift || '—'}
                         </span>
+                        {c.investmentFee > 0 && (
+                          <span className={`text-xs font-semibold ${isWon ? 'text-slate-300' : 'text-emerald-600'}`}>
+                            {c.investmentFee}tr
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
