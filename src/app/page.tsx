@@ -17,6 +17,17 @@ function formatVND(value: number) {
   return new Intl.NumberFormat('vi-VN').format(value) + '₫';
 }
 
+function formatCompactVND(value: number) {
+  if (value >= 1e9) {
+    const b = value / 1e9;
+    return (b % 1 === 0 ? b.toFixed(0) : b.toFixed(1).replace(/\.0$/, '')) + ' tỷ';
+  }
+  if (value >= 1e6) {
+    return new Intl.NumberFormat('vi-VN').format(Math.round(value / 1e6)) + ' tr';
+  }
+  return new Intl.NumberFormat('vi-VN').format(value) + '₫';
+}
+
 function titleCase(str: string) {
   if (!str) return '';
   return str.replace(/\b\w/g, c => c.toUpperCase());
@@ -129,25 +140,29 @@ export default function InvestmentApp() {
       </motion.div>
 
       {/* === STATS === */}
-      <div className="flex-shrink-0 grid grid-cols-3 gap-2 md:gap-3 px-3 md:px-5 pt-3">
+      <div className="flex-shrink-0 grid grid-cols-3 gap-1.5 md:gap-3 px-2 md:px-5 pt-2 md:pt-3">
         {[
           { label: 'Tổng KH', value: stats.totalCustomers, icon: Users, bg: 'bg-amber-50', border: 'border-amber-200', iconBg: 'bg-amber-100', iconColor: 'text-amber-700', valueColor: 'text-amber-900' },
-          { label: 'Tổng phí', value: formatVND(stats.totalFee * 1e6), icon: DollarSign, bg: 'bg-emerald-50', border: 'border-emerald-200', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-700', valueColor: 'text-emerald-900' },
-          { label: 'Tổng quà', value: formatVND(stats.totalGiftValue), icon: Gift, bg: 'bg-rose-50', border: 'border-rose-200', iconBg: 'bg-rose-100', iconColor: 'text-rose-700', valueColor: 'text-rose-900' },
+          { label: 'Tổng phí', value: stats.totalFee * 1e6, icon: DollarSign, bg: 'bg-emerald-50', border: 'border-emerald-200', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-700', valueColor: 'text-emerald-900' },
+          { label: 'Tổng quà', value: stats.totalGiftValue, icon: Gift, bg: 'bg-rose-50', border: 'border-rose-200', iconBg: 'bg-rose-100', iconColor: 'text-rose-700', valueColor: 'text-rose-900' },
         ].map((stat, idx) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.08 * idx }}
-            className={`flex items-center gap-2 rounded-xl border ${stat.border} ${stat.bg} p-2 md:p-3 shadow-sm`}
+            className={`flex items-center gap-1.5 md:gap-2 rounded-xl border ${stat.border} ${stat.bg} p-1.5 md:p-3 shadow-sm overflow-hidden`}
           >
-            <div className={`${stat.iconBg} p-1.5 rounded-lg`}>
-              <stat.icon className={`w-3.5 h-3.5 ${stat.iconColor}`} />
+            <div className={`${stat.iconBg} p-1 md:p-1.5 rounded-lg flex-shrink-0`}>
+              <stat.icon className={`w-3 h-3 md:w-3.5 md:h-3.5 ${stat.iconColor}`} />
             </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{stat.label}</p>
-              <p className={`text-sm md:text-base font-black ${stat.valueColor} leading-tight`}>{stat.value}</p>
+            <div className="min-w-0">
+              <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-wide text-slate-400">{stat.label}</p>
+              <p className={`text-xs md:text-base font-black ${stat.valueColor} leading-tight`}>
+                {/* Mobile: compact format, Desktop: full format */}
+                <span className="md:hidden">{typeof stat.value === 'number' ? formatCompactVND(stat.value) : stat.value}</span>
+                <span className="hidden md:inline">{typeof stat.value === 'number' ? formatVND(stat.value) : stat.value}</span>
+              </p>
             </div>
           </motion.div>
         ))}
