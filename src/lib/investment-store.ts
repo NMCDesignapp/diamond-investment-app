@@ -29,10 +29,18 @@ export interface EventInfo {
   location: string;
 }
 
+export interface DrawPrize {
+  id: string;
+  name: string;
+  quantity: number;
+  order: number;
+}
+
 interface InvestmentStore {
   // Data
   customers: Customer[];
   giftTiers: GiftTier[];
+  drawPrizes: DrawPrize[];
   eventInfo: EventInfo;
   isLoading: boolean;
   searchKeyword: string;
@@ -47,6 +55,7 @@ interface InvestmentStore {
   toggleReceivedStatus: (id: string) => Promise<void>;
   saveEventInfo: (info: Partial<EventInfo>) => Promise<void>;
   saveGiftTiers: (tiers: Omit<GiftTier, 'id' | 'order'>[]) => Promise<void>;
+  saveDrawPrizes: (prizes: { name: string; quantity: number }[]) => Promise<void>;
 
   // Computed
   getFilteredCustomers: () => Customer[];
@@ -57,6 +66,7 @@ interface InvestmentStore {
 export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
   customers: [],
   giftTiers: [],
+  drawPrizes: [],
   eventInfo: { id: 'default', name: 'SỰ KIỆN ĐẦU TƯ 2025', date: '20/03/2025', location: 'TP. Hồ Chí Minh' },
   isLoading: true,
   searchKeyword: '',
@@ -68,19 +78,22 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
   loadAll: async () => {
     set({ isLoading: true });
     try {
-      const [customersRes, tiersRes, eventRes] = await Promise.all([
+      const [customersRes, tiersRes, eventRes, drawPrizesRes] = await Promise.all([
         fetch('/api/customers'),
         fetch('/api/gift-tiers'),
         fetch('/api/event-info'),
+        fetch('/api/draw-prizes'),
       ]);
 
       const customersData = await customersRes.json();
       const tiersData = await tiersRes.json();
       const eventData = await eventRes.json();
+      const drawPrizesData = await drawPrizesRes.json();
 
       if (customersData.success) set({ customers: customersData.customers });
       if (tiersData.success) set({ giftTiers: tiersData.tiers });
       if (eventData.success) set({ eventInfo: eventData.eventInfo });
+      if (drawPrizesData.success) set({ drawPrizes: drawPrizesData.prizes });
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -140,6 +153,18 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
     const data = await res.json();
     if (data.success) {
       set({ giftTiers: data.tiers });
+    }
+  },
+
+  saveDrawPrizes: async (prizes) => {
+    const res = await fetch('/api/draw-prizes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prizes }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      set({ drawPrizes: data.prizes });
     }
   },
 

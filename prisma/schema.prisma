@@ -35,3 +35,10 @@ model GiftTier {
   giftValue Float  @default(500000)
   order     Int    @default(0)
 }
+
+model DrawPrize {
+  id        String @id @default(cuid())
+  name      String @default("Giải nhất")
+  quantity  Int    @default(1)
+  order     Int    @default(0)
+}

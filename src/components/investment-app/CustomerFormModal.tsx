@@ -1,24 +1,29 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Diamond } from 'lucide-react';
+import { Plus, X, Diamond, CheckCircle } from 'lucide-react';
 import { useInvestmentStore, Customer } from '@/lib/investment-store';
+
+const EMPTY_FORM = {
+  name: '',
+  advisor: '',
+  investmentFee: '',
+  gift: '',
+  giftValue: '',
+  status: 'Chưa nhận quà' as const,
+  note: '',
+};
 
 export function CustomerFormModal() {
   const store = useInvestmentStore();
   const [isOpen, setIsOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [form, setForm] = useState({
-    name: '',
-    advisor: '',
-    investmentFee: '',
-    gift: '',
-    giftValue: '',
-    status: 'Chưa nhận quà',
-    note: '',
-  });
+  const [form, setForm] = useState({ ...EMPTY_FORM });
   const [isSaving, setIsSaving] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
+  const [showSavedFeedback, setShowSavedFeedback] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Listen for edit events from the table
   useEffect(() => {
@@ -45,16 +50,14 @@ export function CustomerFormModal() {
           note: editingCustomer.note,
         });
       } else {
-        setForm({
-          name: '',
-          advisor: '',
-          investmentFee: '',
-          gift: '',
-          giftValue: '',
-          status: 'Chưa nhận quà',
-          note: '',
-        });
+        // New mode: keep advisor from last entry for convenience, reset everything else
+        setForm(prev => ({
+          ...EMPTY_FORM,
+          advisor: prev.advisor, // Giữ lại TVV cũ để nhập nhanh
+        }));
       }
+      // Auto-focus vào ô họ tên khi mở form
+      setTimeout(() => nameInputRef.current?.focus(), 100);
     }
   }, [isOpen, editingCustomer]);
 
@@ -69,6 +72,12 @@ export function CustomerFormModal() {
       giftValue: giftInfo.name ? String(giftInfo.value) : '',
     }));
   }, [store]);
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setEditingCustomer(null);
+    setSavedCount(0);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,8 +95,27 @@ export function CustomerFormModal() {
         status: form.status,
         note: form.note,
       });
-      setIsOpen(false);
-      setEditingCustomer(null);
+
+      if (editingCustomer) {
+        // Khi sửa: đóng modal như cũ
+        setIsOpen(false);
+        setEditingCustomer(null);
+      } else {
+        // Khi thêm mới: giữ modal mở, hiện thông báo, reset form cho lần nhập tiếp
+        setSavedCount(prev => prev + 1);
+        setShowSavedFeedback(true);
+        setTimeout(() => setShowSavedFeedback(false), 1500);
+
+        // Reset form nhưng giữ lại TVV cho tiện
+        const lastAdvisor = form.advisor.trim();
+        setForm({
+          ...EMPTY_FORM,
+          advisor: lastAdvisor,
+        });
+
+        // Auto-focus vào ô họ tên cho lần nhập tiếp
+        setTimeout(() => nameInputRef.current?.focus(), 50);
+      }
     } catch (error) {
       console.error('Failed to save:', error);
     } finally {
@@ -117,7 +145,7 @@ export function CustomerFormModal() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setIsOpen(false)}
+            onClick={handleClose}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -129,16 +157,21 @@ export function CustomerFormModal() {
             >
               {/* Modal Header */}
               <div className="relative overflow-hidden bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 p-4 rounded-t-xl">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMjBhMjAgMjAgMCAwIDEgMjAtMjB2NDBhMjAgMjAgMCAwIDEtMjAtMjB6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-30" />
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMjBhMjAgMjAgMCAwIDEgMjAtMjB2NDBhMjAgMjAgMCAwIDEtMjAtMjB6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIi8+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjYSkiLz48L3N2Zz4=')] opacity-30" />
                 <div className="relative flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <Diamond className="w-5 h-5 text-amber-900/70" />
                     <h2 className="text-xl font-bold text-amber-900">
                       {editingCustomer ? 'Sửa khách hàng' : 'Thêm khách hàng'}
                     </h2>
+                    {!editingCustomer && savedCount > 0 && (
+                      <span className="bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                        +{savedCount}
+                      </span>
+                    )}
                   </div>
                   <button
-                    onClick={() => setIsOpen(false)}
+                    onClick={handleClose}
                     className="p-1 hover:bg-black/10 rounded-lg transition-colors"
                   >
                     <X className="w-6 h-6 text-amber-900" />
@@ -146,11 +179,30 @@ export function CustomerFormModal() {
                 </div>
               </div>
 
+              {/* Success feedback banner */}
+              <AnimatePresence>
+                {showSavedFeedback && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex items-center justify-center gap-2 py-2 bg-emerald-50 border-b border-emerald-200">
+                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                      <span className="text-sm font-semibold text-emerald-700">Đã lưu! Nhập khách hàng tiếp theo</span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Form */}
               <form onSubmit={handleSubmit} className="p-5 space-y-4">
                 <div>
                   <label className="text-sm font-bold text-slate-700 mb-1 block">Họ tên *</label>
                   <input
+                    ref={nameInputRef}
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="Nhập họ tên khách hàng"
@@ -193,7 +245,7 @@ export function CustomerFormModal() {
                           : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
                       }`}
                     >
-                      ⏳ Chưa nhận
+                      Chưa nhận
                     </button>
                     <button
                       type="button"
@@ -204,7 +256,7 @@ export function CustomerFormModal() {
                           : 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
                       }`}
                     >
-                      ✗ Không nhận
+                      Không nhận
                     </button>
                   </div>
                 </div>
@@ -245,10 +297,10 @@ export function CustomerFormModal() {
                 <div className="flex gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => setIsOpen(false)}
+                    onClick={handleClose}
                     className="flex-1 bg-slate-100 hover:bg-slate-200 py-2.5 rounded-lg font-semibold transition-colors"
                   >
-                    Hủy
+                    Đóng
                   </button>
                   <motion.button
                     type="submit"
@@ -257,7 +309,7 @@ export function CustomerFormModal() {
                     disabled={isSaving}
                     className="flex-1 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-400 hover:to-amber-600 py-2.5 rounded-lg font-bold text-amber-900 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
                   >
-                    {isSaving ? 'Đang lưu...' : 'Lưu'}
+                    {isSaving ? 'Đang lưu...' : editingCustomer ? 'Lưu' : 'Lưu & Tiếp tục'}
                   </motion.button>
                 </div>
               </form>

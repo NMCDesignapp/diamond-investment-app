@@ -12,6 +12,11 @@ interface TierFormData {
   giftValue: string;
 }
 
+interface DrawPrizeFormData {
+  name: string;
+  quantity: string;
+}
+
 export function SettingsModal() {
   const store = useInvestmentStore();
   const [isOpen, setIsOpen] = useState(false);
@@ -22,6 +27,7 @@ export function SettingsModal() {
     location: '',
   });
   const [tiers, setTiers] = useState<TierFormData[]>([]);
+  const [drawPrizes, setDrawPrizes] = useState<DrawPrizeFormData[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -38,8 +44,14 @@ export function SettingsModal() {
           giftValue: String(t.giftValue),
         }))
       );
+      setDrawPrizes(
+        store.drawPrizes.map(p => ({
+          name: p.name,
+          quantity: String(p.quantity),
+        }))
+      );
     }
-  }, [isOpen, store.eventInfo, store.giftTiers]);
+  }, [isOpen, store.eventInfo, store.giftTiers, store.drawPrizes]);
 
   const handleSaveEventInfo = async () => {
     setIsSaving(true);
@@ -74,6 +86,20 @@ export function SettingsModal() {
     setTiers([...tiers, { minFee: '0', maxFee: '10', giftName: 'Quà mới', giftValue: '500000' }]);
   };
 
+  const addDrawPrize = () => {
+    setDrawPrizes([...drawPrizes, { name: 'Giải mới', quantity: '1' }]);
+  };
+
+  const removeDrawPrize = (idx: number) => {
+    setDrawPrizes(drawPrizes.filter((_, i) => i !== idx));
+  };
+
+  const updateDrawPrize = (idx: number, field: keyof DrawPrizeFormData, value: string) => {
+    const updated = [...drawPrizes];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setDrawPrizes(updated);
+  };
+
   const removeTier = (idx: number) => {
     setTiers(tiers.filter((_, i) => i !== idx));
   };
@@ -88,6 +114,9 @@ export function SettingsModal() {
     // Save everything before closing
     await handleSaveEventInfo();
     await handleSaveTiers();
+    await store.saveDrawPrizes(
+      drawPrizes.map(p => ({ name: p.name, quantity: parseInt(p.quantity) || 1 }))
+    );
     setIsOpen(false);
   };
 
@@ -238,6 +267,63 @@ export function SettingsModal() {
                     className="w-full mt-3 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-400 hover:to-amber-600 py-2.5 rounded-lg font-bold text-amber-900 shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5"
                   >
                     <Plus className="w-4 h-4" /> Thêm mức
+                  </motion.button>
+                </div>
+
+                {/* Draw Prizes (for lucky draw page) */}
+                <div>
+                  <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <span className="w-1.5 h-5 bg-rose-400 rounded-full" />
+                    Quà quay số (trang Quay Số)
+                  </h3>
+                  <p className="text-xs text-slate-400 mb-2">Cài đặt riêng cho trang quay số, không liên quan quà tặng bên trang chính</p>
+                  <div className="space-y-3">
+                    {drawPrizes.length === 0 && (
+                      <p className="text-center text-rose-600 py-4 bg-rose-50 rounded-lg">
+                        Chưa có giải quay số
+                      </p>
+                    )}
+                    {drawPrizes.map((prize, idx) => (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="p-3 border-2 border-rose-200 rounded-xl bg-rose-50/50 space-y-2"
+                      >
+                        <div className="flex gap-2">
+                          <input
+                            placeholder="Tên giải (VD: Giải nhất)"
+                            value={prize.name}
+                            onChange={(e) => updateDrawPrize(idx, 'name', e.target.value)}
+                            className="flex-1 p-2 border-2 border-rose-200 rounded-lg focus:border-rose-400 outline-none transition-all text-sm"
+                          />
+                          <input
+                            type="number"
+                            placeholder="Số lượng"
+                            value={prize.quantity}
+                            onChange={(e) => updateDrawPrize(idx, 'quantity', e.target.value)}
+                            className="w-24 p-2 border-2 border-rose-200 rounded-lg focus:border-rose-400 outline-none transition-all text-sm"
+                          />
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => removeDrawPrize(idx)}
+                            className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold transition-colors shadow-sm"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={addDrawPrize}
+                    className="w-full mt-3 bg-gradient-to-b from-rose-300 to-rose-500 hover:from-rose-400 hover:to-rose-600 py-2.5 rounded-lg font-bold text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" /> Thêm giải
                   </motion.button>
                 </div>
 

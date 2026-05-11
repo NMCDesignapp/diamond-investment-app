@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Settings, X, Trophy, Users, Gift, Crown, Star, Dices, Diamond,
@@ -136,10 +136,7 @@ class ConfettiSystem {
   };
 }
 
-function getPrizeIcon(index: number) {
-  const icons = [<Crown key="crown" />, <Star key="star" />, <Trophy key="trophy" />, <Gift key="gift" />, <Dices key="dices" />];
-  return icons[index % icons.length];
-}
+const PRIZE_ICONS = [Crown, Star, Trophy, Gift, Dices];
 
 type DrawMode = 'customer' | 'advisor';
 
@@ -154,7 +151,9 @@ const SLOT_ITEM_HEIGHT_DESKTOP = 110;
 
 export default function LuckyDrawPage() {
   const store = useInvestmentStore();
-  const trackRef = useRef<HTMLDivElement>(null);
+  // Separate refs for mobile and desktop tracks to avoid conflict
+  const mobileTrackRef = useRef<HTMLDivElement>(null);
+  const desktopTrackRef = useRef<HTMLDivElement>(null);
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null);
   const confettiRef = useRef<ConfettiSystem | null>(null);
   const customerTableRef = useRef<HTMLDivElement>(null);
@@ -179,22 +178,26 @@ export default function LuckyDrawPage() {
   const [newPrizeQty, setNewPrizeQty] = useState('1');
 
   // Auto scroll
-  const [autoScroll, setAutoScroll] = useState(true);
+  const [autoScroll, setAutoScroll] = useState(false);
 
   // Track whether prizes have been initialized from store
   const [localPrizeOverrides, setLocalPrizeOverrides] = useState<Prize[] | null>(null);
 
-  // Derive prizes from store gift tiers, with optional local overrides
-  const prizes: Prize[] = localPrizeOverrides ?? store.giftTiers.map((tier) => ({
-    id: tier.id,
-    name: tier.giftName,
-    quantity: 1,
-    remaining: 1,
-  }));
+  // Derive prizes from store drawPrizes (separate from gift tiers), with optional local overrides
+  const prizes: Prize[] = localPrizeOverrides ?? (Array.isArray(store.drawPrizes) ? store.drawPrizes.map((dp) => ({
+    id: dp.id,
+    name: dp.name,
+    quantity: dp.quantity,
+    remaining: dp.quantity,
+  })) : []);
 
-  // Load data
+  // Load data + auto-sync
   useEffect(() => {
     store.loadAll();
+    const interval = setInterval(() => {
+      store.loadAll();
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   // Confetti canvas setup
@@ -207,14 +210,30 @@ export default function LuckyDrawPage() {
     };
   }, []);
 
+  // Deduplicate customers by id (safety net for any duplicate data)
+  const allCustomers = (() => {
+    const seen = new Set<string>();
+    return (Array.isArray(store.customers) ? store.customers : []).filter(c => {
+      if (seen.has(c.id)) return false;
+      seen.add(c.id);
+      return true;
+    });
+  })();
+
   // Available customers (not won yet)
-  const availableCustomers = store.customers.filter(c => !wonCustomerIds.has(c.id));
+  const availableCustomers = allCustomers.filter(c => !wonCustomerIds.has(c.id));
   const availableAdvisors = [...new Set(availableCustomers.map(c => c.advisor).filter(Boolean))];
   const drawItems = drawMode === 'customer'
     ? availableCustomers.map(c => ({ id: c.id, name: c.name, advisor: c.advisor }))
     : availableAdvisors.map(a => ({ id: a, name: a, advisor: a }));
   const currentPrize = prizes[currentPrizeIndex] || null;
   const canSpin = !isSpinning && drawItems.length > 0 && currentPrize && currentPrize.remaining > 0;
+
+  // Helper: get the correct track ref based on viewport
+  const getTrackRef = useCallback(() => {
+    if (typeof window === 'undefined') return null;
+    return window.innerWidth >= 768 ? desktopTrackRef.current : mobileTrackRef.current;
+  }, []);
 
   // Auto-scroll for customer table (bottom to top)
   useEffect(() => {
@@ -227,14 +246,14 @@ export default function LuckyDrawPage() {
     const scroll = () => {
       scrollPos -= speed;
       if (scrollPos <= 0) {
-        scrollPos = el.scrollHeight / 2; // half because we duplicate content
+        scrollPos = el.scrollHeight / 2;
       }
       el.scrollTop = scrollPos;
       animId = requestAnimationFrame(scroll);
     };
     animId = requestAnimationFrame(scroll);
     return () => cancelAnimationFrame(animId);
-  }, [autoScroll, store.customers, wonCustomerIds]);
+  }, [autoScroll, allCustomers, wonCustomerIds]);
 
   // Reset scroll position when auto-scroll is turned off
   useEffect(() => {
@@ -244,7 +263,7 @@ export default function LuckyDrawPage() {
   }, [autoScroll]);
 
   // Build track for slot machine
-  const buildTrack = () => {
+  const buildTrack = useCallback(() => {
     const items = drawItems.map(item => item.name);
     if (items.length === 0) return [];
     const track: string[] = [];
@@ -253,56 +272,68 @@ export default function LuckyDrawPage() {
       track.push(...shuffled);
     }
     return track;
-  };
+  }, [drawItems]);
 
   // Start spinning
-  const startSpin = () => {
+  const startSpin = useCallback(() => {
     if (isSpinning || drawItems.length === 0 || !currentPrize || currentPrize.remaining <= 0) return;
+
+    const trackEl = getTrackRef();
+    if (!trackEl) return;
+
+    // Set state first - this will cause React to hide the placeholder
     setIsSpinning(true);
     setIsStopping(false);
     setShowResult(false);
     setCurrentWinner(null);
 
     const track = buildTrack();
-    if (!trackRef.current || track.length === 0) return;
+    if (track.length === 0) return;
 
     const isDesktop = window.innerWidth >= 768;
     const itemH = isDesktop ? SLOT_ITEM_HEIGHT_DESKTOP : SLOT_ITEM_HEIGHT_MOBILE;
 
-    // Render track items
-    trackRef.current.innerHTML = '';
-    for (const name of track) {
-      const div = document.createElement('div');
-      div.className = 'slot-item';
-      div.textContent = name;
-      div.style.cssText = `
-        height: ${itemH}px; display: flex; align-items: center; justify-content: center;
-        font-size: ${isDesktop ? '42px' : '24px'}; font-weight: 800; color: #78350f; white-space: nowrap;
-        padding: 0 ${isDesktop ? '50px' : '20px'}; text-align: center; letter-spacing: 0.05em;
-      `;
-      trackRef.current.appendChild(div);
-    }
+    // Use requestAnimationFrame to ensure React has finished its render cycle
+    // before we manipulate the DOM manually
+    requestAnimationFrame(() => {
+      if (!trackEl) return;
 
-    // Animate - fast scroll
-    const totalHeight = track.length * itemH;
-    const scrollDistance = totalHeight * 0.7;
-    trackRef.current.style.transition = 'none';
-    trackRef.current.style.transform = 'translateY(0)';
-    void trackRef.current.offsetHeight;
-    trackRef.current.style.transition = 'transform 20s linear';
-    trackRef.current.style.transform = `translateY(-${scrollDistance}px)`;
-  };
+      // Clear the track and add items (track div has NO React children, so safe)
+      trackEl.innerHTML = '';
+      for (const name of track) {
+        const div = document.createElement('div');
+        div.className = 'slot-item';
+        div.textContent = name;
+        div.style.cssText = `
+          height: ${itemH}px; display: flex; align-items: center; justify-content: center;
+          font-size: ${isDesktop ? '42px' : '24px'}; font-weight: 800; color: #78350f; white-space: nowrap;
+          padding: 0 ${isDesktop ? '50px' : '20px'}; text-align: center; letter-spacing: 0.05em;
+        `;
+        trackEl.appendChild(div);
+      }
+
+      // Animate - fast scroll
+      const totalHeight = track.length * itemH;
+      const scrollDistance = totalHeight * 0.7;
+      trackEl.style.transition = 'none';
+      trackEl.style.transform = 'translateY(0)';
+      void trackEl.offsetHeight;
+      trackEl.style.transition = 'transform 20s linear';
+      trackEl.style.transform = `translateY(-${scrollDistance}px)`;
+    });
+  }, [isSpinning, drawItems, currentPrize, buildTrack, getTrackRef]);
 
   // Stop spinning
-  const stopSpin = () => {
+  const stopSpin = useCallback(() => {
     if (!isSpinning || isStopping) return;
     setIsStopping(true);
 
-    const isDesktop = window.innerWidth >= 768;
+    const trackEl = getTrackRef();
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
     const itemH = isDesktop ? SLOT_ITEM_HEIGHT_DESKTOP : SLOT_ITEM_HEIGHT_MOBILE;
 
     const winnerItem = drawItems[Math.floor(Math.random() * drawItems.length)];
-    const customer = store.customers.find(c =>
+    const customer = allCustomers.find(c =>
       drawMode === 'customer' ? c.id === winnerItem.id : c.advisor === winnerItem.id
     );
 
@@ -313,8 +344,8 @@ export default function LuckyDrawPage() {
       prizeName: currentPrize?.name || 'Giải thưởng',
     };
 
-    if (trackRef.current) {
-      const items = trackRef.current.querySelectorAll('.slot-item');
+    if (trackEl) {
+      const items = trackEl.querySelectorAll('.slot-item');
       const totalItems = items.length;
       let targetIdx = -1;
       for (let i = totalItems - 1; i >= Math.floor(totalItems * 0.3); i--) {
@@ -334,12 +365,12 @@ export default function LuckyDrawPage() {
       if (targetIdx !== -1) {
         const centerOffset = targetIdx - 2;
         const targetY = centerOffset * itemH;
-        const currentTransform = trackRef.current.style.transform;
-        trackRef.current.style.transition = 'none';
-        trackRef.current.style.transform = currentTransform;
-        void trackRef.current.offsetHeight;
-        trackRef.current.style.transition = 'transform 3s cubic-bezier(0.1, 0.7, 0.1, 1)';
-        trackRef.current.style.transform = `translateY(-${targetY}px)`;
+        const currentTransform = trackEl.style.transform;
+        trackEl.style.transition = 'none';
+        trackEl.style.transform = currentTransform;
+        void trackEl.offsetHeight;
+        trackEl.style.transition = 'transform 3s cubic-bezier(0.1, 0.7, 0.1, 1)';
+        trackEl.style.transform = `translateY(-${targetY}px)`;
       }
     }
 
@@ -353,19 +384,19 @@ export default function LuckyDrawPage() {
       if (drawMode === 'customer') {
         setWonCustomerIds(prev => new Set([...prev, winner.id]));
       } else {
-        const advisorCustomerIds = store.customers
+        const advisorCustomerIds = allCustomers
           .filter(c => c.advisor === winner.id)
           .map(c => c.id);
         setWonCustomerIds(prev => new Set([...prev, ...advisorCustomerIds]));
       }
 
       setLocalPrizeOverrides(prev => {
-        const base = prev ?? store.giftTiers.map((tier) => ({
-          id: tier.id,
-          name: tier.giftName,
-          quantity: 1,
-          remaining: 1,
-        }));
+        const base = prev ?? (Array.isArray(store.drawPrizes) ? store.drawPrizes.map((dp) => ({
+          id: dp.id,
+          name: dp.name,
+          quantity: dp.quantity,
+          remaining: dp.quantity,
+        })) : []);
         return base.map((p, i) =>
           i === currentPrizeIndex ? { ...p, remaining: p.remaining - 1 } : p
         );
@@ -376,15 +407,34 @@ export default function LuckyDrawPage() {
         setTimeout(() => confettiRef.current?.stop(), 5000);
       }
     }, 3500);
-  };
+  }, [isSpinning, isStopping, drawItems, allCustomers, drawMode, currentPrize, currentPrizeIndex, store.drawPrizes, getTrackRef]);
 
-  const handleSlotClick = () => {
-    if (!isSpinning) {
-      startSpin();
-    } else if (!isStopping) {
-      stopSpin();
+  // Handle stop button click
+  const handleStopClick = useCallback(() => {
+    try {
+      if (isSpinning && !isStopping) {
+        stopSpin();
+      }
+    } catch (err) {
+      console.error('Stop error:', err);
+      setIsSpinning(false);
+      setIsStopping(false);
     }
-  };
+  }, [isSpinning, isStopping, stopSpin]);
+
+  // Handle prize button click → select prize AND start spin
+  const handlePrizeSpin = useCallback((prizeIndex: number) => {
+    if (isSpinning) return; // Don't allow switching while spinning
+    const prize = prizes[prizeIndex];
+    if (!prize || prize.remaining <= 0) return;
+    if (drawItems.length === 0) return;
+
+    setCurrentPrizeIndex(prizeIndex);
+    // Use setTimeout to ensure state is updated before starting spin
+    setTimeout(() => {
+      startSpin();
+    }, 50);
+  }, [isSpinning, prizes, drawItems.length, startSpin]);
 
   // Settings handlers
   const handleSettingsAuth = () => {
@@ -412,6 +462,8 @@ export default function LuckyDrawPage() {
   };
 
   const handleSaveSettings = () => {
+    // Save to store (persists to DB)
+    store.saveDrawPrizes(editPrizes.map(p => ({ name: p.name, quantity: p.quantity })));
     setLocalPrizeOverrides(editPrizes.map(p => ({ ...p })));
     setSettingsOpen(false);
     setSettingsAuthenticated(false);
@@ -428,18 +480,15 @@ export default function LuckyDrawPage() {
     setWonCustomerIds(new Set());
     setWinners([]);
     setLocalPrizeOverrides(prev => {
-      const base = prev ?? store.giftTiers.map((tier) => ({
-        id: tier.id,
-        name: tier.giftName,
-        quantity: 1,
-        remaining: 1,
-      }));
+      const base = prev ?? (Array.isArray(store.drawPrizes) ? store.drawPrizes.map((dp) => ({
+        id: dp.id,
+        name: dp.name,
+        quantity: dp.quantity,
+        remaining: dp.quantity,
+      })) : []);
       return base.map(p => ({ ...p, remaining: p.quantity }));
     });
   };
-
-  // Customer rows for the scrolling table
-  const allCustomers = store.customers;
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/40">
@@ -478,114 +527,166 @@ export default function LuckyDrawPage() {
               <Diamond className="w-4 h-4 md:w-6 md:h-6 text-amber-900/60" />
             </motion.div>
             <h1 className="text-sm md:text-2xl font-black uppercase tracking-wider text-amber-900">
-              {store.eventInfo.name || 'Quay Số May Mắn'}
+              Quay Số May Mắn
             </h1>
           </div>
-          <div className="flex items-center gap-1.5">
-            {/* Auto-scroll toggle - bigger for mobile */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setAutoScroll(!autoScroll)}
-              className={`p-2 md:p-1.5 rounded-lg transition-all ${autoScroll ? 'bg-emerald-500/20 text-emerald-700' : 'hover:bg-amber-800/10 text-amber-900/50'}`}
-              title={autoScroll ? 'Tắt cuộn tự động' : 'Bật cuộn tự động'}
-            >
-              {autoScroll ? <Pause className="w-5 h-5 md:w-5 md:h-5" /> : <Play className="w-5 h-5 md:w-5 md:h-5" />}
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => { setSettingsOpen(true); setSettingsAuthenticated(false); }}
-              className="p-2 md:p-1.5 hover:bg-amber-800/10 rounded-lg transition-all"
-              title="Cài đặt"
-            >
-              <Settings className="w-5 h-5 md:w-5 md:h-5 text-amber-900/70" />
-            </motion.button>
-          </div>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => { setSettingsOpen(true); setSettingsAuthenticated(false); }}
+            className="p-2 md:p-1.5 hover:bg-amber-800/10 rounded-lg transition-all"
+            title="Cài đặt"
+          >
+            <Settings className="w-5 h-5 md:w-5 md:h-5 text-amber-900/70" />
+          </motion.button>
         </div>
-        {/* Draw mode + Prize selector row */}
-        <div className="relative px-3 pb-2 md:px-6 md:pb-3 flex items-center gap-2">
-          <div className="flex gap-1.5 p-1.5 rounded-lg bg-amber-500/20">
-            <button
-              onClick={() => setDrawMode('customer')}
-              className={`px-3 md:px-4 py-2 md:py-1.5 rounded-lg text-sm md:text-sm font-bold uppercase transition-all ${
-                drawMode === 'customer'
-                  ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
-                  : 'text-amber-800/60 hover:text-amber-800/80'
-              }`}
-            >
-              Khách hàng
-            </button>
-            <button
-              onClick={() => setDrawMode('advisor')}
-              className={`px-3 md:px-4 py-2 md:py-1.5 rounded-lg text-sm md:text-sm font-bold uppercase transition-all ${
-                drawMode === 'advisor'
-                  ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
-                  : 'text-amber-800/60 hover:text-amber-800/80'
-              }`}
-            >
-              TVV
-            </button>
-          </div>
-          {/* Prize selector */}
-          {prizes.length > 0 && (
-            <div className="flex-1 flex items-center gap-1 md:gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-              {prizes.map((prize, idx) => (
+
+        {/* === PRIZE SPIN BUTTONS + DRAW MODE TOGGLE === */}
+        <div className="relative px-2 pb-2 md:px-6 md:pb-3">
+          {/* MOBILE: Draw mode toggle + Prize spin buttons */}
+          <div className="md:hidden flex flex-col gap-1.5">
+            {/* Draw mode toggle - compact */}
+            <div className="flex items-center gap-1.5">
+              <div className="flex gap-1 p-0.5 rounded-lg bg-amber-500/20">
                 <button
-                  key={prize.id}
-                  onClick={() => { if (!isSpinning) setCurrentPrizeIndex(idx); }}
-                  className={`flex-shrink-0 px-3 md:px-4 py-2 md:py-1.5 rounded-lg text-sm md:text-sm font-bold transition-all border ${
-                    idx === currentPrizeIndex
-                      ? 'bg-amber-400/30 border-amber-400 text-amber-900'
-                      : 'border-amber-300/30 text-amber-800/50 hover:text-amber-800/80'
+                  onClick={() => setDrawMode('customer')}
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${
+                    drawMode === 'customer'
+                      ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-sm'
+                      : 'text-amber-800/60'
                   }`}
                 >
-                  {prize.name} <span className="text-[9px] md:text-xs">({prize.remaining})</span>
+                  KH
                 </button>
-              ))}
+                <button
+                  onClick={() => setDrawMode('advisor')}
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${
+                    drawMode === 'advisor'
+                      ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-sm'
+                      : 'text-amber-800/60'
+                  }`}
+                >
+                  TVV
+                </button>
+              </div>
+              <span className="text-amber-800/40 text-[9px] ml-1">
+                {availableCustomers.length} người chơi
+              </span>
             </div>
-          )}
+            {/* Prize buttons - tap to SPIN for that prize */}
+            {prizes.length === 0 ? (
+              <div className="text-center py-1.5">
+                <span className="text-amber-800/60 text-xs">Chưa có giải thưởng - vào Cài đặt để thêm</span>
+              </div>
+            ) : (
+              <div className="flex gap-1 overflow-x-auto py-0.5" style={{ scrollbarWidth: 'none' }}>
+                {prizes.map((prize, idx) => {
+                  const IconComp = PRIZE_ICONS[idx % PRIZE_ICONS.length];
+                  const isAvailable = prize.remaining > 0 && !isSpinning;
+                  return (
+                    <motion.button
+                      key={prize.id}
+                      whileTap={isAvailable ? { scale: 0.92 } : {}}
+                      onClick={() => handlePrizeSpin(idx)}
+                      disabled={!isAvailable}
+                      className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border-2 ${
+                        idx === currentPrizeIndex && isSpinning
+                          ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 border-amber-500 text-amber-900 shadow-md animate-pulse'
+                          : prize.remaining <= 0
+                            ? 'bg-amber-50/50 border-amber-200/30 text-amber-800/30 cursor-not-allowed'
+                            : 'bg-white/80 border-amber-300 text-amber-800 hover:border-amber-400 hover:bg-amber-50 active:bg-amber-100 cursor-pointer'
+                      }`}
+                    >
+                      <IconComp className="w-3 h-3" />
+                      <span>{prize.name}</span>
+                      <span className={`text-[9px] px-1 py-0.5 rounded-full ${
+                        prize.remaining <= 0
+                          ? 'bg-slate-100 text-slate-400'
+                          : 'bg-emerald-100 text-emerald-700'
+                      }`}>
+                        {prize.remaining}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* DESKTOP: Draw mode toggle + Prize spin buttons */}
+          <div className="hidden md:flex items-center gap-2">
+            <div className="flex gap-1.5 p-1.5 rounded-lg bg-amber-500/20">
+              <button
+                onClick={() => setDrawMode('customer')}
+                className={`px-4 py-1.5 rounded-lg text-sm font-bold uppercase transition-all ${
+                  drawMode === 'customer'
+                    ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
+                    : 'text-amber-800/60 hover:text-amber-800/80'
+                }`}
+              >
+                Khách hàng
+              </button>
+              <button
+                onClick={() => setDrawMode('advisor')}
+                className={`px-4 py-1.5 rounded-lg text-sm font-bold uppercase transition-all ${
+                  drawMode === 'advisor'
+                    ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
+                    : 'text-amber-800/60 hover:text-amber-800/80'
+                }`}
+              >
+                TVV
+              </button>
+            </div>
+            {prizes.length > 0 && (
+              <div className="flex-1 flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+                {prizes.map((prize, idx) => {
+                  const IconComp = PRIZE_ICONS[idx % PRIZE_ICONS.length];
+                  const isAvailable = prize.remaining > 0 && !isSpinning;
+                  return (
+                    <motion.button
+                      key={prize.id}
+                      whileTap={isAvailable ? { scale: 0.95 } : {}}
+                      whileHover={isAvailable ? { scale: 1.03 } : {}}
+                      onClick={() => handlePrizeSpin(idx)}
+                      disabled={!isAvailable}
+                      className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold transition-all border-2 ${
+                        idx === currentPrizeIndex && isSpinning
+                          ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 border-amber-500 text-amber-900 shadow-md animate-pulse'
+                          : prize.remaining <= 0
+                            ? 'border-amber-300/30 text-amber-800/30 cursor-not-allowed'
+                            : 'border-amber-300 text-amber-800 hover:border-amber-400 hover:bg-amber-50 cursor-pointer'
+                      }`}
+                    >
+                      <IconComp className="w-4 h-4" />
+                      <span>{prize.name}</span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                        prize.remaining <= 0
+                          ? 'bg-slate-100 text-slate-400'
+                          : 'bg-emerald-100 text-emerald-700'
+                      }`}>
+                        {prize.remaining}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* === MOBILE LAYOUT - Compact controller view === */}
       <div className="flex-1 min-h-0 flex flex-col md:hidden">
         {/* Slot machine area - compact for phone control */}
-        <div className="flex-shrink-0 flex flex-col items-center px-3 pt-1.5 pb-1">
-          {/* Prize indicator row with spin button */}
-          <div className="w-full max-w-md flex items-center justify-between mb-1">
-            {currentPrize && (
-              <div className="flex items-center gap-1">
-                <Crown className="w-3 h-3 text-amber-600" />
-                <span className="text-amber-800 font-bold text-xs">{currentPrize.name}</span>
-                <span className="text-slate-400 text-[10px]">({currentPrize.remaining})</span>
-              </div>
-            )}
-            {/* Spin button - bigger for easy tapping */}
-            <motion.button
-              whileHover={canSpin ? { scale: 1.05 } : {}}
-              whileTap={canSpin ? { scale: 0.95 } : {}}
-              onClick={handleSlotClick}
-              disabled={!canSpin && !isSpinning}
-              className={`px-5 py-2.5 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg transition-all ${
-                canSpin ? 'animate-pulse-glow' : ''
-              }`}
-              style={{
-                background: canSpin || isSpinning
-                  ? 'linear-gradient(135deg, #f59e0b, #fbbf24, #f59e0b)'
-                  : '#fef3c7',
-                color: canSpin || isSpinning ? '#78350f' : '#d4a843',
-                border: '2px solid rgba(245, 158, 11, 0.5)',
-                cursor: canSpin || isSpinning ? 'pointer' : 'not-allowed',
-                minHeight: '44px',
-              }}
-            >
-              {isSpinning
-                ? (isStopping ? '⏹ Dừng' : '⏸ Nhấn dừng!')
-                : (drawItems.length === 0 ? '---' : (!currentPrize || currentPrize.remaining <= 0 ? 'Hết giải' : '🎲 Quay số'))
-              }
-            </motion.button>
-          </div>
+        <div className="flex-shrink-0 flex flex-col items-center px-3 pt-1 pb-1">
+          {/* Prize indicator */}
+          {currentPrize && (
+            <div className="w-full max-w-md flex items-center justify-center gap-1 mb-1">
+              <Crown className="w-3.5 h-3.5 text-amber-600" />
+              <span className="text-amber-800 font-bold text-sm">{currentPrize.name}</span>
+              <span className="text-slate-400 text-xs">(còn {currentPrize.remaining})</span>
+            </div>
+          )}
 
           {/* Slot Machine - compact */}
           <div
@@ -595,15 +696,17 @@ export default function LuckyDrawPage() {
             style={{
               background: 'linear-gradient(180deg, #fffbeb 0%, #fef3c7 50%, #fffbeb 100%)',
               border: '2px solid #f59e0b',
-              boxShadow: canSpin
-                ? '0 0 20px rgba(245, 158, 11, 0.3), inset 0 0 20px rgba(245, 158, 11, 0.05)'
-                : '0 0 10px rgba(245, 158, 11, 0.1), inset 0 0 10px rgba(245, 158, 11, 0.02)',
+              boxShadow: isSpinning
+                ? '0 0 30px rgba(245, 158, 11, 0.5), inset 0 0 20px rgba(245, 158, 11, 0.08)'
+                : canSpin
+                  ? '0 0 20px rgba(245, 158, 11, 0.3), inset 0 0 20px rgba(245, 158, 11, 0.05)'
+                  : '0 0 10px rgba(245, 158, 11, 0.1), inset 0 0 10px rgba(245, 158, 11, 0.02)',
             }}
           >
             {/* Top decoration */}
             <div className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
 
-            {/* Slot viewport - compact 2 items visible */}
+            {/* Slot viewport - compact 3 items visible */}
             <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 3}px` }}>
               {/* Highlight lines */}
               <div className="absolute inset-0 pointer-events-none z-10">
@@ -627,21 +730,91 @@ export default function LuckyDrawPage() {
                 </div>
               </div>
 
-              {/* Track */}
-              <div ref={trackRef} className="absolute left-0 right-0" style={{ top: '0' }}>
-                {!isSpinning && !showResult && (
-                  <div style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 3}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <p className="text-slate-400 text-sm font-medium">
-                      {drawItems.length === 0 ? 'Không có người tham gia' : 'Nhấn "Quay số" để bắt đầu'}
-                    </p>
-                  </div>
-                )}
-              </div>
+              {/* Placeholder - React managed, OUTSIDE the track ref */}
+              {!isSpinning && !showResult && (
+                <div className="absolute inset-0 flex items-center justify-center z-[5]">
+                  <p className="text-slate-400 text-sm font-medium text-center px-4">
+                    {prizes.length === 0
+                      ? 'Thêm giải thưởng trong Cài đặt'
+                      : drawItems.length === 0
+                        ? 'Không có người tham gia'
+                        : 'Bấm nút giải thưởng để quay'}
+                  </p>
+                </div>
+              )}
+
+              {/* Track - NO React children, only manipulated by JS */}
+              <div ref={mobileTrackRef} className="absolute left-0 right-0 top-0" />
             </div>
 
             {/* Bottom decoration */}
             <div className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
           </div>
+
+          {/* === STOP BUTTON (mobile) - only visible when spinning === */}
+          <AnimatePresence>
+            {isSpinning && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center justify-center mt-2 mb-1"
+              >
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  onClick={handleStopClick}
+                  disabled={isStopping}
+                  className="relative"
+                  style={{ width: '80px', height: '80px', cursor: 'pointer' }}
+                >
+                  {/* Outer ring - 3D depth */}
+                  <div
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: isStopping
+                        ? 'linear-gradient(145deg, #9ca3af, #6b7280)'
+                        : 'linear-gradient(145deg, #ef4444, #b91c1c)',
+                      boxShadow: isStopping
+                        ? '0 4px 0 #4b5563, 0 6px 12px rgba(75, 85, 99, 0.4), inset 0 1px 2px rgba(255,255,255,0.2)'
+                        : '0 4px 0 #7f1d1d, 0 8px 16px rgba(127, 29, 29, 0.4), inset 0 1px 2px rgba(255,255,255,0.3)',
+                    }}
+                  />
+                  {/* Inner circle - raised surface */}
+                  <div
+                    className="absolute rounded-full flex items-center justify-center"
+                    style={{
+                      top: '3px', left: '3px', right: '3px', bottom: '5px',
+                      background: isStopping
+                        ? 'radial-gradient(circle at 35% 35%, #e5e7eb 0%, #9ca3af 40%, #6b7280 100%)'
+                        : 'radial-gradient(circle at 35% 35%, #fca5a5 0%, #ef4444 40%, #b91c1c 100%)',
+                      boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.4)',
+                      border: isStopping
+                        ? '2px solid rgba(156, 163, 175, 0.6)'
+                        : '2px solid rgba(248, 113, 113, 0.6)',
+                    }}
+                  >
+                    <span
+                      className="font-black uppercase tracking-wider leading-tight text-center"
+                      style={{
+                        color: isStopping ? '#4b5563' : '#7f1d1d',
+                        fontSize: '12px',
+                        textShadow: '0 1px 2px rgba(255,255,255,0.5)',
+                      }}
+                    >
+                      {isStopping ? 'Đang\ndừng...' : 'DỪNG!'}
+                    </span>
+                  </div>
+                  {/* Pulse effect */}
+                  {!isStopping && (
+                    <div
+                      className="absolute inset-0 rounded-full animate-ping"
+                      style={{ background: 'rgba(239, 68, 68, 0.2)', animationDuration: '1s' }}
+                    />
+                  )}
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Winner result overlay - mobile */}
@@ -666,9 +839,9 @@ export default function LuckyDrawPage() {
           )}
         </AnimatePresence>
 
-        {/* === BOTTOM TABLE: ~50% screen on mobile - bigger for control === */}
+        {/* === BOTTOM TABLE: Customer list on mobile === */}
         <div className="flex-1 min-h-0 border-t-2 border-amber-300 bg-white/95 backdrop-blur-sm flex flex-col">
-          {/* Table header - bigger buttons for mobile */}
+          {/* Table header */}
           <div className="flex-shrink-0 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 flex items-center px-3 py-2">
             <div className="flex-1 flex items-center gap-1.5">
               <Users className="w-4 h-4 text-amber-900" />
@@ -685,44 +858,45 @@ export default function LuckyDrawPage() {
             </motion.button>
           </div>
 
-          {/* Scrollable body - takes remaining space */}
+          {/* Scrollable body */}
           <div
             ref={customerTableRef}
-            className="flex-1 overflow-hidden"
+            className="flex-1 overflow-y-auto"
           >
-            {[0, 1].map(dup => (
+            {(autoScroll ? [0, 1] : [0]).map(dup => (
               <div key={dup}>
                 {allCustomers.map((c, idx) => {
                   const isWon = wonCustomerIds.has(c.id);
                   return (
                     <div
                       key={`${c.id}-${dup}`}
-                      className={`flex items-center px-3 py-2 border-b border-amber-100/60 transition-colors ${
+                      className={`flex items-center px-3 py-1.5 border-b border-amber-100/60 transition-colors ${
                         isWon ? 'bg-amber-50/50 opacity-50' : ''
                       }`}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-slate-400 font-mono text-xs w-6 flex-shrink-0">{idx + 1}</span>
-                          <span className={`text-base font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                          <span className="text-slate-400 font-mono text-[10px] w-5 flex-shrink-0">{idx + 1}</span>
+                          <span className={`text-sm font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
                             {titleCase(c.name)}
                           </span>
                         </div>
                         {c.advisor && (
-                          <div className="pl-[32px]">
-                            <span className={`text-xs italic ${isWon ? 'text-slate-300' : 'text-slate-400'}`}>TVV {titleCase(c.advisor)}</span>
+                          <div className="pl-[22px]">
+                            <span className={`text-[10px] italic ${isWon ? 'text-slate-300' : 'text-slate-400'}`}>TVV {titleCase(c.advisor)}</span>
                           </div>
                         )}
                       </div>
-                      <div className="flex flex-col items-end min-w-[100px] gap-0.5">
-                        <span className={`text-sm font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-rose-700'}`}>
-                          {c.gift || '—'}
-                        </span>
+                      {/* Gift + Fee - shown directly on card */}
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-1">
                         {c.investmentFee > 0 && (
-                          <span className={`text-xs font-semibold ${isWon ? 'text-slate-300' : 'text-emerald-600'}`}>
+                          <span className={`text-[10px] font-semibold ${isWon ? 'text-slate-300' : 'text-emerald-600'}`}>
                             {c.investmentFee}tr
                           </span>
                         )}
+                        <span className={`text-xs font-bold max-w-[120px] truncate ${isWon ? 'text-slate-400 line-through' : 'text-rose-700'}`}>
+                          {c.gift || '—'}
+                        </span>
                       </div>
                     </div>
                   );
@@ -754,9 +928,11 @@ export default function LuckyDrawPage() {
             style={{
               background: 'linear-gradient(180deg, #fffbeb 0%, #fef3c7 50%, #fffbeb 100%)',
               border: '4px solid #f59e0b',
-              boxShadow: canSpin
-                ? '0 0 60px rgba(245, 158, 11, 0.4), inset 0 0 50px rgba(245, 158, 11, 0.08)'
-                : '0 0 30px rgba(245, 158, 11, 0.15), inset 0 0 25px rgba(245, 158, 11, 0.04)',
+              boxShadow: isSpinning
+                ? '0 0 80px rgba(245, 158, 11, 0.5), inset 0 0 50px rgba(245, 158, 11, 0.08)'
+                : canSpin
+                  ? '0 0 60px rgba(245, 158, 11, 0.4), inset 0 0 50px rgba(245, 158, 11, 0.08)'
+                  : '0 0 30px rgba(245, 158, 11, 0.15), inset 0 0 25px rgba(245, 158, 11, 0.04)',
             }}
           >
             {/* Top decoration */}
@@ -786,45 +962,52 @@ export default function LuckyDrawPage() {
                 </div>
               </div>
 
-              {/* Track */}
-              <div ref={trackRef} className="absolute left-0 right-0" style={{ top: '0' }}>
-                {!isSpinning && !showResult && (
-                  <div style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 3}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <p className="text-slate-400 text-3xl font-medium">
-                      {drawItems.length === 0 ? 'Không có người tham gia' : 'Nhấn để bắt đầu quay số'}
-                    </p>
-                  </div>
-                )}
-              </div>
+              {/* Placeholder - React managed, OUTSIDE the track ref */}
+              {!isSpinning && !showResult && (
+                <div className="absolute inset-0 flex items-center justify-center z-[5]">
+                  <p className="text-slate-400 text-3xl font-medium">
+                    {prizes.length === 0
+                      ? 'Thêm giải thưởng trong Cài đặt'
+                      : drawItems.length === 0
+                        ? 'Không có người tham gia'
+                        : 'Nhấn nút giải thưởng để quay số'}
+                  </p>
+                </div>
+              )}
+
+              {/* Track - NO React children, only manipulated by JS */}
+              <div ref={desktopTrackRef} className="absolute left-0 right-0 top-0" />
             </div>
 
             {/* Bottom decoration */}
             <div className="h-3 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
           </div>
 
-          {/* Spin button - desktop, bigger */}
-          <motion.button
-            whileHover={canSpin ? { scale: 1.05 } : {}}
-            whileTap={canSpin ? { scale: 0.95 } : {}}
-            onClick={handleSlotClick}
-            disabled={!canSpin && !isSpinning}
-            className={`mt-4 px-16 py-4 rounded-2xl font-bold text-2xl uppercase tracking-widest shadow-xl transition-all min-h-[64px] ${
-              canSpin ? 'animate-pulse-glow' : ''
-            }`}
-            style={{
-              background: canSpin || isSpinning
-                ? 'linear-gradient(135deg, #f59e0b, #fbbf24, #f59e0b)'
-                : '#fef3c7',
-              color: canSpin || isSpinning ? '#78350f' : '#d4a843',
-              border: '3px solid rgba(245, 158, 11, 0.5)',
-              cursor: canSpin || isSpinning ? 'pointer' : 'not-allowed',
-            }}
-          >
-            {isSpinning
-              ? (isStopping ? 'Đang dừng...' : 'Nhấn để dừng!')
-              : (drawItems.length === 0 ? 'Không có người chơi' : (!currentPrize || currentPrize.remaining <= 0 ? 'Hết giải thưởng' : 'Bắt đầu quay'))
-            }
-          </motion.button>
+          {/* STOP button - desktop, only visible when spinning */}
+          <AnimatePresence>
+            {isSpinning && (
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleStopClick}
+                disabled={isStopping}
+                className="mt-4 px-16 py-4 rounded-2xl font-bold text-2xl uppercase tracking-widest shadow-xl transition-all min-h-[64px]"
+                style={{
+                  background: isStopping
+                    ? 'linear-gradient(135deg, #9ca3af, #6b7280, #9ca3af)'
+                    : 'linear-gradient(135deg, #ef4444, #f87171, #ef4444)',
+                  color: isStopping ? '#4b5563' : '#7f1d1d',
+                  border: '3px solid rgba(239, 68, 68, 0.5)',
+                  cursor: 'pointer',
+                  animation: 'pulse 1.5s infinite',
+                }}
+              >
+                {isStopping ? 'Đang dừng...' : 'Nhấn để dừng!'}
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Winner result overlay - desktop */}
@@ -878,10 +1061,10 @@ export default function LuckyDrawPage() {
           {/* Scrollable body - desktop */}
           <div
             ref={customerTableRef}
-            className="overflow-hidden"
+            className="overflow-y-auto"
             style={{ height: 'calc(30vh - 44px)', minHeight: '136px' }}
           >
-            {[0, 1].map(dup => (
+            {(autoScroll ? [0, 1] : [0]).map(dup => (
               <div key={dup}>
                 {allCustomers.map((c, idx) => {
                   const isWon = wonCustomerIds.has(c.id);
@@ -995,7 +1178,6 @@ export default function LuckyDrawPage() {
                   {/* General tab */}
                   {settingsTab === 'general' && (
                     <div className="space-y-4">
-                      {/* Program title setting */}
                       <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
                         <h4 className="text-amber-800 text-sm font-semibold mb-2">Tiêu đề chương trình</h4>
                         <input
@@ -1010,11 +1192,11 @@ export default function LuckyDrawPage() {
                         <div className="space-y-1.5 text-xs">
                           <div className="flex justify-between">
                             <span className="text-slate-500">Tổng khách hàng:</span>
-                            <span className="text-amber-800 font-bold">{store.customers.length}</span>
+                            <span className="text-amber-800 font-bold">{allCustomers.length}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-500">Tổng TVV:</span>
-                            <span className="text-amber-800 font-bold">{[...new Set(store.customers.map(c => c.advisor).filter(Boolean))].length}</span>
+                            <span className="text-amber-800 font-bold">{[...new Set(allCustomers.map(c => c.advisor).filter(Boolean))].length}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-500">Số giải đã trao:</span>
@@ -1038,36 +1220,39 @@ export default function LuckyDrawPage() {
                   {/* Prizes tab */}
                   {settingsTab === 'prizes' && (
                     <div className="space-y-3">
-                      {editPrizes.map((prize, idx) => (
-                        <div
-                          key={prize.id}
-                          className="p-3 rounded-xl flex items-center gap-2 bg-amber-50 border border-amber-200"
-                        >
-                          <span className="text-amber-600 flex-shrink-0">{getPrizeIcon(idx)}</span>
-                          <input
-                            value={prize.name}
-                            onChange={e => {
-                              const updated = [...editPrizes];
-                              updated[idx] = { ...updated[idx], name: e.target.value };
-                              setEditPrizes(updated);
-                            }}
-                            className="flex-1 p-1.5 border border-amber-200 rounded-md text-sm outline-none focus:border-amber-400"
-                          />
-                          <input
-                            type="number"
-                            min={1}
-                            value={prize.quantity}
-                            onChange={e => handleUpdatePrizeQty(prize.id, parseInt(e.target.value) || 1)}
-                            className="w-16 p-1.5 border border-amber-200 rounded-md text-sm text-center outline-none focus:border-amber-400"
-                          />
-                          <button
-                            onClick={() => handleRemovePrize(prize.id)}
-                            className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-md transition-colors"
+                      {editPrizes.map((prize, idx) => {
+                        const IconComp = PRIZE_ICONS[idx % PRIZE_ICONS.length];
+                        return (
+                          <div
+                            key={prize.id}
+                            className="p-3 rounded-xl flex items-center gap-2 bg-amber-50 border border-amber-200"
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
+                            <IconComp className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                            <input
+                              value={prize.name}
+                              onChange={e => {
+                                const updated = [...editPrizes];
+                                updated[idx] = { ...updated[idx], name: e.target.value };
+                                setEditPrizes(updated);
+                              }}
+                              className="flex-1 p-1.5 border border-amber-200 rounded-md text-sm outline-none focus:border-amber-400"
+                            />
+                            <input
+                              type="number"
+                              min={1}
+                              value={prize.quantity}
+                              onChange={e => handleUpdatePrizeQty(prize.id, parseInt(e.target.value) || 1)}
+                              className="w-16 p-1.5 border border-amber-200 rounded-md text-sm text-center outline-none focus:border-amber-400"
+                            />
+                            <button
+                              onClick={() => handleRemovePrize(prize.id)}
+                              className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-md transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
                       <div className="flex gap-2">
                         <input
                           value={newPrizeName}
@@ -1107,7 +1292,7 @@ export default function LuckyDrawPage() {
                         </p>
                       </div>
                       <div className="max-h-60 overflow-y-auto space-y-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#f59e0b transparent' }}>
-                        {store.customers.map(c => (
+                        {allCustomers.map(c => (
                           <div key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded text-xs bg-white border border-amber-100">
                             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${wonCustomerIds.has(c.id) ? 'bg-rose-400' : 'bg-emerald-500'}`} />
                             <span className="font-semibold text-slate-700 truncate">{c.name}</span>
