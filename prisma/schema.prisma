@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -15,14 +15,14 @@ model EventInfo {
 }
 
 model Customer {
-  id             String  @id @default(cuid())
+  id             String   @id @default(cuid())
   name           String
-  advisor        String  @default("")
-  investmentFee  Float   @default(0)
-  gift           String  @default("")
-  giftValue      Float   @default(0)
-  status         String  @default("Chưa nhận quà")
-  note           String  @default("")
+  advisor        String   @default("")
+  investmentFee  Float    @default(0)
+  gift           String   @default("")
+  giftValue      Float    @default(0)
+  status         String   @default("Chưa nhận quà")
+  note           String   @default("")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
@@ -37,8 +37,8 @@ model GiftTier {
 }
 
 model DrawPrize {
-  id        String @id @default(cuid())
-  name      String @default("Giải nhất")
-  quantity  Int    @default(1)
-  order     Int    @default(0)
+  id       String @id @default(cuid())
+  name     String @default("Giải nhất")
+  quantity Int    @default(1)
+  order    Int    @default(0)
 }
