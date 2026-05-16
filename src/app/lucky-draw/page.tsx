@@ -911,13 +911,137 @@ export default function LuckyDrawPage() {
         </div>
       </div>
 
-      {/* === DESKTOP LAYOUT - side by side with bigger elements for projection === */}
-      <div className="flex-1 min-h-0 hidden md:flex md:flex-col">
-        {/* Top: Slot machine area - fills most of the space */}
-        <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-8 py-3">
+      {/* === DESKTOP LAYOUT - Left sidebar 1/4 + Right slot machine 3/4 === */}
+      <div className="flex-1 min-h-0 hidden md:flex md:flex-row">
+
+        {/* === LEFT SIDEBAR - 1/4 width: Gift Tiers + Customer List === */}
+        <div className="w-[25%] min-w-[280px] max-w-[400px] flex flex-col border-r-2 border-amber-300/60 bg-white/95 backdrop-blur-sm">
+
+          {/* Gift Tiers Section */}
+          <div className="flex-shrink-0 border-b border-amber-200/60">
+            <div className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 flex items-center px-3 py-2">
+              <Gift className="w-4 h-4 text-amber-900" />
+              <span className="text-amber-900 font-extrabold text-sm uppercase ml-1.5">Bậc Quà Tặng</span>
+            </div>
+            <div className="px-2 py-2 space-y-1.5">
+              {(Array.isArray(store.giftTiers) ? store.giftTiers : [])
+                .sort((a, b) => a.order - b.order)
+                .map((tier, idx) => {
+                  const tierColors = [
+                    { bg: 'bg-slate-50', border: 'border-slate-300', icon: '🥈', text: 'text-slate-700' },
+                    { bg: 'bg-amber-50', border: 'border-amber-300', icon: '🥇', text: 'text-amber-700' },
+                    { bg: 'bg-cyan-50', border: 'border-cyan-300', icon: '💎', text: 'text-cyan-700' },
+                    { bg: 'bg-purple-50', border: 'border-purple-300', icon: '👑', text: 'text-purple-700' },
+                  ];
+                  const color = tierColors[idx % tierColors.length];
+                  return (
+                    <div
+                      key={tier.id}
+                      className={`${color.bg} border ${color.border} rounded-lg px-2.5 py-1.5 flex items-center gap-2`}
+                    >
+                      <span className="text-base flex-shrink-0">{color.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-bold ${color.text} truncate`}>{tier.giftName}</p>
+                        <p className="text-[10px] text-slate-400">
+                          {tier.minFee >= 1000000 ? `${(tier.minFee / 1000000).toFixed(0)}tr` : `${(tier.minFee / 1000).toFixed(0)}K`} -
+                          {tier.maxFee >= 999999999 ? ' ∞' : tier.maxFee >= 1000000 ? ` ${(tier.maxFee / 1000000).toFixed(0)}tr` : ` ${(tier.maxFee / 1000).toFixed(0)}K`}
+                        </p>
+                      </div>
+                      <span className="text-[10px] font-bold text-emerald-600 flex-shrink-0">
+                        {tier.giftValue >= 1000000 ? `${(tier.giftValue / 1000000).toFixed(1)}tr` : `${(tier.giftValue / 1000).toFixed(0)}K`}
+                      </span>
+                    </div>
+                  );
+                })}
+              {(Array.isArray(store.giftTiers) ? store.giftTiers : []).length === 0 && (
+                <p className="text-xs text-slate-400 text-center py-2 italic">Chưa có bậc quà</p>
+              )}
+            </div>
+          </div>
+
+          {/* Customer List Section */}
+          <div className="flex-1 min-h-0 flex flex-col">
+            {/* Customer header */}
+            <div className="flex-shrink-0 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 flex items-center px-3 py-2">
+              <div className="flex-1 flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-amber-900" />
+                <span className="text-amber-900 font-extrabold text-sm uppercase">Khách Hàng</span>
+                <span className="text-amber-900/60 text-xs ml-0.5">({allCustomers.length})</span>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setAutoScroll(!autoScroll)}
+                className={`ml-1 p-1 rounded-md transition-all ${
+                  autoScroll ? 'bg-emerald-500/20 text-emerald-700' : 'bg-amber-500/30 text-amber-900/60'
+                }`}
+                title={autoScroll ? 'Tắt cuộn' : 'Bật cuộn'}
+              >
+                {autoScroll ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+              </motion.button>
+            </div>
+
+            {/* Scrollable customer list - desktop sidebar */}
+            <div
+              ref={customerTableRef}
+              className="flex-1 overflow-y-auto"
+              style={{ scrollbarWidth: 'thin', scrollbarColor: '#f59e0b transparent' }}
+            >
+              {(autoScroll ? [0, 1] : [0]).map(dup => (
+                <div key={dup}>
+                  {allCustomers.map((c, idx) => {
+                    const isWon = wonCustomerIds.has(c.id);
+                    return (
+                      <div
+                        key={`${c.id}-${dup}`}
+                        className={`flex items-center px-2.5 py-1.5 border-b border-amber-100/40 transition-colors ${
+                          isWon ? 'bg-amber-50/50 opacity-50' : ''
+                        }`}
+                      >
+                        <span className="text-slate-400 font-mono text-[10px] w-5 flex-shrink-0">{idx + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span className={`text-xs font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                              {titleCase(c.name)}
+                            </span>
+                            {c.investmentFee > 0 && (
+                              <span className={`text-[10px] font-semibold flex-shrink-0 ${isWon ? 'text-slate-300' : 'text-emerald-600'}`}>
+                                {c.investmentFee}tr
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {c.advisor && (
+                              <span className={`text-[9px] italic ${isWon ? 'text-slate-300' : 'text-slate-400'}`}>
+                                TVV {titleCase(c.advisor)}
+                              </span>
+                            )}
+                            <span className={`text-[9px] font-bold truncate ${isWon ? 'text-slate-300 line-through' : 'text-rose-600'}`}>
+                              {c.gift || ''}
+                            </span>
+                          </div>
+                        </div>
+                        {isWon && (
+                          <span className="text-[8px] bg-amber-200/50 text-amber-700 px-1 rounded flex-shrink-0">Trúng</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* === RIGHT AREA - 3/4 width: Slot Machine (prominent for projection) === */}
+        <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-6 py-3 relative">
+          {/* Decorative glow behind slot machine */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[70%] bg-gradient-radial from-amber-200/20 via-amber-100/10 to-transparent rounded-full blur-3xl" />
+          </div>
+
           {/* Desktop: show prize name prominently */}
           {currentPrize && (
-            <div className="flex items-center justify-center gap-3 mb-2">
+            <div className="relative flex items-center justify-center gap-3 mb-2">
               <Crown className="w-8 h-8 text-amber-600" />
               <span className="text-amber-800 font-extrabold text-2xl md:text-3xl">{currentPrize.name}</span>
               <span className="text-slate-500 text-lg">(còn {currentPrize.remaining})</span>
@@ -997,7 +1121,7 @@ export default function LuckyDrawPage() {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleStopClick}
                 disabled={isStopping}
-                className="mt-4 px-16 py-4 rounded-2xl font-bold text-2xl uppercase tracking-widest shadow-xl transition-all min-h-[64px]"
+                className="mt-4 px-16 py-4 rounded-2xl font-bold text-2xl uppercase tracking-widest shadow-xl transition-all min-h-[64px] relative"
                 style={{
                   background: isStopping
                     ? 'linear-gradient(135deg, #9ca3af, #6b7280, #9ca3af)'
@@ -1012,97 +1136,28 @@ export default function LuckyDrawPage() {
               </motion.button>
             )}
           </AnimatePresence>
-        </div>
 
-        {/* Winner result overlay - desktop */}
-        <AnimatePresence>
-          {showResult && currentWinner && (
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.9 }}
-              transition={{ type: 'spring', duration: 0.5 }}
-              className="flex-shrink-0 px-8 pb-2"
-            >
-              <div className="max-w-5xl mx-auto rounded-2xl p-6 md:p-8 text-center bg-white/95 backdrop-blur-sm border-2 border-amber-300 shadow-lg">
-                <p className="text-slate-500 text-sm uppercase tracking-wider mb-1">Chúc mừng người trúng giải</p>
-                <p className="text-4xl md:text-5xl font-black text-amber-900 mb-1">{currentWinner.customerName}</p>
-                {drawMode === 'customer' && currentWinner.advisor && (
-                  <p className="text-slate-500 text-lg md:text-xl">TVV: {currentWinner.advisor}</p>
-                )}
-                <p className="text-amber-700 font-semibold mt-1 text-xl md:text-2xl">🏆 {currentWinner.prizeName}</p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* === BOTTOM TABLE: Desktop - wider columns, bolder text === */}
-        <div className="flex-shrink-0 border-t-2 border-amber-300 bg-white/95 backdrop-blur-sm" style={{ height: '30vh', minHeight: '180px' }}>
-          {/* Table header - desktop */}
-          <div className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 flex items-center px-6 py-2.5">
-            <div className="flex-1 flex items-center gap-2">
-              <Users className="w-5 h-5 text-amber-900" />
-              <span className="text-amber-900 font-extrabold text-base uppercase">Khách Hàng</span>
-              <span className="text-amber-900/60 text-sm ml-1">({allCustomers.length})</span>
-            </div>
-            <div className="flex items-center gap-2 min-w-[280px] justify-end">
-              <Gift className="w-5 h-5 text-amber-900" />
-              <span className="text-amber-900 font-extrabold text-base uppercase">Quà Tặng</span>
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setAutoScroll(!autoScroll)}
-              className={`ml-3 px-2 py-1 rounded-md transition-all text-sm font-semibold flex items-center gap-1 ${
-                autoScroll ? 'bg-emerald-500/20 text-emerald-700' : 'bg-slate-100 text-slate-400'
-              }`}
-              title={autoScroll ? 'Tắt cuộn tự động' : 'Bật cuộn tự động'}
-            >
-              {autoScroll ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              <span className="text-xs">{autoScroll ? 'Dừng cuộn' : 'Cuộn'}</span>
-            </motion.button>
-          </div>
-
-          {/* Scrollable body - desktop */}
-          <div
-            ref={customerTableRef}
-            className="overflow-y-auto"
-            style={{ height: 'calc(30vh - 44px)', minHeight: '136px' }}
-          >
-            {(autoScroll ? [0, 1] : [0]).map(dup => (
-              <div key={dup}>
-                {allCustomers.map((c, idx) => {
-                  const isWon = wonCustomerIds.has(c.id);
-                  return (
-                    <div
-                      key={`${c.id}-${dup}`}
-                      className={`flex items-center px-6 py-2.5 border-b border-amber-100/60 transition-colors ${
-                        isWon ? 'bg-amber-50/50 opacity-60' : ''
-                      }`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3">
-                          <span className="text-slate-400 font-mono text-sm w-8 flex-shrink-0">{idx + 1}</span>
-                          <span className={`text-lg font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
-                            {titleCase(c.name)}{c.investmentFee > 0 && <span className="font-semibold text-slate-500"> - {c.investmentFee}tr</span>}
-                          </span>
-                        </div>
-                        {c.advisor && (
-                          <div className="pl-[44px]">
-                            <span className={`text-sm italic ${isWon ? 'text-slate-300' : 'text-slate-400'}`}>TVV {titleCase(c.advisor)}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 min-w-[280px] justify-end">
-                        <span className={`text-base font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-rose-700'}`}>
-                          {c.gift || '—'}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
+          {/* Winner result overlay - desktop (inside right area) */}
+          <AnimatePresence>
+            {showResult && currentWinner && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                transition={{ type: 'spring', duration: 0.5 }}
+                className="absolute inset-0 flex items-center justify-center z-20 bg-black/30 backdrop-blur-sm"
+              >
+                <div className="rounded-2xl p-8 md:p-10 text-center bg-white/95 backdrop-blur-sm border-2 border-amber-300 shadow-2xl max-w-2xl mx-4">
+                  <p className="text-slate-500 text-sm uppercase tracking-wider mb-2">Chúc mừng người trúng giải</p>
+                  <p className="text-5xl md:text-6xl font-black text-amber-900 mb-2">{currentWinner.customerName}</p>
+                  {drawMode === 'customer' && currentWinner.advisor && (
+                    <p className="text-slate-500 text-xl md:text-2xl">TVV: {currentWinner.advisor}</p>
+                  )}
+                  <p className="text-amber-700 font-semibold mt-2 text-2xl md:text-3xl">🏆 {currentWinner.prizeName}</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
