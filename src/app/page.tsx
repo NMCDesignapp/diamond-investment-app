@@ -53,8 +53,12 @@ export default function InvestmentApp() {
   const [autoScroll, setAutoScroll] = useState(false);
   const tableBodyRef = useRef<HTMLDivElement>(null);
 
+  const hasLoaded = useRef(false);
   useEffect(() => {
-    store.loadAll();
+    if (!hasLoaded.current) {
+      hasLoaded.current = true;
+      store.loadAll();
+    }
   }, []);
 
   const filtered = store.getFilteredCustomers();

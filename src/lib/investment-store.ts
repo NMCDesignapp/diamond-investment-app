@@ -78,11 +78,27 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
   loadAll: async () => {
     set({ isLoading: true });
     try {
+      const fetchWithRetry = async (url: string, retries = 2): Promise<Response> => {
+        for (let attempt = 0; attempt <= retries; attempt++) {
+          try {
+            const res = await fetch(url, { cache: 'no-store' });
+            if (res.ok) return res;
+            if (attempt < retries) {
+              await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+            }
+          } catch (err) {
+            if (attempt === retries) throw err;
+            await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+          }
+        }
+        throw new Error(`Failed to fetch ${url} after retries`);
+      };
+
       const [customersRes, tiersRes, eventRes, drawPrizesRes] = await Promise.all([
-        fetch('/api/customers'),
-        fetch('/api/gift-tiers'),
-        fetch('/api/event-info'),
-        fetch('/api/draw-prizes'),
+        fetchWithRetry('/api/customers'),
+        fetchWithRetry('/api/gift-tiers'),
+        fetchWithRetry('/api/event-info'),
+        fetchWithRetry('/api/draw-prizes'),
       ]);
 
       const customersData = await customersRes.json();
@@ -90,10 +106,10 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
       const eventData = await eventRes.json();
       const drawPrizesData = await drawPrizesRes.json();
 
-      if (customersData.success) set({ customers: customersData.customers });
-      if (tiersData.success) set({ giftTiers: tiersData.tiers });
-      if (eventData.success) set({ eventInfo: eventData.eventInfo });
-      if (drawPrizesData.success) set({ drawPrizes: drawPrizesData.prizes });
+      if (customersData.success) set({ customers: customersData.customers || [] });
+      if (tiersData.success) set({ giftTiers: tiersData.tiers || [] });
+      if (eventData.success) set({ eventInfo: eventData.eventInfo || { id: 'default', name: 'SỰ KIỆN ĐẦU TƯ 2025', date: '20/03/2025', location: 'TP. Hồ Chí Minh' } });
+      if (drawPrizesData.success) set({ drawPrizes: drawPrizesData.prizes || [] });
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {

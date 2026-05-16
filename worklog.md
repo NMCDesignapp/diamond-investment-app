@@ -179,3 +179,24 @@ Stage Summary:
 - UX flow: tap prize button → spin starts → tap STOP button → result shown
 - Mobile has KH/TVV toggle and prize buttons in header
 - Build compiles successfully
+
+---
+Task ID: 7
+Agent: Main
+Task: Fix data loading issues - data not displaying after page load / cannot add new data
+
+Work Log:
+- Checked database: 1 customer, 3 draw prizes, 1 event info - all intact, NO data loss
+- Checked all API endpoints: all return 200 with correct data
+- Found potential issue: loadAll() in React Strict Mode causes double-fetch on mount
+- Fixed page.tsx: Added hasLoaded ref guard to prevent double loadAll() calls
+- Fixed lucky-draw/page.tsx: Same hasLoaded ref guard for loadAll() 
+- Enhanced loadAll() in investment-store.ts: Added fetchWithRetry with 2 retries and cache: 'no-store' to prevent stale cached responses
+- Added null safety: customers || [], drawPrizes || [], etc. to prevent empty state on failed loads
+- Build successful, all code compiles without errors
+
+Stage Summary:
+- Data is NOT lost - all original data preserved in SQLite database
+- Fixed React Strict Mode double-trigger issue on both pages
+- Added retry logic and cache: 'no-store' for more reliable data fetching
+- Added null safety fallbacks in loadAll()

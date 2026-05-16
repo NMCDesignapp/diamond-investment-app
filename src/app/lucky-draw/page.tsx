@@ -191,9 +191,13 @@ export default function LuckyDrawPage() {
     remaining: dp.quantity,
   })) : []);
 
-  // Load data + auto-sync
+  // Load data + auto-sync (with strict mode guard)
+  const hasLoaded = useRef(false);
   useEffect(() => {
-    store.loadAll();
+    if (!hasLoaded.current) {
+      hasLoaded.current = true;
+      store.loadAll();
+    }
     const interval = setInterval(() => {
       store.loadAll();
     }, 10000);
