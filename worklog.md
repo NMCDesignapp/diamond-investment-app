@@ -200,3 +200,29 @@ Stage Summary:
 - Fixed React Strict Mode double-trigger issue on both pages
 - Added retry logic and cache: 'no-store' for more reliable data fetching
 - Added null safety fallbacks in loadAll()
+
+---
+Task ID: 8
+Agent: Main
+Task: Prepare and deploy app to Vercel
+
+Work Log:
+- Installed Vercel CLI (v54.1.0)
+- Migrated Prisma schema from SQLite to PostgreSQL (provider = "postgresql")
+- Updated package.json: build script = "prisma generate && next build", added postinstall = "prisma generate", added prisma seed config
+- Updated next.config.ts: removed "output: standalone" (Vercel handles this)
+- Created PostgreSQL migration file: prisma/migrations/0001_init/migration.sql
+- Created seed script: prisma/seed.ts (EventInfo + DrawPrize defaults)
+- Installed tsx dev dependency for seed script
+- Updated .gitignore to allow .env.example
+- Created .env.example with DATABASE_URL template
+- All API routes verified compatible with PostgreSQL (no raw SQL, all Prisma ORM)
+- Build test successful (next build passes)
+- Vercel CLI login requires interactive authentication - user needs to do this themselves
+- Created VERCEL_DEPLOY.md with step-by-step deployment guide
+
+Stage Summary:
+- Project fully prepared for Vercel deployment
+- SQLite → PostgreSQL migration complete
+- Build passes, all API routes compatible
+- User needs to: 1) Push to GitHub, 2) Import to Vercel, 3) Add Vercel Postgres, 4) Run migration + seed
