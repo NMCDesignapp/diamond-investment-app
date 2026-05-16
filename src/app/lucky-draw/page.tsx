@@ -310,7 +310,7 @@ export default function LuckyDrawPage() {
         div.textContent = name;
         div.style.cssText = `
           height: ${itemH}px; display: flex; align-items: center; justify-content: center;
-          font-size: ${isDesktop ? '42px' : '24px'}; font-weight: 800; color: #78350f; white-space: nowrap;
+          font-size: ${isDesktop ? '42px' : '24px'}; font-weight: 800; color: #1e3a5f; white-space: nowrap;
           padding: 0 ${isDesktop ? '50px' : '20px'}; text-align: center; letter-spacing: 0.05em;
         `;
         trackEl.appendChild(div);
@@ -495,7 +495,7 @@ export default function LuckyDrawPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/40">
+    <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-blue-100/20">
       {/* Confetti Canvas */}
       <canvas
         ref={confettiCanvasRef}
@@ -505,22 +505,22 @@ export default function LuckyDrawPage() {
 
       {/* Decorative background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-amber-200/20 to-yellow-100/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -left-20 w-72 h-72 bg-gradient-to-tr from-amber-100/15 to-orange-100/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-to-tl from-orange-100/10 to-amber-100/10 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-900/10 to-blue-800/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -left-20 w-72 h-72 bg-gradient-to-tr from-blue-800/5 to-blue-800/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-to-tl from-blue-800/5 to-blue-800/5 rounded-full blur-3xl" />
       </div>
 
       {/* === HEADER BAR === */}
       <div className="flex-shrink-0 relative overflow-hidden rounded-b-2xl shadow-lg">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 opacity-95" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 opacity-95" />
         <div className="relative px-3 py-2 md:px-6 md:py-3 flex items-center justify-between">
           <Link href="/" title="Quay lại">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="p-1.5 hover:bg-amber-800/10 rounded-lg transition-all"
+              className="p-1.5 hover:bg-white/10 rounded-lg transition-all"
             >
-              <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 text-amber-900/70" />
+              <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 text-blue-200" />
             </motion.button>
           </Link>
           <div className="flex items-center gap-2">
@@ -528,9 +528,9 @@ export default function LuckyDrawPage() {
               animate={{ rotate: [0, 8, -8, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <Diamond className="w-4 h-4 md:w-6 md:h-6 text-amber-900/60" />
+              <Diamond className="w-4 h-4 md:w-6 md:h-6 text-yellow-400/80" />
             </motion.div>
-            <h1 className="text-sm md:text-2xl font-black uppercase tracking-wider text-amber-900">
+            <h1 className="text-sm md:text-2xl font-black uppercase tracking-wider text-yellow-400">
               Quay Số May Mắn
             </h1>
           </div>
@@ -538,10 +538,10 @@ export default function LuckyDrawPage() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => { setSettingsOpen(true); setSettingsAuthenticated(false); }}
-            className="p-2 md:p-1.5 hover:bg-amber-800/10 rounded-lg transition-all"
+            className="p-2 md:p-1.5 hover:bg-white/10 rounded-lg transition-all"
             title="Cài đặt"
           >
-            <Settings className="w-5 h-5 md:w-5 md:h-5 text-amber-900/70" />
+            <Settings className="w-5 h-5 md:w-5 md:h-5 text-blue-200" />
           </motion.button>
         </div>
 
@@ -551,13 +551,13 @@ export default function LuckyDrawPage() {
           <div className="md:hidden flex flex-col gap-1.5">
             {/* Draw mode toggle - compact */}
             <div className="flex items-center gap-1.5">
-              <div className="flex gap-1 p-0.5 rounded-lg bg-amber-500/20">
+              <div className="flex gap-1 p-0.5 rounded-lg bg-blue-900/20">
                 <button
                   onClick={() => setDrawMode('customer')}
                   className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${
                     drawMode === 'customer'
-                      ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-sm'
-                      : 'text-amber-800/60'
+                      ? 'bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 text-blue-900 shadow-sm'
+                      : 'text-blue-200/60'
                   }`}
                 >
                   KH
@@ -566,21 +566,21 @@ export default function LuckyDrawPage() {
                   onClick={() => setDrawMode('advisor')}
                   className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${
                     drawMode === 'advisor'
-                      ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-sm'
-                      : 'text-amber-800/60'
+                      ? 'bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 text-blue-900 shadow-sm'
+                      : 'text-blue-200/60'
                   }`}
                 >
                   TVV
                 </button>
               </div>
-              <span className="text-amber-800/40 text-[9px] ml-1">
+              <span className="text-blue-800/40 text-[9px] ml-1">
                 {availableCustomers.length} người chơi
               </span>
             </div>
             {/* Prize buttons - tap to SPIN for that prize */}
             {prizes.length === 0 ? (
               <div className="text-center py-1.5">
-                <span className="text-amber-800/60 text-xs">Chưa có giải thưởng - vào Cài đặt để thêm</span>
+                <span className="text-blue-800/60 text-xs">Chưa có giải thưởng - vào Cài đặt để thêm</span>
               </div>
             ) : (
               <div className="flex gap-1 overflow-x-auto py-0.5" style={{ scrollbarWidth: 'none' }}>
@@ -595,10 +595,10 @@ export default function LuckyDrawPage() {
                       disabled={!isAvailable}
                       className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border-2 ${
                         idx === currentPrizeIndex && isSpinning
-                          ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 border-amber-500 text-amber-900 shadow-md animate-pulse'
+                          ? 'bg-gradient-to-r from-green-700 via-green-600 to-green-700 border-green-500 text-white shadow-md animate-pulse'
                           : prize.remaining <= 0
-                            ? 'bg-amber-50/50 border-amber-200/30 text-amber-800/30 cursor-not-allowed'
-                            : 'bg-white/80 border-amber-300 text-amber-800 hover:border-amber-400 hover:bg-amber-50 active:bg-amber-100 cursor-pointer'
+                            ? 'bg-blue-50/50 border-blue-200/30 text-blue-800/30 cursor-not-allowed'
+                            : 'bg-white/80 border-yellow-600/40 text-blue-900 hover:border-yellow-600 hover:bg-yellow-50 active:bg-yellow-50 cursor-pointer'
                       }`}
                     >
                       <IconComp className="w-3 h-3" />
@@ -606,7 +606,7 @@ export default function LuckyDrawPage() {
                       <span className={`text-[9px] px-1 py-0.5 rounded-full ${
                         prize.remaining <= 0
                           ? 'bg-slate-100 text-slate-400'
-                          : 'bg-emerald-100 text-emerald-700'
+                          : 'bg-green-100 text-green-700'
                       }`}>
                         {prize.remaining}
                       </span>
@@ -619,13 +619,13 @@ export default function LuckyDrawPage() {
 
           {/* DESKTOP: Draw mode toggle + Prize spin buttons */}
           <div className="hidden md:flex items-center gap-2">
-            <div className="flex gap-1.5 p-1.5 rounded-lg bg-amber-500/20">
+            <div className="flex gap-1.5 p-1.5 rounded-lg bg-blue-900/20">
               <button
                 onClick={() => setDrawMode('customer')}
                 className={`px-4 py-1.5 rounded-lg text-sm font-bold uppercase transition-all ${
                   drawMode === 'customer'
-                    ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
-                    : 'text-amber-800/60 hover:text-amber-800/80'
+                    ? 'bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 text-blue-900 shadow-md'
+                    : 'text-blue-200/60 hover:text-blue-200/80'
                 }`}
               >
                 Khách hàng
@@ -634,8 +634,8 @@ export default function LuckyDrawPage() {
                 onClick={() => setDrawMode('advisor')}
                 className={`px-4 py-1.5 rounded-lg text-sm font-bold uppercase transition-all ${
                   drawMode === 'advisor'
-                    ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
-                    : 'text-amber-800/60 hover:text-amber-800/80'
+                    ? 'bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 text-blue-900 shadow-md'
+                    : 'text-blue-200/60 hover:text-blue-200/80'
                 }`}
               >
                 TVV
@@ -655,10 +655,10 @@ export default function LuckyDrawPage() {
                       disabled={!isAvailable}
                       className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold transition-all border-2 ${
                         idx === currentPrizeIndex && isSpinning
-                          ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 border-amber-500 text-amber-900 shadow-md animate-pulse'
+                          ? 'bg-gradient-to-r from-green-700 via-green-600 to-green-700 border-green-500 text-white shadow-md animate-pulse'
                           : prize.remaining <= 0
-                            ? 'border-amber-300/30 text-amber-800/30 cursor-not-allowed'
-                            : 'border-amber-300 text-amber-800 hover:border-amber-400 hover:bg-amber-50 cursor-pointer'
+                            ? 'border-blue-200/30 text-blue-800/30 cursor-not-allowed'
+                            : 'border-yellow-600/40 text-blue-900 hover:border-yellow-600 hover:bg-yellow-50 cursor-pointer'
                       }`}
                     >
                       <IconComp className="w-4 h-4" />
@@ -666,7 +666,7 @@ export default function LuckyDrawPage() {
                       <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                         prize.remaining <= 0
                           ? 'bg-slate-100 text-slate-400'
-                          : 'bg-emerald-100 text-emerald-700'
+                          : 'bg-green-100 text-green-700'
                       }`}>
                         {prize.remaining}
                       </span>
@@ -686,8 +686,8 @@ export default function LuckyDrawPage() {
           {/* Prize indicator */}
           {currentPrize && (
             <div className="w-full max-w-md flex items-center justify-center gap-1 mb-1">
-              <Crown className="w-3.5 h-3.5 text-amber-600" />
-              <span className="text-amber-800 font-bold text-sm">{currentPrize.name}</span>
+              <Crown className="w-3.5 h-3.5 text-yellow-600" />
+              <span className="text-blue-800 font-bold text-sm">{currentPrize.name}</span>
               <span className="text-slate-400 text-xs">(còn {currentPrize.remaining})</span>
             </div>
           )}
@@ -831,31 +831,31 @@ export default function LuckyDrawPage() {
               transition={{ type: 'spring', duration: 0.5 }}
               className="flex-shrink-0 px-3 pb-1"
             >
-              <div className="max-w-md mx-auto rounded-xl p-2.5 text-center bg-white/95 backdrop-blur-sm border-2 border-amber-300 shadow-lg">
+              <div className="max-w-md mx-auto rounded-xl p-2.5 text-center bg-white/95 backdrop-blur-sm border-2 border-yellow-600/50 shadow-lg">
                 <p className="text-slate-500 text-[9px] uppercase tracking-wider mb-0.5">Chúc mừng người trúng giải</p>
-                <p className="text-lg font-black text-amber-900">{currentWinner.customerName}</p>
+                <p className="text-lg font-black text-blue-900">{currentWinner.customerName}</p>
                 {drawMode === 'customer' && currentWinner.advisor && (
                   <p className="text-slate-400 text-[10px] italic">TVV {currentWinner.advisor}</p>
                 )}
-                <p className="text-amber-700 font-semibold text-xs">🏆 {currentWinner.prizeName}</p>
+                <p className="text-green-700 font-semibold text-xs">🏆 {currentWinner.prizeName}</p>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* === BOTTOM TABLE: Customer list on mobile === */}
-        <div className="flex-1 min-h-0 border-t-2 border-amber-300 bg-white/95 backdrop-blur-sm flex flex-col">
+        <div className="flex-1 min-h-0 border-t-2 border-yellow-600/50 bg-white/95 backdrop-blur-sm flex flex-col">
           {/* Table header */}
-          <div className="flex-shrink-0 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 flex items-center px-3 py-2">
+          <div className="flex-shrink-0 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 flex items-center px-3 py-2">
             <div className="flex-1 flex items-center gap-1.5">
-              <Users className="w-4 h-4 text-amber-900" />
-              <span className="text-amber-900 font-extrabold text-sm uppercase">DS Tham Dự</span>
-              <span className="text-amber-900/60 text-xs ml-0.5">({allCustomers.length})</span>
+              <Users className="w-4 h-4 text-yellow-400" />
+              <span className="text-yellow-400 font-extrabold text-sm uppercase">DS Tham Dự</span>
+              <span className="text-yellow-400/80 text-xs ml-0.5">({allCustomers.length})</span>
             </div>
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setAutoScroll(!autoScroll)}
-              className={`ml-2 p-1.5 rounded-md transition-all ${autoScroll ? 'bg-emerald-500/20 text-emerald-700' : 'bg-amber-500/30 text-amber-900/60'}`}
+              className={`ml-2 p-1.5 rounded-md transition-all ${autoScroll ? 'bg-emerald-500/20 text-emerald-700' : 'bg-blue-500/30 text-blue-900/60'}`}
               title={autoScroll ? 'Tắt cuộn' : 'Bật cuộn'}
             >
               {autoScroll ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -874,8 +874,8 @@ export default function LuckyDrawPage() {
                   return (
                     <div
                       key={`${c.id}-${dup}`}
-                      className={`flex items-center px-3 py-1.5 border-b border-amber-100/60 transition-colors ${
-                        isWon ? 'bg-amber-50/50 opacity-50' : ''
+                      className={`flex items-center px-3 py-1.5 border-b border-blue-100/40 transition-colors ${
+                        isWon ? 'bg-blue-50/50 opacity-50' : ''
                       }`}
                     >
                       <div className="flex-1 min-w-0">
@@ -915,13 +915,13 @@ export default function LuckyDrawPage() {
       <div className="flex-1 min-h-0 hidden md:flex md:flex-row">
 
         {/* === LEFT SIDEBAR - 1/4 width: Gift Tiers + Customer List === */}
-        <div className="w-[25%] min-w-[280px] max-w-[400px] flex flex-col border-r-2 border-amber-300/60 bg-white/95 backdrop-blur-sm">
+        <div className="w-[25%] min-w-[280px] max-w-[400px] flex flex-col border-r-2 border-yellow-600/30 bg-white/95 backdrop-blur-sm">
 
           {/* Gift Tiers Section */}
-          <div className="flex-shrink-0 border-b border-amber-200/60">
-            <div className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 flex items-center px-3 py-2">
-              <Gift className="w-4 h-4 text-amber-900" />
-              <span className="text-amber-900 font-extrabold text-sm uppercase ml-1.5">Bậc Quà Tặng</span>
+          <div className="flex-shrink-0 border-b border-yellow-600/20">
+            <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 flex items-center px-3 py-2">
+              <Gift className="w-4 h-4 text-yellow-400" />
+              <span className="text-yellow-400 font-extrabold text-sm uppercase ml-1.5">Bậc Quà Tặng</span>
             </div>
             <div className="px-2 py-2 space-y-1.5">
               {(Array.isArray(store.giftTiers) ? store.giftTiers : [])
@@ -929,7 +929,7 @@ export default function LuckyDrawPage() {
                 .map((tier, idx) => {
                   const tierColors = [
                     { bg: 'bg-slate-50', border: 'border-slate-300', icon: '🥈', text: 'text-slate-700' },
-                    { bg: 'bg-amber-50', border: 'border-amber-300', icon: '🥇', text: 'text-amber-700' },
+                    { bg: 'bg-yellow-50', border: 'border-yellow-600/30', icon: '🥇', text: 'text-green-700' },
                     { bg: 'bg-cyan-50', border: 'border-cyan-300', icon: '💎', text: 'text-cyan-700' },
                     { bg: 'bg-purple-50', border: 'border-purple-300', icon: '👑', text: 'text-purple-700' },
                   ];
@@ -962,17 +962,17 @@ export default function LuckyDrawPage() {
           {/* Customer List Section */}
           <div className="flex-1 min-h-0 flex flex-col">
             {/* Customer header */}
-            <div className="flex-shrink-0 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 flex items-center px-3 py-2">
+            <div className="flex-shrink-0 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 flex items-center px-3 py-2">
               <div className="flex-1 flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-amber-900" />
-                <span className="text-amber-900 font-extrabold text-sm uppercase">Khách Hàng</span>
-                <span className="text-amber-900/60 text-xs ml-0.5">({allCustomers.length})</span>
+                <Users className="w-4 h-4 text-yellow-400" />
+                <span className="text-yellow-400 font-extrabold text-sm uppercase">Khách Hàng</span>
+                <span className="text-yellow-400/80 text-xs ml-0.5">({allCustomers.length})</span>
               </div>
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setAutoScroll(!autoScroll)}
                 className={`ml-1 p-1 rounded-md transition-all ${
-                  autoScroll ? 'bg-emerald-500/20 text-emerald-700' : 'bg-amber-500/30 text-amber-900/60'
+                  autoScroll ? 'bg-emerald-500/20 text-emerald-700' : 'bg-blue-500/30 text-blue-900/60'
                 }`}
                 title={autoScroll ? 'Tắt cuộn' : 'Bật cuộn'}
               >
@@ -993,8 +993,8 @@ export default function LuckyDrawPage() {
                     return (
                       <div
                         key={`${c.id}-${dup}`}
-                        className={`flex items-center px-2.5 py-1.5 border-b border-amber-100/40 transition-colors ${
-                          isWon ? 'bg-amber-50/50 opacity-50' : ''
+                        className={`flex items-center px-2.5 py-1.5 border-b border-blue-100/40 transition-colors ${
+                          isWon ? 'bg-blue-50/50 opacity-50' : ''
                         }`}
                       >
                         <span className="text-slate-400 font-mono text-[10px] w-5 flex-shrink-0">{idx + 1}</span>
@@ -1021,7 +1021,7 @@ export default function LuckyDrawPage() {
                           </div>
                         </div>
                         {isWon && (
-                          <span className="text-[8px] bg-amber-200/50 text-amber-700 px-1 rounded flex-shrink-0">Trúng</span>
+                          <span className="text-[8px] bg-green-200/50 text-green-700 px-1 rounded flex-shrink-0">Trúng</span>
                         )}
                       </div>
                     );
@@ -1036,14 +1036,14 @@ export default function LuckyDrawPage() {
         <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-6 py-3 relative">
           {/* Decorative glow behind slot machine */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[70%] bg-gradient-radial from-amber-200/20 via-amber-100/10 to-transparent rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[70%] bg-gradient-radial from-blue-900/10 via-blue-800/5 to-transparent rounded-full blur-3xl" />
           </div>
 
           {/* Desktop: show prize name prominently */}
           {currentPrize && (
             <div className="relative flex items-center justify-center gap-3 mb-2">
-              <Crown className="w-8 h-8 text-amber-600" />
-              <span className="text-amber-800 font-extrabold text-2xl md:text-3xl">{currentPrize.name}</span>
+              <Crown className="w-8 h-8 text-yellow-600" />
+              <span className="text-blue-900 font-extrabold text-2xl md:text-3xl">{currentPrize.name}</span>
               <span className="text-slate-500 text-lg">(còn {currentPrize.remaining})</span>
             </div>
           )}
@@ -1147,13 +1147,13 @@ export default function LuckyDrawPage() {
                 transition={{ type: 'spring', duration: 0.5 }}
                 className="absolute inset-0 flex items-center justify-center z-20 bg-black/30 backdrop-blur-sm"
               >
-                <div className="rounded-2xl p-8 md:p-10 text-center bg-white/95 backdrop-blur-sm border-2 border-amber-300 shadow-2xl max-w-2xl mx-4">
+                <div className="rounded-2xl p-8 md:p-10 text-center bg-white/95 backdrop-blur-sm border-2 border-yellow-600/50 shadow-2xl max-w-2xl mx-4">
                   <p className="text-slate-500 text-sm uppercase tracking-wider mb-2">Chúc mừng người trúng giải</p>
-                  <p className="text-5xl md:text-6xl font-black text-amber-900 mb-2">{currentWinner.customerName}</p>
+                  <p className="text-5xl md:text-6xl font-black text-blue-900 mb-2">{currentWinner.customerName}</p>
                   {drawMode === 'customer' && currentWinner.advisor && (
                     <p className="text-slate-500 text-xl md:text-2xl">TVV: {currentWinner.advisor}</p>
                   )}
-                  <p className="text-amber-700 font-semibold mt-2 text-2xl md:text-3xl">🏆 {currentWinner.prizeName}</p>
+                  <p className="text-green-700 font-semibold mt-2 text-2xl md:text-3xl">🏆 {currentWinner.prizeName}</p>
                 </div>
               </motion.div>
             )}
@@ -1176,24 +1176,24 @@ export default function LuckyDrawPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', duration: 0.4 }}
-              className="w-full max-w-lg max-h-[85vh] overflow-auto rounded-2xl bg-white border-2 border-amber-200 shadow-2xl"
+              className="w-full max-w-lg max-h-[85vh] overflow-auto rounded-2xl bg-white border-2 border-blue-200 shadow-2xl"
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="relative overflow-hidden p-4 flex justify-between items-center bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 rounded-t-2xl">
-                <h2 className="text-xl font-bold text-amber-900">Cài đặt Quay Số</h2>
+              <div className="relative overflow-hidden p-4 flex justify-between items-center bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 rounded-t-2xl">
+                <h2 className="text-xl font-bold text-yellow-400">Cài đặt Quay Số</h2>
                 <button
                   onClick={() => { setSettingsOpen(false); setSettingsAuthenticated(false); }}
                   className="p-1 hover:bg-black/10 rounded-lg transition-colors"
                 >
-                  <X className="w-6 h-6 text-amber-900" />
+                  <X className="w-6 h-6 text-yellow-400" />
                 </button>
               </div>
 
               {!settingsAuthenticated ? (
                 <div className="p-6 text-center">
-                  <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
-                    <Settings className="w-10 h-10 text-amber-500 mx-auto mb-3" />
+                  <div className="mb-4 p-4 rounded-xl bg-blue-50 border border-blue-200">
+                    <Settings className="w-10 h-10 text-blue-500 mx-auto mb-3" />
                     <p className="text-slate-600 text-sm mb-3">Nhập mật khẩu để tiếp tục</p>
                     <input
                       type="password"
@@ -1201,7 +1201,7 @@ export default function LuckyDrawPage() {
                       onChange={e => setSettingsPassword(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleSettingsAuth()}
                       placeholder="Mật khẩu"
-                      className="w-full p-3 rounded-lg text-center font-mono text-lg tracking-widest outline-none transition-all border-2 border-amber-200 focus:border-amber-400 bg-white text-amber-900"
+                      className="w-full p-3 rounded-lg text-center font-mono text-lg tracking-widest outline-none transition-all border-2 border-blue-200 focus:border-blue-400 bg-white text-blue-900"
                       autoFocus
                     />
                     {settingsPassword && settingsPassword !== '0969774224' && (
@@ -1210,7 +1210,7 @@ export default function LuckyDrawPage() {
                   </div>
                   <button
                     onClick={handleSettingsAuth}
-                    className="px-6 py-2.5 rounded-lg font-bold transition-all bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md hover:shadow-lg"
+                    className="px-6 py-2.5 rounded-lg font-bold transition-all bg-gradient-to-r from-green-700 via-green-600 to-green-700 text-white shadow-md hover:shadow-lg"
                   >
                     Xác nhận
                   </button>
@@ -1218,15 +1218,15 @@ export default function LuckyDrawPage() {
               ) : (
                 <div className="p-5 space-y-4">
                   {/* Tabs */}
-                  <div className="flex gap-1 p-1 rounded-lg bg-amber-100/80">
+                  <div className="flex gap-1 p-1 rounded-lg bg-blue-100/80">
                     {(['general', 'prizes', 'customers'] as const).map(tab => (
                       <button
                         key={tab}
                         onClick={() => setSettingsTab(tab)}
                         className={`flex-1 px-3 py-1.5 rounded-md text-xs font-bold uppercase transition-all ${
                           settingsTab === tab
-                            ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md'
-                            : 'text-slate-500 hover:text-amber-700'
+                            ? 'bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-yellow-400 shadow-md'
+                            : 'text-slate-500 hover:text-green-700'
                         }`}
                       >
                         {tab === 'general' ? 'Chung' : tab === 'prizes' ? 'Giải thưởng' : 'Khách hàng'}
@@ -1237,29 +1237,29 @@ export default function LuckyDrawPage() {
                   {/* General tab */}
                   {settingsTab === 'general' && (
                     <div className="space-y-4">
-                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
-                        <h4 className="text-amber-800 text-sm font-semibold mb-2">Tiêu đề chương trình</h4>
+                      <div className="p-3 rounded-xl bg-blue-50 border border-blue-200">
+                        <h4 className="text-blue-800 text-sm font-semibold mb-2">Tiêu đề chương trình</h4>
                         <input
                           value={store.eventInfo.name}
                           onChange={(e) => store.saveEventInfo({ name: e.target.value })}
                           placeholder="Nhập tiêu đề chương trình"
-                          className="w-full p-2.5 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-200 outline-none transition-all text-sm"
+                          className="w-full p-2.5 border-2 border-blue-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm"
                         />
                       </div>
-                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
-                        <h4 className="text-amber-800 text-sm font-semibold mb-2">Thống kê</h4>
+                      <div className="p-3 rounded-xl bg-blue-50 border border-blue-200">
+                        <h4 className="text-blue-800 text-sm font-semibold mb-2">Thống kê</h4>
                         <div className="space-y-1.5 text-xs">
                           <div className="flex justify-between">
                             <span className="text-slate-500">Tổng khách hàng:</span>
-                            <span className="text-amber-800 font-bold">{allCustomers.length}</span>
+                            <span className="text-blue-800 font-bold">{allCustomers.length}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-500">Tổng TVV:</span>
-                            <span className="text-amber-800 font-bold">{[...new Set(allCustomers.map(c => c.advisor).filter(Boolean))].length}</span>
+                            <span className="text-blue-800 font-bold">{[...new Set(allCustomers.map(c => c.advisor).filter(Boolean))].length}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-500">Số giải đã trao:</span>
-                            <span className="text-amber-800 font-bold">{winners.length}</span>
+                            <span className="text-blue-800 font-bold">{winners.length}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-500">Còn lại:</span>
@@ -1284,9 +1284,9 @@ export default function LuckyDrawPage() {
                         return (
                           <div
                             key={prize.id}
-                            className="p-3 rounded-xl flex items-center gap-2 bg-amber-50 border border-amber-200"
+                            className="p-3 rounded-xl flex items-center gap-2 bg-blue-50 border border-blue-200"
                           >
-                            <IconComp className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                            <IconComp className="w-4 h-4 text-yellow-600 flex-shrink-0" />
                             <input
                               value={prize.name}
                               onChange={e => {
@@ -1294,14 +1294,14 @@ export default function LuckyDrawPage() {
                                 updated[idx] = { ...updated[idx], name: e.target.value };
                                 setEditPrizes(updated);
                               }}
-                              className="flex-1 p-1.5 border border-amber-200 rounded-md text-sm outline-none focus:border-amber-400"
+                              className="flex-1 p-1.5 border border-blue-200 rounded-md text-sm outline-none focus:border-blue-400"
                             />
                             <input
                               type="number"
                               min={1}
                               value={prize.quantity}
                               onChange={e => handleUpdatePrizeQty(prize.id, parseInt(e.target.value) || 1)}
-                              className="w-16 p-1.5 border border-amber-200 rounded-md text-sm text-center outline-none focus:border-amber-400"
+                              className="w-16 p-1.5 border border-blue-200 rounded-md text-sm text-center outline-none focus:border-blue-400"
                             />
                             <button
                               onClick={() => handleRemovePrize(prize.id)}
@@ -1317,25 +1317,25 @@ export default function LuckyDrawPage() {
                           value={newPrizeName}
                           onChange={e => setNewPrizeName(e.target.value)}
                           placeholder="Tên giải"
-                          className="flex-1 p-2 border-2 border-amber-200 rounded-lg text-sm outline-none focus:border-amber-400"
+                          className="flex-1 p-2 border-2 border-blue-200 rounded-lg text-sm outline-none focus:border-blue-400"
                         />
                         <input
                           type="number"
                           min={1}
                           value={newPrizeQty}
                           onChange={e => setNewPrizeQty(e.target.value)}
-                          className="w-20 p-2 border-2 border-amber-200 rounded-lg text-sm text-center outline-none focus:border-amber-400"
+                          className="w-20 p-2 border-2 border-blue-200 rounded-lg text-sm text-center outline-none focus:border-blue-400"
                         />
                         <button
                           onClick={handleAddPrize}
-                          className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold text-sm transition-colors"
+                          className="px-3 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg font-bold text-sm transition-colors"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
                       <button
                         onClick={handleSaveSettings}
-                        className="w-full px-4 py-2.5 rounded-lg font-bold text-sm transition-all bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-md hover:shadow-lg"
+                        className="w-full px-4 py-2.5 rounded-lg font-bold text-sm transition-all bg-gradient-to-r from-green-700 via-green-600 to-green-700 text-white shadow-md hover:shadow-lg"
                       >
                         Lưu giải thưởng
                       </button>
@@ -1345,14 +1345,14 @@ export default function LuckyDrawPage() {
                   {/* Customers tab */}
                   {settingsTab === 'customers' && (
                     <div className="space-y-2">
-                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
+                      <div className="p-3 rounded-xl bg-blue-50 border border-blue-200">
                         <p className="text-slate-500 text-sm">
-                          Quản lý khách hàng từ <Link href="/" className="text-amber-700 underline font-semibold">trang chính</Link>.
+                          Quản lý khách hàng từ <Link href="/" className="text-green-700 underline font-semibold">trang chính</Link>.
                         </p>
                       </div>
                       <div className="max-h-60 overflow-y-auto space-y-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#f59e0b transparent' }}>
                         {allCustomers.map(c => (
-                          <div key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded text-xs bg-white border border-amber-100">
+                          <div key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded text-xs bg-white border border-blue-100">
                             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${wonCustomerIds.has(c.id) ? 'bg-rose-400' : 'bg-emerald-500'}`} />
                             <span className="font-semibold text-slate-700 truncate">{c.name}</span>
                             <span className="text-slate-400 ml-auto text-[10px]">{c.advisor}</span>
