@@ -226,3 +226,29 @@ Stage Summary:
 - SQLite → PostgreSQL migration complete
 - Build passes, all API routes compatible
 - User needs to: 1) Push to GitHub, 2) Import to Vercel, 3) Add Vercel Postgres, 4) Run migration + seed
+---
+Task ID: deploy-vercel
+Agent: main
+Task: Deploy app to Vercel with Neon Postgres database
+
+Work Log:
+- Checked project status: build passes, git remote configured
+- Installed Vercel CLI v54.1.0
+- Linked project to Vercel: charlienc1604-5790s-projects/my-project
+- First deployment successful: https://my-project-delta-one-86.vercel.app
+- Removed old placeholder DATABASE_URL from Vercel env
+- Installed Neon Postgres integration: neon-cordovan-sail
+- Connected Neon database to project (env vars auto-configured)
+- Ran Prisma migration on Neon: 0001_init applied successfully
+- Seeded database: EventInfo, GiftTiers, DrawPrizes created
+- Updated prisma/schema.prisma: added directUrl for Neon migrations
+- Added gift tiers to seed script (4 tiers: Bạc, Vàng, Kim Cương, VIP)
+- Redeployed with updated schema
+- Verified all API endpoints on production
+
+Stage Summary:
+- Production URL: https://my-project-delta-one-86.vercel.app
+- GitHub repo: https://github.com/NMCDesignapp/diamond-investment-app
+- Neon Postgres: neon-cordovan-sail (ep-shiny-salad-aqi37ks3)
+- All APIs working: /api/customers, /api/event-info, /api/gift-tiers, /api/draw-prizes, /api/stats
+- Credentials saved: GitHub PAT + Vercel Token
