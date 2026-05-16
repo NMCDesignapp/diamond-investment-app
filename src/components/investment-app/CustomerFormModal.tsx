@@ -50,13 +50,11 @@ export function CustomerFormModal() {
           note: editingCustomer.note,
         });
       } else {
-        // New mode: keep advisor from last entry for convenience, reset everything else
         setForm(prev => ({
           ...EMPTY_FORM,
-          advisor: prev.advisor, // Giữ lại TVV cũ để nhập nhanh
+          advisor: prev.advisor,
         }));
       }
-      // Auto-focus vào ô họ tên khi mở form
       setTimeout(() => nameInputRef.current?.focus(), 100);
     }
   }, [isOpen, editingCustomer]);
@@ -97,23 +95,18 @@ export function CustomerFormModal() {
       });
 
       if (editingCustomer) {
-        // Khi sửa: đóng modal như cũ
         setIsOpen(false);
         setEditingCustomer(null);
       } else {
-        // Khi thêm mới: giữ modal mở, hiện thông báo, reset form cho lần nhập tiếp
         setSavedCount(prev => prev + 1);
         setShowSavedFeedback(true);
         setTimeout(() => setShowSavedFeedback(false), 1500);
 
-        // Reset form nhưng giữ lại TVV cho tiện
         const lastAdvisor = form.advisor.trim();
         setForm({
           ...EMPTY_FORM,
           advisor: lastAdvisor,
         });
-
-        // Auto-focus vào ô họ tên cho lần nhập tiếp
         setTimeout(() => nameInputRef.current?.focus(), 50);
       }
     } catch (error) {
@@ -121,6 +114,12 @@ export function CustomerFormModal() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const inputStyle = {
+    border: '1px solid rgba(212,168,67,0.25)',
+    background: 'rgba(10,22,40,0.8)',
+    color: '#f5d870',
   };
 
   return (
@@ -132,10 +131,10 @@ export function CustomerFormModal() {
           setEditingCustomer(null);
           setIsOpen(true);
         }}
-        className="p-0.5 hover:bg-amber-800/10 rounded transition-all"
+        className="p-0.5 hover:bg-white/5 rounded transition-all"
         title="Thêm khách hàng"
       >
-        <Plus className="w-3.5 h-3.5 text-amber-900/50" />
+        <Plus className="w-3.5 h-3.5" style={{ color: 'rgba(212,168,67,0.5)' }} />
       </motion.button>
 
       <AnimatePresence>
@@ -144,7 +143,7 @@ export function CustomerFormModal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={handleClose}
           >
             <motion.div
@@ -152,29 +151,29 @@ export function CustomerFormModal() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', duration: 0.4 }}
-              className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-auto border-4 border-amber-400 shadow-2xl"
+              className="rounded-2xl max-w-lg w-full max-h-[90vh] overflow-auto shadow-2xl"
+              style={{ background: '#0f2042', border: '2px solid rgba(212,168,67,0.4)' }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="relative overflow-hidden bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 p-4 rounded-t-xl">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMjBhMjAgMjAgMCAwIDEgMjAtMjB2NDBhMjAgMjAgMCAwIDEtMjAtMjB6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIi8+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjYSkiLz48L3N2Zz4=')] opacity-30" />
+              <div className="relative overflow-hidden p-4" style={{ background: 'linear-gradient(135deg, #0a1628, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
                 <div className="relative flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <Diamond className="w-5 h-5 text-amber-900/70" />
-                    <h2 className="text-xl font-bold text-amber-900">
+                    <Diamond className="w-5 h-5" style={{ color: '#f5d870' }} />
+                    <h2 className="text-xl font-bold" style={{ color: '#f5d870' }}>
                       {editingCustomer ? 'Sửa khách hàng' : 'Thêm khách hàng'}
                     </h2>
                     {!editingCustomer && savedCount > 0 && (
-                      <span className="bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(13,90,63,0.3)', color: '#10b981' }}>
                         +{savedCount}
                       </span>
                     )}
                   </div>
                   <button
                     onClick={handleClose}
-                    className="p-1 hover:bg-black/10 rounded-lg transition-colors"
+                    className="p-1 hover:bg-white/5 rounded-lg transition-colors"
                   >
-                    <X className="w-6 h-6 text-amber-900" />
+                    <X className="w-6 h-6" style={{ color: '#d4a843' }} />
                   </button>
                 </div>
               </div>
@@ -189,9 +188,9 @@ export function CustomerFormModal() {
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
-                    <div className="flex items-center justify-center gap-2 py-2 bg-emerald-50 border-b border-emerald-200">
-                      <CheckCircle className="w-4 h-4 text-emerald-600" />
-                      <span className="text-sm font-semibold text-emerald-700">Đã lưu! Nhập khách hàng tiếp theo</span>
+                    <div className="flex items-center justify-center gap-2 py-2" style={{ background: 'rgba(13,90,63,0.15)', borderBottom: '1px solid rgba(16,185,129,0.2)' }}>
+                      <CheckCircle className="w-4 h-4" style={{ color: '#10b981' }} />
+                      <span className="text-sm font-semibold" style={{ color: '#10b981' }}>Đã lưu! Nhập khách hàng tiếp theo</span>
                     </div>
                   </motion.div>
                 )}
@@ -200,61 +199,66 @@ export function CustomerFormModal() {
               {/* Form */}
               <form onSubmit={handleSubmit} className="p-5 space-y-4">
                 <div>
-                  <label className="text-sm font-bold text-slate-700 mb-1 block">Họ tên *</label>
+                  <label className="text-sm font-bold mb-1 block" style={{ color: '#d4a843' }}>Họ tên *</label>
                   <input
                     ref={nameInputRef}
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="Nhập họ tên khách hàng"
                     required
-                    className="w-full p-2.5 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                    className="w-full p-2.5 rounded-lg outline-none transition-all"
+                    style={inputStyle}
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-slate-700 mb-1 block">Tư vấn viên</label>
+                  <label className="text-sm font-bold mb-1 block" style={{ color: '#d4a843' }}>Tư vấn viên</label>
                   <input
                     value={form.advisor}
                     onChange={(e) => setForm({ ...form, advisor: e.target.value })}
                     placeholder="Tên tư vấn viên"
-                    className="w-full p-2.5 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                    className="w-full p-2.5 rounded-lg outline-none transition-all"
+                    style={inputStyle}
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-slate-700 mb-1 block">Phí đầu tư (triệu)</label>
+                  <label className="text-sm font-bold mb-1 block" style={{ color: '#d4a843' }}>Phí đầu tư (triệu)</label>
                   <input
                     type="number"
                     step="1"
                     value={form.investmentFee}
                     onChange={(e) => autoFillGift(e.target.value)}
                     placeholder="VD: 100"
-                    className="w-full p-2.5 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                    className="w-full p-2.5 rounded-lg outline-none transition-all"
+                    style={inputStyle}
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-slate-700 mb-2 block">Trạng thái quà</label>
+                  <label className="text-sm font-bold mb-2 block" style={{ color: '#d4a843' }}>Trạng thái quà</label>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => setForm({ ...form, status: 'Chưa nhận quà' })}
-                      className={`flex-1 py-2.5 rounded-lg font-semibold transition-all border-2 ${
-                        form.status === 'Chưa nhận quà'
-                          ? 'bg-amber-400 border-amber-500 text-amber-900 shadow-md'
-                          : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
-                      }`}
+                      className="flex-1 py-2.5 rounded-lg font-semibold transition-all border"
+                      style={{
+                        background: form.status === 'Chưa nhận quà' ? 'rgba(212,168,67,0.2)' : 'rgba(10,22,40,0.5)',
+                        borderColor: form.status === 'Chưa nhận quà' ? 'rgba(212,168,67,0.5)' : 'rgba(212,168,67,0.15)',
+                        color: form.status === 'Chưa nhận quà' ? '#f5d870' : 'rgba(212,168,67,0.4)',
+                      }}
                     >
                       Chưa nhận
                     </button>
                     <button
                       type="button"
                       onClick={() => setForm({ ...form, status: 'Không nhận quà' })}
-                      className={`flex-1 py-2.5 rounded-lg font-semibold transition-all border-2 ${
-                        form.status === 'Không nhận quà'
-                          ? 'bg-rose-400 border-rose-500 text-rose-900 shadow-md'
-                          : 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
-                      }`}
+                      className="flex-1 py-2.5 rounded-lg font-semibold transition-all border"
+                      style={{
+                        background: form.status === 'Không nhận quà' ? 'rgba(239,68,68,0.15)' : 'rgba(10,22,40,0.5)',
+                        borderColor: form.status === 'Không nhận quà' ? 'rgba(239,68,68,0.4)' : 'rgba(239,68,68,0.1)',
+                        color: form.status === 'Không nhận quà' ? '#ef4444' : 'rgba(239,68,68,0.4)',
+                      }}
                     >
                       Không nhận
                     </button>
@@ -263,34 +267,37 @@ export function CustomerFormModal() {
 
                 <div className="space-y-2">
                   <div>
-                    <label className="text-sm font-bold text-slate-700 mb-1 block">Quà tặng</label>
+                    <label className="text-sm font-bold mb-1 block" style={{ color: '#d4a843' }}>Quà tặng</label>
                     <input
                       value={form.gift}
                       readOnly
                       placeholder="Tự động theo mức phí"
-                      className="w-full p-2.5 bg-amber-50/80 border-2 border-amber-100 rounded-lg text-slate-600"
+                      className="w-full p-2.5 rounded-lg"
+                      style={{ ...inputStyle, opacity: 0.7 }}
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-bold text-slate-700 mb-1 block">Giá trị quà (VND)</label>
+                    <label className="text-sm font-bold mb-1 block" style={{ color: '#d4a843' }}>Giá trị quà (VND)</label>
                     <input
                       type="number"
                       value={form.giftValue}
                       onChange={(e) => setForm({ ...form, giftValue: e.target.value })}
                       placeholder="Giá trị"
-                      className="w-full p-2.5 bg-amber-50/80 border-2 border-amber-100 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                      className="w-full p-2.5 rounded-lg outline-none transition-all"
+                      style={inputStyle}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-slate-700 mb-1 block">Ghi chú</label>
+                  <label className="text-sm font-bold mb-1 block" style={{ color: '#d4a843' }}>Ghi chú</label>
                   <textarea
                     value={form.note}
                     onChange={(e) => setForm({ ...form, note: e.target.value })}
                     rows={2}
                     placeholder="Ghi chú thêm..."
-                    className="w-full p-2.5 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-200 outline-none transition-all resize-none"
+                    className="w-full p-2.5 rounded-lg outline-none transition-all resize-none"
+                    style={inputStyle}
                   />
                 </div>
 
@@ -298,7 +305,8 @@ export function CustomerFormModal() {
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="flex-1 bg-slate-100 hover:bg-slate-200 py-2.5 rounded-lg font-semibold transition-colors"
+                    className="flex-1 py-2.5 rounded-lg font-semibold transition-colors"
+                    style={{ background: 'rgba(212,168,67,0.08)', color: 'rgba(212,168,67,0.5)' }}
                   >
                     Đóng
                   </button>
@@ -307,7 +315,8 @@ export function CustomerFormModal() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     disabled={isSaving}
-                    className="flex-1 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-400 hover:to-amber-600 py-2.5 rounded-lg font-bold text-amber-900 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                    className="flex-1 py-2.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                    style={{ background: 'linear-gradient(135deg, #0d5a3f, #0a7a4a)', color: '#f5d870' }}
                   >
                     {isSaving ? 'Đang lưu...' : editingCustomer ? 'Lưu' : 'Lưu & Tiếp tục'}
                   </motion.button>

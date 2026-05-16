@@ -35,13 +35,16 @@ function titleCase(str: string) {
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; text: string; icon: string }> = {
-    'Đã nhận quà': { bg: 'bg-emerald-100', text: 'text-emerald-800', icon: '✓' },
-    'Chưa nhận quà': { bg: 'bg-blue-100', text: 'text-blue-800', icon: '⏳' },
-    'Không nhận quà': { bg: 'bg-rose-100', text: 'text-rose-800', icon: '✗' },
+    'Đã nhận quà': { bg: 'rgba(13,90,63,0.2)', text: '#10b981', icon: '✓' },
+    'Chưa nhận quà': { bg: 'rgba(212,168,67,0.15)', text: '#d4a843', icon: '⏳' },
+    'Không nhận quà': { bg: 'rgba(239,68,68,0.15)', text: '#ef4444', icon: '✗' },
   };
   const c = config[status] || config['Chưa nhận quà'];
   return (
-    <span className={`inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full text-[9px] font-semibold ${c.bg} ${c.text} whitespace-nowrap`}>
+    <span
+      className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap"
+      style={{ background: c.bg, color: c.text }}
+    >
       <span>{c.icon}</span>{status.replace(' nhận quà', '')}
     </span>
   );
@@ -76,7 +79,7 @@ export default function InvestmentApp() {
     const scroll = () => {
       scrollPos -= speed;
       if (scrollPos <= 0) {
-        scrollPos = el.scrollHeight / 2; // half because we duplicate content
+        scrollPos = el.scrollHeight / 2;
       }
       el.scrollTop = scrollPos;
       animId = requestAnimationFrame(scroll);
@@ -92,11 +95,13 @@ export default function InvestmentApp() {
   }, [autoScroll]);
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-blue-100/20 overflow-hidden">
-      {/* Decorative background */}
+    <div className="h-screen flex flex-col overflow-hidden" style={{ background: '#0a1628' }}>
+      {/* Background glow effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-900/10 to-blue-800/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -left-20 w-72 h-72 bg-gradient-to-tr from-blue-800/5 to-blue-100/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(ellipse, rgba(212,168,67,0.05) 0%, transparent 70%)' }} />
+        <div className="absolute top-1/3 -left-20 w-72 h-72 rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(ellipse, rgba(13,90,63,0.05) 0%, transparent 70%)' }} />
       </div>
 
       {/* === FIXED HEADER === */}
@@ -105,8 +110,8 @@ export default function InvestmentApp() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className="relative flex-shrink-0 overflow-hidden rounded-b-2xl shadow-lg"
+        style={{ background: 'linear-gradient(135deg, #0f2042, #162d50, #0f2042)', borderBottom: '2px solid rgba(212,168,67,0.3)' }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 opacity-95" />
         <div className="relative px-4 py-3 md:px-6 md:py-3.5 flex items-center justify-between">
           {/* Center title */}
           <div className="flex-1" />
@@ -115,12 +120,12 @@ export default function InvestmentApp() {
               animate={{ rotate: [0, 8, -8, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <Diamond className="w-5 h-5 text-yellow-400 mx-auto" />
+              <Diamond className="w-5 h-5 mx-auto" style={{ color: '#f5d870' }} />
             </motion.div>
-            <h1 className="text-lg md:text-xl font-black uppercase tracking-wider text-white drop-shadow-sm">
+            <h1 className="text-lg md:text-xl font-black uppercase tracking-wider" style={{ color: '#f5d870', textShadow: '0 0 20px rgba(212,168,67,0.2)' }}>
               {store.eventInfo.name}
             </h1>
-            <p className="text-blue-200 font-medium text-[11px] md:text-xs">
+            <p style={{ color: 'rgba(212,168,67,0.5)' }} className="font-medium text-[11px] md:text-xs">
               {store.eventInfo.date} &bull; {store.eventInfo.location}
             </p>
           </div>
@@ -131,9 +136,9 @@ export default function InvestmentApp() {
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className="p-0.5 hover:bg-white/10 rounded transition-all"
+                  className="p-0.5 hover:bg-white/5 rounded transition-all"
                 >
-                  <Dices className="w-3.5 h-3.5 text-white/60" />
+                  <Dices className="w-3.5 h-3.5" style={{ color: 'rgba(212,168,67,0.5)' }} />
                 </motion.button>
               </Link>
               <SettingsModal />
@@ -146,24 +151,27 @@ export default function InvestmentApp() {
       {/* === STATS === */}
       <div className="flex-shrink-0 grid grid-cols-3 gap-1.5 md:gap-3 px-2 md:px-5 pt-2 md:pt-3">
         {[
-          { label: 'Tổng KH', value: stats.totalCustomers, icon: Users, bg: 'bg-blue-50', border: 'border-blue-200', iconBg: 'bg-blue-100', iconColor: 'text-blue-700', valueColor: 'text-blue-900' },
-          { label: 'Tổng phí', value: stats.totalFee * 1e6, icon: DollarSign, bg: 'bg-emerald-50', border: 'border-emerald-200', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-700', valueColor: 'text-emerald-900' },
-          { label: 'Tổng quà', value: stats.totalGiftValue, icon: Gift, bg: 'bg-green-50', border: 'border-green-200', iconBg: 'bg-green-100', iconColor: 'text-green-700', valueColor: 'text-green-900' },
+          { label: 'Tổng KH', value: stats.totalCustomers, icon: Users, accentColor: '#d4a843' },
+          { label: 'Tổng phí', value: stats.totalFee * 1e6, icon: DollarSign, accentColor: '#10b981' },
+          { label: 'Tổng quà', value: stats.totalGiftValue, icon: Gift, accentColor: '#f5d870' },
         ].map((stat, idx) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.08 * idx }}
-            className={`flex items-center gap-1.5 md:gap-2 rounded-xl border ${stat.border} ${stat.bg} p-1.5 md:p-3 shadow-sm overflow-hidden`}
+            className="flex items-center gap-1.5 md:gap-2 rounded-xl p-1.5 md:p-3 shadow-sm overflow-hidden"
+            style={{
+              background: 'rgba(15,32,66,0.8)',
+              border: `1px solid rgba(212,168,67,0.2)`,
+            }}
           >
-            <div className={`${stat.iconBg} p-1 md:p-1.5 rounded-lg flex-shrink-0`}>
-              <stat.icon className={`w-3 h-3 md:w-3.5 md:h-3.5 ${stat.iconColor}`} />
+            <div className="p-1 md:p-1.5 rounded-lg flex-shrink-0" style={{ background: `rgba(212,168,67,0.1)` }}>
+              <stat.icon className="w-3 h-3 md:w-3.5 md:h-3.5" style={{ color: stat.accentColor }} />
             </div>
             <div className="min-w-0">
-              <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-wide text-slate-400">{stat.label}</p>
-              <p className={`text-xs md:text-base font-black ${stat.valueColor} leading-tight`}>
-                {/* Mobile: compact format, Desktop: full format */}
+              <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-wide" style={{ color: 'rgba(212,168,67,0.4)' }}>{stat.label}</p>
+              <p className="text-xs md:text-base font-black leading-tight" style={{ color: stat.accentColor }}>
                 <span className="md:hidden">{typeof stat.value === 'number' ? formatCompactVND(stat.value) : stat.value}</span>
                 <span className="hidden md:inline">{typeof stat.value === 'number' ? formatVND(stat.value) : stat.value}</span>
               </p>
@@ -176,39 +184,41 @@ export default function InvestmentApp() {
       <div className="flex-1 min-h-0 px-3 md:px-5 pt-2.5 pb-1 hidden md:flex md:flex-col">
         {store.isLoading ? (
           <div className="flex flex-col items-center justify-center h-full">
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }} className="w-10 h-10 border-4 border-blue-300 border-t-blue-600 rounded-full" />
-            <p className="mt-3 text-blue-700 font-medium text-sm">Đang tải...</p>
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+              className="w-10 h-10 rounded-full"
+              style={{ border: '4px solid rgba(212,168,67,0.2)', borderTopColor: '#d4a843' }} />
+            <p className="mt-3 font-medium text-sm" style={{ color: '#d4a843' }}>Đang tải...</p>
           </div>
         ) : isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full">
-            <Users className="w-12 h-12 text-blue-300 mb-2" />
-            <p className="text-lg font-bold text-slate-500">Chưa có khách hàng</p>
-            <p className="text-blue-500 text-sm">Nhấn &quot;+&quot; để thêm</p>
+            <Users className="w-12 h-12 mb-2" style={{ color: 'rgba(212,168,67,0.2)' }} />
+            <p className="text-lg font-bold" style={{ color: 'rgba(212,168,67,0.5)' }}>Chưa có khách hàng</p>
+            <p style={{ color: '#d4a843' }} className="text-sm">Nhấn &quot;+&quot; để thêm</p>
           </div>
         ) : (
-          <div className="h-full rounded-lg border-2 border-yellow-600 shadow-lg bg-white/95 backdrop-blur-sm flex flex-col overflow-hidden">
+          <div className="h-full rounded-lg shadow-lg flex flex-col overflow-hidden"
+            style={{ background: 'rgba(15,32,66,0.9)', border: '2px solid rgba(212,168,67,0.3)' }}>
             {/* Fixed table header */}
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900">
-                  <th className="px-2 py-1.5 text-yellow-400 font-extrabold text-sm uppercase text-center w-12">STT</th>
-                  <th className="px-2 py-1.5 text-yellow-400 font-extrabold text-sm uppercase text-center whitespace-nowrap">Khách Hàng</th>
-                  <th className="px-2 py-1.5 text-yellow-400 font-extrabold text-sm uppercase text-center whitespace-nowrap">TVV</th>
-                  <th className="px-2 py-1.5 text-yellow-400 font-extrabold text-sm uppercase text-center whitespace-nowrap">Phí Đầu Tư</th>
-                  <th className="px-2 py-1.5 text-yellow-400 font-extrabold text-sm uppercase text-center">Quà Tặng</th>
-                  <th className="px-2 py-1.5 text-yellow-400 font-extrabold text-sm uppercase text-center whitespace-nowrap">Giá Trị</th>
-                  <th className="px-2 py-1.5 text-yellow-400 font-extrabold text-sm uppercase text-center w-24">Ghi Chú</th>
+                <tr style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)' }}>
+                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center w-12" style={{ color: '#f5d870' }}>STT</th>
+                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>Khách Hàng</th>
+                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>TVV</th>
+                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>Phí Đầu Tư</th>
+                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center" style={{ color: '#f5d870' }}>Quà Tặng</th>
+                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>Giá Trị</th>
+                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center w-24" style={{ color: '#f5d870' }}>Ghi Chú</th>
                 </tr>
               </thead>
             </table>
-            {/* Scrollable body - with duplicated rows for seamless auto-scroll */}
+            {/* Scrollable body */}
             <div
               ref={tableBodyRef}
               className={`flex-1 overflow-y-auto ${autoScroll ? 'overflow-y-hidden' : ''}`}
             >
               <table className="w-full border-collapse">
                 <tbody>
-                  {/* If auto-scrolling, duplicate for seamless loop */}
                   {(autoScroll ? [filtered, filtered] : [filtered]).flat().map((c, idx) => {
                     const realIdx = idx % filtered.length;
                     const realC = filtered[realIdx];
@@ -218,21 +228,26 @@ export default function InvestmentApp() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.25, delay: realIdx * 0.02 }}
-                        className="border-b border-yellow-600/20 hover:bg-blue-50/60 transition-colors duration-100"
+                        className="transition-colors duration-100"
+                        style={{
+                          borderBottom: '1px solid rgba(212,168,67,0.1)',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,168,67,0.05)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
-                        <td className="px-2 py-1.5 text-center font-bold text-slate-400 text-sm w-12">{realIdx + 1}</td>
-                        <td className="px-2 py-1.5 font-semibold text-slate-500 text-sm whitespace-nowrap">{titleCase(realC.name)}</td>
-                        <td className="px-2 py-1.5 text-slate-500 text-sm whitespace-nowrap">{titleCase(realC.advisor) || '—'}</td>
-                        <td className="px-2 py-1.5 text-right font-mono text-emerald-700 font-semibold text-sm whitespace-nowrap">
+                        <td className="px-2 py-1.5 text-center font-bold text-sm w-12" style={{ color: 'rgba(212,168,67,0.3)' }}>{realIdx + 1}</td>
+                        <td className="px-2 py-1.5 font-semibold text-sm whitespace-nowrap" style={{ color: '#f5d870' }}>{titleCase(realC.name)}</td>
+                        <td className="px-2 py-1.5 text-sm whitespace-nowrap" style={{ color: 'rgba(212,168,67,0.5)' }}>{titleCase(realC.advisor) || '—'}</td>
+                        <td className="px-2 py-1.5 text-right font-mono font-semibold text-sm whitespace-nowrap" style={{ color: '#10b981' }}>
                           {formatVND(realC.investmentFee * 1e6)}
                         </td>
-                        <td className="px-2 py-1.5 text-right font-semibold text-rose-700 text-sm">
+                        <td className="px-2 py-1.5 text-right font-semibold text-sm" style={{ color: '#d4a843' }}>
                           <span className="inline-flex items-end justify-end gap-1 flex-wrap">
-                            <Gift className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                            <Gift className="w-4 h-4 flex-shrink-0" style={{ color: 'rgba(212,168,67,0.5)' }} />
                             <span className="leading-tight">{realC.gift || '—'}</span>
                           </span>
                         </td>
-                        <td className="px-2 py-1.5 text-right font-mono text-rose-700 font-semibold text-sm whitespace-nowrap">
+                        <td className="px-2 py-1.5 text-right font-mono font-semibold text-sm whitespace-nowrap" style={{ color: '#d4a843' }}>
                           {formatVND(realC.giftValue)}
                         </td>
                         <td className="p-2 w-20">
@@ -242,11 +257,11 @@ export default function InvestmentApp() {
                               whileHover={{ scale: 1.15 }}
                               whileTap={{ scale: 0.85 }}
                               onClick={() => store.toggleReceivedStatus(realC.id)}
-                              className={`p-1 rounded-md transition-colors ${
-                                realC.status === 'Đã nhận quà'
-                                  ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700'
-                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-500'
-                              }`}
+                              className="p-1 rounded-md transition-colors"
+                              style={{
+                                background: realC.status === 'Đã nhận quà' ? 'rgba(13,90,63,0.2)' : 'rgba(212,168,67,0.08)',
+                                color: realC.status === 'Đã nhận quà' ? '#10b981' : 'rgba(212,168,67,0.35)',
+                              }}
                               title={realC.status === 'Đã nhận quà' ? 'Chưa nhận quà' : 'Đã nhận quà'}
                             >
                               <Check className="w-3.5 h-3.5" />
@@ -267,13 +282,15 @@ export default function InvestmentApp() {
       <div className="flex-1 min-h-0 overflow-y-auto px-3 pt-2 pb-1 md:hidden">
         {store.isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }} className="w-10 h-10 border-4 border-blue-300 border-t-blue-600 rounded-full" />
-            <p className="mt-3 text-blue-700 font-medium text-sm">Đang tải...</p>
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+              className="w-10 h-10 rounded-full"
+              style={{ border: '4px solid rgba(212,168,67,0.2)', borderTopColor: '#d4a843' }} />
+            <p className="mt-3 font-medium text-sm" style={{ color: '#d4a843' }}>Đang tải...</p>
           </div>
         ) : isEmpty ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <Users className="w-12 h-12 text-blue-300 mb-2" />
-            <p className="text-lg font-bold text-slate-500">Chưa có khách hàng</p>
+            <Users className="w-12 h-12 mb-2" style={{ color: 'rgba(212,168,67,0.2)' }} />
+            <p className="text-lg font-bold" style={{ color: 'rgba(212,168,67,0.5)' }}>Chưa có khách hàng</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -283,19 +300,20 @@ export default function InvestmentApp() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: idx * 0.03 }}
-                className="bg-white/90 backdrop-blur-sm rounded-xl border border-yellow-600/30 shadow-md overflow-hidden"
+                className="rounded-xl shadow-md overflow-hidden"
+                style={{ background: 'rgba(15,32,66,0.9)', border: '1px solid rgba(212,168,67,0.2)' }}
               >
                 <div className="p-3 cursor-pointer" onClick={() => setExpandedMobile(expandedMobile === c.id ? null : c.id)}>
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">#{idx + 1}</span>
-                      <h3 className="font-bold text-base text-slate-800">{titleCase(c.name)}</h3>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(212,168,67,0.1)', color: '#d4a843' }}>#{idx + 1}</span>
+                      <h3 className="font-bold text-base" style={{ color: '#f5d870' }}>{titleCase(c.name)}</h3>
                     </div>
-                    {expandedMobile === c.id ? <ChevronUp className="w-4 h-4 text-blue-500" /> : <ChevronDown className="w-4 h-4 text-blue-500" />}
+                    {expandedMobile === c.id ? <ChevronUp className="w-4 h-4" style={{ color: '#d4a843' }} /> : <ChevronDown className="w-4 h-4" style={{ color: '#d4a843' }} />}
                   </div>
                   <div className="mt-1 flex items-center justify-between">
-                    <span className="text-xs text-slate-500">💼 {titleCase(c.advisor) || '—'}</span>
-                    <span className="text-xs font-mono font-bold text-emerald-700">{formatVND(c.investmentFee * 1e6)}</span>
+                    <span className="text-xs" style={{ color: 'rgba(212,168,67,0.5)' }}>💼 {titleCase(c.advisor) || '—'}</span>
+                    <span className="text-xs font-mono font-bold" style={{ color: '#10b981' }}>{formatVND(c.investmentFee * 1e6)}</span>
                   </div>
                 </div>
                 <AnimatePresence>
@@ -307,24 +325,30 @@ export default function InvestmentApp() {
                       transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
-                      <div className="px-3 pb-3 space-y-1.5 border-t border-blue-100 pt-2 text-xs">
+                      <div className="px-3 pb-3 space-y-1.5 pt-2 text-xs" style={{ borderTop: '1px solid rgba(212,168,67,0.1)' }}>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">🎁 Quà</span>
-                          <span className="font-semibold text-slate-700">{c.gift || '—'}</span>
+                          <span style={{ color: 'rgba(212,168,67,0.5)' }}>🎁 Quà</span>
+                          <span className="font-semibold" style={{ color: '#d4a843' }}>{c.gift || '—'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">💎 Giá trị</span>
-                          <span className="font-mono font-bold text-rose-700">{formatVND(c.giftValue)}</span>
+                          <span style={{ color: 'rgba(212,168,67,0.5)' }}>💎 Giá trị</span>
+                          <span className="font-mono font-bold" style={{ color: '#d4a843' }}>{formatVND(c.giftValue)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">📝 Ghi chú</span>
-                          <span className="text-slate-600">{c.note || '—'}</span>
+                          <span style={{ color: 'rgba(212,168,67,0.5)' }}>📝 Ghi chú</span>
+                          <span style={{ color: 'rgba(212,168,67,0.6)' }}>{c.note || '—'}</span>
                         </div>
                         <div className="flex justify-between items-center pt-1">
                           <StatusBadge status={c.status} />
                           <div className="flex gap-1.5">
-                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => store.toggleReceivedStatus(c.id)} className="p-1.5 bg-emerald-100 rounded text-emerald-700"><Check className="w-3.5 h-3.5" /></motion.button>
-                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => { const event = new CustomEvent('editCustomer', { detail: c }); window.dispatchEvent(event); }} className="p-1.5 bg-blue-100 rounded text-blue-700"><Pencil className="w-3.5 h-3.5" /></motion.button>
+                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => store.toggleReceivedStatus(c.id)}
+                              className="p-1.5 rounded" style={{ background: 'rgba(13,90,63,0.2)', color: '#10b981' }}>
+                              <Check className="w-3.5 h-3.5" />
+                            </motion.button>
+                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => { const event = new CustomEvent('editCustomer', { detail: c }); window.dispatchEvent(event); }}
+                              className="p-1.5 rounded" style={{ background: 'rgba(212,168,67,0.1)', color: '#d4a843' }}>
+                              <Pencil className="w-3.5 h-3.5" />
+                            </motion.button>
                             <DeleteConfirmModal customerId={c.id} customerName={c.name} />
                           </div>
                         </div>
@@ -339,22 +363,32 @@ export default function InvestmentApp() {
       </div>
 
       {/* === FIXED BOTTOM: SEARCH, FILTER & SCROLL TOGGLE === */}
-      <div className="flex-shrink-0 px-3 md:px-5 py-2 bg-white/80 backdrop-blur-md border-t border-yellow-600/30 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
+      <div className="flex-shrink-0 px-3 md:px-5 py-2" style={{ background: 'rgba(10,22,40,0.95)', borderTop: '1px solid rgba(212,168,67,0.2)' }}>
         <div className="max-w-7xl mx-auto flex gap-2 items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-blue-500" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: '#d4a843' }} />
             <input
               type="text"
               placeholder="Tìm tên, TVV..."
               value={store.searchKeyword}
               onChange={(e) => store.setSearchKeyword(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-blue-200 bg-white/90 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-200 outline-none transition-all"
+              className="w-full pl-8 pr-3 py-1.5 rounded-lg text-sm outline-none transition-all"
+              style={{
+                border: '1px solid rgba(212,168,67,0.2)',
+                background: 'rgba(15,32,66,0.8)',
+                color: '#f5d870',
+              }}
             />
           </div>
           <select
             value={store.statusFilter}
             onChange={(e) => store.setStatusFilter(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg border border-blue-200 bg-white/90 text-sm focus:border-blue-400 outline-none transition-all cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg text-sm outline-none transition-all cursor-pointer"
+            style={{
+              border: '1px solid rgba(212,168,67,0.2)',
+              background: 'rgba(15,32,66,0.8)',
+              color: '#f5d870',
+            }}
           >
             <option value="">Tất cả</option>
             <option value="Đã nhận quà">Đã nhận</option>
@@ -365,11 +399,12 @@ export default function InvestmentApp() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => setAutoScroll(!autoScroll)}
-            className={`flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all ${
-              autoScroll
-                ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                : 'bg-white/90 border-blue-200 text-slate-400 hover:text-blue-700'
-            }`}
+            className="flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all"
+            style={{
+              background: autoScroll ? 'rgba(13,90,63,0.2)' : 'rgba(15,32,66,0.8)',
+              borderColor: autoScroll ? 'rgba(16,185,129,0.3)' : 'rgba(212,168,67,0.2)',
+              color: autoScroll ? '#10b981' : 'rgba(212,168,67,0.4)',
+            }}
             title={autoScroll ? 'Tắt cuộn tự động' : 'Bật cuộn tự động'}
           >
             {autoScroll ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}

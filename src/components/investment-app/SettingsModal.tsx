@@ -111,7 +111,6 @@ export function SettingsModal() {
   };
 
   const handleClose = async () => {
-    // Save everything before closing
     await handleSaveEventInfo();
     await handleSaveTiers();
     await store.saveDrawPrizes(
@@ -120,16 +119,22 @@ export function SettingsModal() {
     setIsOpen(false);
   };
 
+  const inputStyle = {
+    border: '1px solid rgba(212,168,67,0.25)',
+    background: 'rgba(10,22,40,0.8)',
+    color: '#f5d870',
+  };
+
   return (
     <>
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(true)}
-        className="p-0.5 hover:bg-amber-800/10 rounded transition-all"
+        className="p-0.5 hover:bg-white/5 rounded transition-all"
         title="Cài đặt"
       >
-        <Settings className="w-3.5 h-3.5 text-amber-900/50" />
+        <Settings className="w-3.5 h-3.5" style={{ color: 'rgba(212,168,67,0.5)' }} />
       </motion.button>
 
       <AnimatePresence>
@@ -138,7 +143,7 @@ export function SettingsModal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={handleClose}
           >
             <motion.div
@@ -146,22 +151,22 @@ export function SettingsModal() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', duration: 0.4 }}
-              className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] overflow-auto border-4 border-amber-400 shadow-2xl"
+              className="rounded-2xl w-full max-w-lg max-h-[85vh] overflow-auto shadow-2xl"
+              style={{ background: '#0f2042', border: '2px solid rgba(212,168,67,0.4)' }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="relative overflow-hidden bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 p-4">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMjBhMjAgMjAgMCAwIDEgMjAtMjB2NDBhMjAgMjAgMCAwIDEtMjAtMjB6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-30" />
+              <div className="relative overflow-hidden p-4" style={{ background: 'linear-gradient(135deg, #0a1628, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
                 <div className="relative flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <Diamond className="w-5 h-5 text-amber-900/70" />
-                    <h2 className="text-xl font-bold text-amber-900">Cài đặt</h2>
+                    <Diamond className="w-5 h-5" style={{ color: '#f5d870' }} />
+                    <h2 className="text-xl font-bold" style={{ color: '#f5d870' }}>Cài đặt</h2>
                   </div>
                   <button
                     onClick={handleClose}
-                    className="p-1 hover:bg-black/10 rounded-lg transition-colors"
+                    className="p-1 hover:bg-white/5 rounded-lg transition-colors"
                   >
-                    <X className="w-6 h-6 text-amber-900" />
+                    <X className="w-6 h-6" style={{ color: '#d4a843' }} />
                   </button>
                 </div>
               </div>
@@ -169,44 +174,47 @@ export function SettingsModal() {
               <div className="p-5 space-y-6">
                 {/* Event Info */}
                 <div>
-                  <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
-                    <span className="w-1.5 h-5 bg-amber-400 rounded-full" />
+                  <h3 className="font-bold mb-3 flex items-center gap-2" style={{ color: '#d4a843' }}>
+                    <span className="w-1.5 h-5 rounded-full" style={{ background: '#d4a843' }} />
                     Thông tin sự kiện
                   </h3>
                   <div className="space-y-2.5">
                     <div>
-                      <label className="text-xs font-semibold text-amber-700 mb-1 block">Tiêu đề chương trình</label>
+                      <label className="text-xs font-semibold mb-1 block" style={{ color: 'rgba(212,168,67,0.6)' }}>Tiêu đề chương trình</label>
                       <input
                         value={eventForm.name}
                         onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })}
-                        placeholder="Tiêu đề chương trình (hiển thị trên trang quay số)"
-                        className="w-full p-2.5 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                        placeholder="Tiêu đề chương trình"
+                        className="w-full p-2.5 rounded-lg outline-none transition-all"
+                        style={inputStyle}
                       />
                     </div>
                     <input
                       value={eventForm.date}
                       onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
                       placeholder="Ngày"
-                      className="w-full p-2.5 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                      className="w-full p-2.5 rounded-lg outline-none transition-all"
+                      style={inputStyle}
                     />
                     <input
                       value={eventForm.location}
                       onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
                       placeholder="Địa điểm"
-                      className="w-full p-2.5 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                      className="w-full p-2.5 rounded-lg outline-none transition-all"
+                      style={inputStyle}
                     />
                   </div>
                 </div>
 
                 {/* Gift Tiers */}
                 <div>
-                  <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
-                    <span className="w-1.5 h-5 bg-amber-400 rounded-full" />
+                  <h3 className="font-bold mb-3 flex items-center gap-2" style={{ color: '#d4a843' }}>
+                    <span className="w-1.5 h-5 rounded-full" style={{ background: '#d4a843' }} />
                     Mức quà tặng (theo triệu)
                   </h3>
                   <div className="space-y-3">
                     {tiers.length === 0 && (
-                      <p className="text-center text-amber-600 py-4 bg-amber-50 rounded-lg">
+                      <p className="text-center py-4 rounded-lg" style={{ color: 'rgba(212,168,67,0.4)', background: 'rgba(10,22,40,0.5)' }}>
                         Chưa có cấu hình quà
                       </p>
                     )}
@@ -216,7 +224,8 @@ export function SettingsModal() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="p-3 border-2 border-amber-200 rounded-xl bg-amber-50/50 space-y-2"
+                        className="p-3 rounded-xl space-y-2"
+                        style={{ background: 'rgba(10,22,40,0.5)', border: '1px solid rgba(212,168,67,0.15)' }}
                       >
                         <div className="flex gap-2">
                           <input
@@ -224,20 +233,23 @@ export function SettingsModal() {
                             placeholder="Từ (triệu)"
                             value={tier.minFee}
                             onChange={(e) => updateTier(idx, 'minFee', e.target.value)}
-                            className="w-1/3 p-2 border-2 border-amber-200 rounded-lg focus:border-amber-400 outline-none transition-all text-sm"
+                            className="w-1/3 p-2 rounded-lg outline-none transition-all text-sm"
+                            style={inputStyle}
                           />
                           <input
                             type="number"
                             placeholder="Đến (triệu)"
                             value={tier.maxFee}
                             onChange={(e) => updateTier(idx, 'maxFee', e.target.value)}
-                            className="w-1/3 p-2 border-2 border-amber-200 rounded-lg focus:border-amber-400 outline-none transition-all text-sm"
+                            className="w-1/3 p-2 rounded-lg outline-none transition-all text-sm"
+                            style={inputStyle}
                           />
                           <input
                             placeholder="Tên quà"
                             value={tier.giftName}
                             onChange={(e) => updateTier(idx, 'giftName', e.target.value)}
-                            className="flex-1 p-2 border-2 border-amber-200 rounded-lg focus:border-amber-400 outline-none transition-all text-sm"
+                            className="flex-1 p-2 rounded-lg outline-none transition-all text-sm"
+                            style={inputStyle}
                           />
                         </div>
                         <div className="flex gap-2">
@@ -246,13 +258,15 @@ export function SettingsModal() {
                             placeholder="Giá trị VND"
                             value={tier.giftValue}
                             onChange={(e) => updateTier(idx, 'giftValue', e.target.value)}
-                            className="flex-1 p-2 border-2 border-amber-200 rounded-lg focus:border-amber-400 outline-none transition-all text-sm"
+                            className="flex-1 p-2 rounded-lg outline-none transition-all text-sm"
+                            style={inputStyle}
                           />
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => removeTier(idx)}
-                            className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold transition-colors shadow-sm"
+                            className="px-3 py-2 rounded-lg font-bold transition-colors shadow-sm"
+                            style={{ background: 'rgba(239,68,68,0.2)', color: '#ef4444' }}
                           >
                             <Trash2 className="w-4 h-4" />
                           </motion.button>
@@ -264,22 +278,23 @@ export function SettingsModal() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={addTier}
-                    className="w-full mt-3 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-400 hover:to-amber-600 py-2.5 rounded-lg font-bold text-amber-900 shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5"
+                    className="w-full mt-3 py-2.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5"
+                    style={{ background: 'linear-gradient(135deg, #0d5a3f, #0a7a4a)', color: '#f5d870' }}
                   >
                     <Plus className="w-4 h-4" /> Thêm mức
                   </motion.button>
                 </div>
 
-                {/* Draw Prizes (for lucky draw page) */}
+                {/* Draw Prizes */}
                 <div>
-                  <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
-                    <span className="w-1.5 h-5 bg-rose-400 rounded-full" />
+                  <h3 className="font-bold mb-3 flex items-center gap-2" style={{ color: '#d4a843' }}>
+                    <span className="w-1.5 h-5 rounded-full" style={{ background: '#10b981' }} />
                     Quà quay số (trang Quay Số)
                   </h3>
-                  <p className="text-xs text-slate-400 mb-2">Cài đặt riêng cho trang quay số, không liên quan quà tặng bên trang chính</p>
+                  <p className="text-xs mb-2" style={{ color: 'rgba(212,168,67,0.35)' }}>Cài đặt riêng cho trang quay số, không liên quan quà tặng bên trang chính</p>
                   <div className="space-y-3">
                     {drawPrizes.length === 0 && (
-                      <p className="text-center text-rose-600 py-4 bg-rose-50 rounded-lg">
+                      <p className="text-center py-4 rounded-lg" style={{ color: 'rgba(13,90,63,0.6)', background: 'rgba(10,22,40,0.5)' }}>
                         Chưa có giải quay số
                       </p>
                     )}
@@ -289,27 +304,31 @@ export function SettingsModal() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="p-3 border-2 border-rose-200 rounded-xl bg-rose-50/50 space-y-2"
+                        className="p-3 rounded-xl space-y-2"
+                        style={{ background: 'rgba(10,22,40,0.5)', border: '1px solid rgba(13,90,63,0.2)' }}
                       >
                         <div className="flex gap-2">
                           <input
                             placeholder="Tên giải (VD: Giải nhất)"
                             value={prize.name}
                             onChange={(e) => updateDrawPrize(idx, 'name', e.target.value)}
-                            className="flex-1 p-2 border-2 border-rose-200 rounded-lg focus:border-rose-400 outline-none transition-all text-sm"
+                            className="flex-1 p-2 rounded-lg outline-none transition-all text-sm"
+                            style={inputStyle}
                           />
                           <input
                             type="number"
                             placeholder="Số lượng"
                             value={prize.quantity}
                             onChange={(e) => updateDrawPrize(idx, 'quantity', e.target.value)}
-                            className="w-24 p-2 border-2 border-rose-200 rounded-lg focus:border-rose-400 outline-none transition-all text-sm"
+                            className="w-24 p-2 rounded-lg outline-none transition-all text-sm"
+                            style={inputStyle}
                           />
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => removeDrawPrize(idx)}
-                            className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold transition-colors shadow-sm"
+                            className="px-3 py-2 rounded-lg font-bold transition-colors shadow-sm"
+                            style={{ background: 'rgba(239,68,68,0.2)', color: '#ef4444' }}
                           >
                             <Trash2 className="w-4 h-4" />
                           </motion.button>
@@ -321,7 +340,8 @@ export function SettingsModal() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={addDrawPrize}
-                    className="w-full mt-3 bg-gradient-to-b from-rose-300 to-rose-500 hover:from-rose-400 hover:to-rose-600 py-2.5 rounded-lg font-bold text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5"
+                    className="w-full mt-3 py-2.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5"
+                    style={{ background: 'linear-gradient(135deg, #0d5a3f, #0a7a4a)', color: '#f5d870' }}
                   >
                     <Plus className="w-4 h-4" /> Thêm giải
                   </motion.button>
@@ -330,7 +350,8 @@ export function SettingsModal() {
                 <button
                   onClick={handleClose}
                   disabled={isSaving}
-                  className="w-full bg-slate-100 hover:bg-slate-200 py-2.5 rounded-lg font-semibold transition-colors mt-2"
+                  className="w-full py-2.5 rounded-lg font-semibold transition-colors mt-2"
+                  style={{ background: 'rgba(212,168,67,0.08)', color: 'rgba(212,168,67,0.5)' }}
                 >
                   {isSaving ? 'Đang lưu...' : 'Đóng & Lưu'}
                 </button>

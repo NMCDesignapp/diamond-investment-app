@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Settings, X, Trophy, Users, Gift, Crown, Star, Dices, Diamond,
-  Pause, Play, Plus, Trash2
+  Pause, Play, Plus, Trash2, Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import { useInvestmentStore } from '@/lib/investment-store';
@@ -46,10 +46,10 @@ class ConfettiSystem {
     this.canvas.height = window.innerHeight;
     this.running = true;
     const colors = [
-      '#f59e0b', '#fbbf24', '#fcd34d', '#ff6b6b', '#4ecdc4',
-      '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#6ab04c',
+      '#d4a843', '#f5d870', '#ffe066', '#ff6b6b', '#4ecdc4',
+      '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#0d5a3f',
       '#e74c3c', '#9b59b6', '#3498db', '#1abc9c', '#e67e22',
-      '#fd79a8', '#a29bfe', '#00b894', '#fdcb6e', '#6c5ce7',
+      '#fd79a8', '#a29bfe', '#10b981', '#fdcb6e', '#6c5ce7',
     ];
     const shapes: Array<'rect' | 'circle' | 'star'> = ['rect', 'circle', 'star'];
     for (let i = 0; i < 300; i++) {
@@ -147,11 +147,10 @@ function titleCase(str: string) {
 
 // Slot item height - bigger for desktop projection
 const SLOT_ITEM_HEIGHT_MOBILE = 70;
-const SLOT_ITEM_HEIGHT_DESKTOP = 110;
+const SLOT_ITEM_HEIGHT_DESKTOP = 120;
 
 export default function LuckyDrawPage() {
   const store = useInvestmentStore();
-  // Separate refs for mobile and desktop tracks to avoid conflict
   const mobileTrackRef = useRef<HTMLDivElement>(null);
   const desktopTrackRef = useRef<HTMLDivElement>(null);
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -183,7 +182,7 @@ export default function LuckyDrawPage() {
   // Track whether prizes have been initialized from store
   const [localPrizeOverrides, setLocalPrizeOverrides] = useState<Prize[] | null>(null);
 
-  // Derive prizes from store drawPrizes (separate from gift tiers), with optional local overrides
+  // Derive prizes from store drawPrizes
   const prizes: Prize[] = localPrizeOverrides ?? (Array.isArray(store.drawPrizes) ? store.drawPrizes.map((dp) => ({
     id: dp.id,
     name: dp.name,
@@ -214,7 +213,7 @@ export default function LuckyDrawPage() {
     };
   }, []);
 
-  // Deduplicate customers by id (safety net for any duplicate data)
+  // Deduplicate customers by id
   const allCustomers = (() => {
     const seen = new Set<string>();
     return (Array.isArray(store.customers) ? store.customers : []).filter(c => {
@@ -259,7 +258,6 @@ export default function LuckyDrawPage() {
     return () => cancelAnimationFrame(animId);
   }, [autoScroll, allCustomers, wonCustomerIds]);
 
-  // Reset scroll position when auto-scroll is turned off
   useEffect(() => {
     if (!autoScroll && customerTableRef.current) {
       customerTableRef.current.scrollTop = 0;
@@ -285,7 +283,6 @@ export default function LuckyDrawPage() {
     const trackEl = getTrackRef();
     if (!trackEl) return;
 
-    // Set state first - this will cause React to hide the placeholder
     setIsSpinning(true);
     setIsStopping(false);
     setShowResult(false);
@@ -297,12 +294,9 @@ export default function LuckyDrawPage() {
     const isDesktop = window.innerWidth >= 768;
     const itemH = isDesktop ? SLOT_ITEM_HEIGHT_DESKTOP : SLOT_ITEM_HEIGHT_MOBILE;
 
-    // Use requestAnimationFrame to ensure React has finished its render cycle
-    // before we manipulate the DOM manually
     requestAnimationFrame(() => {
       if (!trackEl) return;
 
-      // Clear the track and add items (track div has NO React children, so safe)
       trackEl.innerHTML = '';
       for (const name of track) {
         const div = document.createElement('div');
@@ -310,13 +304,13 @@ export default function LuckyDrawPage() {
         div.textContent = name;
         div.style.cssText = `
           height: ${itemH}px; display: flex; align-items: center; justify-content: center;
-          font-size: ${isDesktop ? '42px' : '24px'}; font-weight: 800; color: #1e3a5f; white-space: nowrap;
+          font-size: ${isDesktop ? '48px' : '24px'}; font-weight: 800; color: #d4a843; white-space: nowrap;
           padding: 0 ${isDesktop ? '50px' : '20px'}; text-align: center; letter-spacing: 0.05em;
+          text-shadow: 0 0 10px rgba(212,168,67,0.3);
         `;
         trackEl.appendChild(div);
       }
 
-      // Animate - fast scroll
       const totalHeight = track.length * itemH;
       const scrollDistance = totalHeight * 0.7;
       trackEl.style.transition = 'none';
@@ -428,13 +422,12 @@ export default function LuckyDrawPage() {
 
   // Handle prize button click → select prize AND start spin
   const handlePrizeSpin = useCallback((prizeIndex: number) => {
-    if (isSpinning) return; // Don't allow switching while spinning
+    if (isSpinning) return;
     const prize = prizes[prizeIndex];
     if (!prize || prize.remaining <= 0) return;
     if (drawItems.length === 0) return;
 
     setCurrentPrizeIndex(prizeIndex);
-    // Use setTimeout to ensure state is updated before starting spin
     setTimeout(() => {
       startSpin();
     }, 50);
@@ -466,7 +459,6 @@ export default function LuckyDrawPage() {
   };
 
   const handleSaveSettings = () => {
-    // Save to store (persists to DB)
     store.saveDrawPrizes(editPrizes.map(p => ({ name: p.name, quantity: p.quantity })));
     setLocalPrizeOverrides(editPrizes.map(p => ({ ...p })));
     setSettingsOpen(false);
@@ -494,8 +486,54 @@ export default function LuckyDrawPage() {
     });
   };
 
+  // LED border component for slot machine
+  const LEDBorder = () => (
+    <div className="absolute inset-0 pointer-events-none z-20">
+      {/* Top LED row */}
+      <div className="absolute top-0 left-0 right-0 h-2 flex overflow-hidden">
+        {Array.from({ length: 40 }).map((_, i) => (
+          <div
+            key={`top-${i}`}
+            className="flex-1 led-dot"
+            style={{ animationDelay: `${i * 0.08}s` }}
+          />
+        ))}
+      </div>
+      {/* Bottom LED row */}
+      <div className="absolute bottom-0 left-0 right-0 h-2 flex overflow-hidden">
+        {Array.from({ length: 40 }).map((_, i) => (
+          <div
+            key={`bot-${i}`}
+            className="flex-1 led-dot"
+            style={{ animationDelay: `${(40 - i) * 0.08}s` }}
+          />
+        ))}
+      </div>
+      {/* Left LED column */}
+      <div className="absolute top-0 left-0 bottom-0 w-2 flex flex-col overflow-hidden">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div
+            key={`left-${i}`}
+            className="flex-1 led-dot-v"
+            style={{ animationDelay: `${i * 0.08}s` }}
+          />
+        ))}
+      </div>
+      {/* Right LED column */}
+      <div className="absolute top-0 right-0 bottom-0 w-2 flex flex-col overflow-hidden">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div
+            key={`right-${i}`}
+            className="flex-1 led-dot-v"
+            style={{ animationDelay: `${(20 - i) * 0.08}s` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-blue-100/20">
+    <div className="h-screen flex flex-col overflow-hidden" style={{ background: '#0a1628' }}>
       {/* Confetti Canvas */}
       <canvas
         ref={confettiCanvasRef}
@@ -503,24 +541,24 @@ export default function LuckyDrawPage() {
         style={{ width: '100vw', height: '100vh' }}
       />
 
-      {/* Decorative background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-900/10 to-blue-800/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -left-20 w-72 h-72 bg-gradient-to-tr from-blue-800/5 to-blue-800/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-to-tl from-blue-800/5 to-blue-800/5 rounded-full blur-3xl" />
+      {/* Background glow effects */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[60%] h-[50%] rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(ellipse, rgba(212,168,67,0.06) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(ellipse, rgba(13,90,63,0.08) 0%, transparent 70%)' }} />
       </div>
 
-      {/* === HEADER BAR === */}
-      <div className="flex-shrink-0 relative overflow-hidden rounded-b-2xl shadow-lg">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 opacity-95" />
-        <div className="relative px-3 py-2 md:px-6 md:py-3 flex items-center justify-between">
+      {/* === HEADER BAR - Compact === */}
+      <div className="flex-shrink-0 relative" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50, #0f2042)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>
+        <div className="relative px-3 py-2 md:px-6 md:py-2.5 flex items-center justify-between">
           <Link href="/" title="Quay lại">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="p-1.5 hover:bg-white/10 rounded-lg transition-all"
+              className="p-1.5 hover:bg-white/5 rounded-lg transition-all"
             >
-              <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 text-blue-200" />
+              <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" style={{ color: '#d4a843' }} />
             </motion.button>
           </Link>
           <div className="flex items-center gap-2">
@@ -528,9 +566,9 @@ export default function LuckyDrawPage() {
               animate={{ rotate: [0, 8, -8, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <Diamond className="w-4 h-4 md:w-6 md:h-6 text-yellow-400/80" />
+              <Diamond className="w-4 h-4 md:w-6 md:h-6" style={{ color: '#f5d870' }} />
             </motion.div>
-            <h1 className="text-sm md:text-2xl font-black uppercase tracking-wider text-yellow-400">
+            <h1 className="text-sm md:text-2xl font-black uppercase tracking-wider" style={{ color: '#f5d870', textShadow: '0 0 20px rgba(212,168,67,0.3)' }}>
               Quay Số May Mắn
             </h1>
           </div>
@@ -538,206 +576,71 @@ export default function LuckyDrawPage() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => { setSettingsOpen(true); setSettingsAuthenticated(false); }}
-            className="p-2 md:p-1.5 hover:bg-white/10 rounded-lg transition-all"
+            className="p-2 md:p-1.5 hover:bg-white/5 rounded-lg transition-all"
             title="Cài đặt"
           >
-            <Settings className="w-5 h-5 md:w-5 md:h-5 text-blue-200" />
+            <Settings className="w-5 h-5" style={{ color: '#d4a843' }} />
           </motion.button>
-        </div>
-
-        {/* === PRIZE SPIN BUTTONS + DRAW MODE TOGGLE === */}
-        <div className="relative px-2 pb-2 md:px-6 md:pb-3">
-          {/* MOBILE: Draw mode toggle + Prize spin buttons */}
-          <div className="md:hidden flex flex-col gap-1.5">
-            {/* Draw mode toggle - compact */}
-            <div className="flex items-center gap-1.5">
-              <div className="flex gap-1 p-0.5 rounded-lg bg-blue-900/20">
-                <button
-                  onClick={() => setDrawMode('customer')}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${
-                    drawMode === 'customer'
-                      ? 'bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 text-blue-900 shadow-sm'
-                      : 'text-blue-200/60'
-                  }`}
-                >
-                  KH
-                </button>
-                <button
-                  onClick={() => setDrawMode('advisor')}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${
-                    drawMode === 'advisor'
-                      ? 'bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 text-blue-900 shadow-sm'
-                      : 'text-blue-200/60'
-                  }`}
-                >
-                  TVV
-                </button>
-              </div>
-              <span className="text-blue-800/40 text-[9px] ml-1">
-                {availableCustomers.length} người chơi
-              </span>
-            </div>
-            {/* Prize buttons - tap to SPIN for that prize */}
-            {prizes.length === 0 ? (
-              <div className="text-center py-1.5">
-                <span className="text-blue-800/60 text-xs">Chưa có giải thưởng - vào Cài đặt để thêm</span>
-              </div>
-            ) : (
-              <div className="flex gap-1 overflow-x-auto py-0.5" style={{ scrollbarWidth: 'none' }}>
-                {prizes.map((prize, idx) => {
-                  const IconComp = PRIZE_ICONS[idx % PRIZE_ICONS.length];
-                  const isAvailable = prize.remaining > 0 && !isSpinning;
-                  return (
-                    <motion.button
-                      key={prize.id}
-                      whileTap={isAvailable ? { scale: 0.92 } : {}}
-                      onClick={() => handlePrizeSpin(idx)}
-                      disabled={!isAvailable}
-                      className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border-2 ${
-                        idx === currentPrizeIndex && isSpinning
-                          ? 'bg-gradient-to-r from-green-700 via-green-600 to-green-700 border-green-500 text-white shadow-md animate-pulse'
-                          : prize.remaining <= 0
-                            ? 'bg-blue-50/50 border-blue-200/30 text-blue-800/30 cursor-not-allowed'
-                            : 'bg-white/80 border-yellow-600/40 text-blue-900 hover:border-yellow-600 hover:bg-yellow-50 active:bg-yellow-50 cursor-pointer'
-                      }`}
-                    >
-                      <IconComp className="w-3 h-3" />
-                      <span>{prize.name}</span>
-                      <span className={`text-[9px] px-1 py-0.5 rounded-full ${
-                        prize.remaining <= 0
-                          ? 'bg-slate-100 text-slate-400'
-                          : 'bg-green-100 text-green-700'
-                      }`}>
-                        {prize.remaining}
-                      </span>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* DESKTOP: Draw mode toggle + Prize spin buttons */}
-          <div className="hidden md:flex items-center gap-2">
-            <div className="flex gap-1.5 p-1.5 rounded-lg bg-blue-900/20">
-              <button
-                onClick={() => setDrawMode('customer')}
-                className={`px-4 py-1.5 rounded-lg text-sm font-bold uppercase transition-all ${
-                  drawMode === 'customer'
-                    ? 'bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 text-blue-900 shadow-md'
-                    : 'text-blue-200/60 hover:text-blue-200/80'
-                }`}
-              >
-                Khách hàng
-              </button>
-              <button
-                onClick={() => setDrawMode('advisor')}
-                className={`px-4 py-1.5 rounded-lg text-sm font-bold uppercase transition-all ${
-                  drawMode === 'advisor'
-                    ? 'bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 text-blue-900 shadow-md'
-                    : 'text-blue-200/60 hover:text-blue-200/80'
-                }`}
-              >
-                TVV
-              </button>
-            </div>
-            {prizes.length > 0 && (
-              <div className="flex-1 flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-                {prizes.map((prize, idx) => {
-                  const IconComp = PRIZE_ICONS[idx % PRIZE_ICONS.length];
-                  const isAvailable = prize.remaining > 0 && !isSpinning;
-                  return (
-                    <motion.button
-                      key={prize.id}
-                      whileTap={isAvailable ? { scale: 0.95 } : {}}
-                      whileHover={isAvailable ? { scale: 1.03 } : {}}
-                      onClick={() => handlePrizeSpin(idx)}
-                      disabled={!isAvailable}
-                      className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold transition-all border-2 ${
-                        idx === currentPrizeIndex && isSpinning
-                          ? 'bg-gradient-to-r from-green-700 via-green-600 to-green-700 border-green-500 text-white shadow-md animate-pulse'
-                          : prize.remaining <= 0
-                            ? 'border-blue-200/30 text-blue-800/30 cursor-not-allowed'
-                            : 'border-yellow-600/40 text-blue-900 hover:border-yellow-600 hover:bg-yellow-50 cursor-pointer'
-                      }`}
-                    >
-                      <IconComp className="w-4 h-4" />
-                      <span>{prize.name}</span>
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                        prize.remaining <= 0
-                          ? 'bg-slate-100 text-slate-400'
-                          : 'bg-green-100 text-green-700'
-                      }`}>
-                        {prize.remaining}
-                      </span>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
       {/* === MOBILE LAYOUT - Compact controller view === */}
       <div className="flex-1 min-h-0 flex flex-col md:hidden">
         {/* Slot machine area - compact for phone control */}
-        <div className="flex-shrink-0 flex flex-col items-center px-3 pt-1 pb-1">
+        <div className="flex-shrink-0 flex flex-col items-center px-3 pt-2 pb-1">
           {/* Prize indicator */}
           {currentPrize && (
             <div className="w-full max-w-md flex items-center justify-center gap-1 mb-1">
-              <Crown className="w-3.5 h-3.5 text-yellow-600" />
-              <span className="text-blue-800 font-bold text-sm">{currentPrize.name}</span>
-              <span className="text-slate-400 text-xs">(còn {currentPrize.remaining})</span>
+              <Crown className="w-3.5 h-3.5" style={{ color: '#f5d870' }} />
+              <span style={{ color: '#f5d870' }} className="font-bold text-sm">{currentPrize.name}</span>
+              <span style={{ color: 'rgba(212,168,67,0.5)' }} className="text-xs">(còn {currentPrize.remaining})</span>
             </div>
           )}
 
-          {/* Slot Machine - compact */}
+          {/* Slot Machine - compact with LED border */}
           <div
-            className={`relative w-full max-w-md rounded-xl overflow-hidden shadow-xl transition-shadow duration-1000 ${
-              canSpin ? 'animate-pulse-shadow' : ''
-            }`}
+            className={`relative w-full max-w-md rounded-xl overflow-hidden ${canSpin ? 'animate-pulse-shadow' : ''}`}
             style={{
-              background: 'linear-gradient(180deg, #fffbeb 0%, #fef3c7 50%, #fffbeb 100%)',
-              border: '2px solid #f59e0b',
+              background: 'linear-gradient(180deg, #0f2042 0%, #162d50 50%, #0f2042 100%)',
+              border: '2px solid #d4a843',
               boxShadow: isSpinning
-                ? '0 0 30px rgba(245, 158, 11, 0.5), inset 0 0 20px rgba(245, 158, 11, 0.08)'
+                ? '0 0 40px rgba(212,168,67,0.5), inset 0 0 30px rgba(212,168,67,0.1)'
                 : canSpin
-                  ? '0 0 20px rgba(245, 158, 11, 0.3), inset 0 0 20px rgba(245, 158, 11, 0.05)'
-                  : '0 0 10px rgba(245, 158, 11, 0.1), inset 0 0 10px rgba(245, 158, 11, 0.02)',
+                  ? '0 0 25px rgba(212,168,67,0.3), inset 0 0 20px rgba(212,168,67,0.05)'
+                  : '0 0 10px rgba(212,168,67,0.1), inset 0 0 10px rgba(212,168,67,0.02)',
             }}
           >
-            {/* Top decoration */}
-            <div className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
+            {/* LED border */}
+            <LEDBorder />
 
             {/* Slot viewport - compact 3 items visible */}
             <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 3}px` }}>
               {/* Highlight lines */}
               <div className="absolute inset-0 pointer-events-none z-10">
-                <div className="absolute top-0 left-0 right-0 h-10" style={{ background: 'linear-gradient(to bottom, #fffbeb, transparent)' }} />
-                <div className="absolute bottom-0 left-0 right-0 h-10" style={{ background: 'linear-gradient(to top, #fffbeb, transparent)' }} />
+                <div className="absolute top-0 left-0 right-0 h-10" style={{ background: 'linear-gradient(to bottom, #0f2042, transparent)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-10" style={{ background: 'linear-gradient(to top, #0f2042, transparent)' }} />
                 <div
                   className="absolute left-0 right-0"
                   style={{
                     top: `calc(50% - ${SLOT_ITEM_HEIGHT_MOBILE / 2}px)`,
                     height: `${SLOT_ITEM_HEIGHT_MOBILE}px`,
-                    borderTop: '2px solid rgba(245, 158, 11, 0.5)',
-                    borderBottom: '2px solid rgba(245, 158, 11, 0.5)',
-                    background: 'rgba(245, 158, 11, 0.08)',
+                    borderTop: '2px solid rgba(212,168,67,0.6)',
+                    borderBottom: '2px solid rgba(212,168,67,0.6)',
+                    background: 'rgba(13,90,63,0.15)',
                   }}
                 />
                 <div className="absolute left-1.5 top-1/2 -translate-y-1/2">
-                  <div className="w-0 h-0" style={{ borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '8px solid #f59e0b' }} />
+                  <div className="w-0 h-0" style={{ borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '8px solid #d4a843' }} />
                 </div>
                 <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
-                  <div className="w-0 h-0" style={{ borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderRight: '8px solid #f59e0b' }} />
+                  <div className="w-0 h-0" style={{ borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderRight: '8px solid #d4a843' }} />
                 </div>
               </div>
 
-              {/* Placeholder - React managed, OUTSIDE the track ref */}
+              {/* Placeholder */}
               {!isSpinning && !showResult && (
                 <div className="absolute inset-0 flex items-center justify-center z-[5]">
-                  <p className="text-slate-400 text-sm font-medium text-center px-4">
+                  <p style={{ color: 'rgba(212,168,67,0.4)' }} className="text-sm font-medium text-center px-4">
                     {prizes.length === 0
                       ? 'Thêm giải thưởng trong Cài đặt'
                       : drawItems.length === 0
@@ -747,15 +650,12 @@ export default function LuckyDrawPage() {
                 </div>
               )}
 
-              {/* Track - NO React children, only manipulated by JS */}
+              {/* Track */}
               <div ref={mobileTrackRef} className="absolute left-0 right-0 top-0" />
             </div>
-
-            {/* Bottom decoration */}
-            <div className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
           </div>
 
-          {/* === STOP BUTTON (mobile) - only visible when spinning === */}
+          {/* STOP BUTTON (mobile) */}
           <AnimatePresence>
             {isSpinning && (
               <motion.div
@@ -771,7 +671,6 @@ export default function LuckyDrawPage() {
                   className="relative"
                   style={{ width: '80px', height: '80px', cursor: 'pointer' }}
                 >
-                  {/* Outer ring - 3D depth */}
                   <div
                     className="absolute inset-0 rounded-full"
                     style={{
@@ -783,7 +682,6 @@ export default function LuckyDrawPage() {
                         : '0 4px 0 #7f1d1d, 0 8px 16px rgba(127, 29, 29, 0.4), inset 0 1px 2px rgba(255,255,255,0.3)',
                     }}
                   />
-                  {/* Inner circle - raised surface */}
                   <div
                     className="absolute rounded-full flex items-center justify-center"
                     style={{
@@ -808,7 +706,6 @@ export default function LuckyDrawPage() {
                       {isStopping ? 'Đang\ndừng...' : 'DỪNG!'}
                     </span>
                   </div>
-                  {/* Pulse effect */}
                   {!isStopping && (
                     <div
                       className="absolute inset-0 rounded-full animate-ping"
@@ -831,161 +728,123 @@ export default function LuckyDrawPage() {
               transition={{ type: 'spring', duration: 0.5 }}
               className="flex-shrink-0 px-3 pb-1"
             >
-              <div className="max-w-md mx-auto rounded-xl p-2.5 text-center bg-white/95 backdrop-blur-sm border-2 border-yellow-600/50 shadow-lg">
-                <p className="text-slate-500 text-[9px] uppercase tracking-wider mb-0.5">Chúc mừng người trúng giải</p>
-                <p className="text-lg font-black text-blue-900">{currentWinner.customerName}</p>
+              <div className="max-w-md mx-auto rounded-xl p-2.5 text-center border-2 shadow-lg"
+                style={{ background: 'rgba(15,32,66,0.95)', borderColor: 'rgba(212,168,67,0.6)', backdropFilter: 'blur(8px)' }}>
+                <p style={{ color: 'rgba(212,168,67,0.6)' }} className="text-[9px] uppercase tracking-wider mb-0.5">Chúc mừng người trúng giải</p>
+                <p className="text-lg font-black" style={{ color: '#f5d870', textShadow: '0 0 15px rgba(212,168,67,0.3)' }}>{currentWinner.customerName}</p>
                 {drawMode === 'customer' && currentWinner.advisor && (
-                  <p className="text-slate-400 text-[10px] italic">TVV {currentWinner.advisor}</p>
+                  <p style={{ color: 'rgba(212,168,67,0.5)' }} className="text-[10px] italic">TVV {currentWinner.advisor}</p>
                 )}
-                <p className="text-green-700 font-semibold text-xs">🏆 {currentWinner.prizeName}</p>
+                <p className="font-semibold text-xs" style={{ color: '#10b981' }}>🏆 {currentWinner.prizeName}</p>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* === BOTTOM TABLE: Customer list on mobile === */}
-        <div className="flex-1 min-h-0 border-t-2 border-yellow-600/50 bg-white/95 backdrop-blur-sm flex flex-col">
-          {/* Table header */}
-          <div className="flex-shrink-0 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 flex items-center px-3 py-2">
-            <div className="flex-1 flex items-center gap-1.5">
-              <Users className="w-4 h-4 text-yellow-400" />
-              <span className="text-yellow-400 font-extrabold text-sm uppercase">DS Tham Dự</span>
-              <span className="text-yellow-400/80 text-xs ml-0.5">({allCustomers.length})</span>
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setAutoScroll(!autoScroll)}
-              className={`ml-2 p-1.5 rounded-md transition-all ${autoScroll ? 'bg-emerald-500/20 text-emerald-700' : 'bg-blue-500/30 text-blue-900/60'}`}
-              title={autoScroll ? 'Tắt cuộn' : 'Bật cuộn'}
-            >
-              {autoScroll ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            </motion.button>
-          </div>
-
-          {/* Scrollable body */}
-          <div
-            ref={customerTableRef}
-            className="flex-1 overflow-y-auto"
-          >
-            {(autoScroll ? [0, 1] : [0]).map(dup => (
-              <div key={dup}>
-                {allCustomers.map((c, idx) => {
-                  const isWon = wonCustomerIds.has(c.id);
-                  return (
-                    <div
-                      key={`${c.id}-${dup}`}
-                      className={`flex items-center px-3 py-1.5 border-b border-blue-100/40 transition-colors ${
-                        isWon ? 'bg-blue-50/50 opacity-50' : ''
-                      }`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-slate-400 font-mono text-[10px] w-5 flex-shrink-0">{idx + 1}</span>
-                          <span className={`text-sm font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
-                            {titleCase(c.name)}
-                          </span>
-                        </div>
-                        {c.advisor && (
-                          <div className="pl-[22px]">
-                            <span className={`text-[10px] italic ${isWon ? 'text-slate-300' : 'text-slate-400'}`}>TVV {titleCase(c.advisor)}</span>
-                          </div>
-                        )}
-                      </div>
-                      {/* Gift + Fee - shown directly on card */}
-                      <div className="flex items-center gap-2 flex-shrink-0 ml-1">
-                        {c.investmentFee > 0 && (
-                          <span className={`text-[10px] font-semibold ${isWon ? 'text-slate-300' : 'text-emerald-600'}`}>
-                            {c.investmentFee}tr
-                          </span>
-                        )}
-                        <span className={`text-xs font-bold max-w-[120px] truncate ${isWon ? 'text-slate-400 line-through' : 'text-rose-700'}`}>
-                          {c.gift || '—'}
+        {/* === BOTTOM: Combined Prizes + Customers on mobile === */}
+        <div className="flex-1 min-h-0 flex flex-col" style={{ borderTop: '2px solid rgba(212,168,67,0.3)' }}>
+          {/* Prize spin buttons - moved here from header */}
+          <div className="flex-shrink-0" style={{ background: 'rgba(15,32,66,0.9)', borderBottom: '1px solid rgba(212,168,67,0.2)' }}>
+            <div className="flex items-center gap-1.5 px-2 py-1.5">
+              <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#d4a843' }}>Giải:</span>
+              {prizes.length === 0 ? (
+                <span style={{ color: 'rgba(212,168,67,0.4)' }} className="text-xs">Chưa có giải</span>
+              ) : (
+                <div className="flex gap-1 overflow-x-auto flex-1" style={{ scrollbarWidth: 'none' }}>
+                  {prizes.map((prize, idx) => {
+                    const IconComp = PRIZE_ICONS[idx % PRIZE_ICONS.length];
+                    const isAvailable = prize.remaining > 0 && !isSpinning;
+                    return (
+                      <motion.button
+                        key={prize.id}
+                        whileTap={isAvailable ? { scale: 0.92 } : {}}
+                        onClick={() => handlePrizeSpin(idx)}
+                        disabled={!isAvailable}
+                        className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${
+                          idx === currentPrizeIndex && isSpinning
+                            ? 'animate-pulse'
+                            : ''
+                        }`}
+                        style={{
+                          background: idx === currentPrizeIndex && isSpinning
+                            ? 'linear-gradient(135deg, #0d5a3f, #0a7a4a)'
+                            : prize.remaining <= 0
+                              ? 'rgba(15,32,66,0.5)'
+                              : 'rgba(22,45,80,0.8)',
+                          borderColor: idx === currentPrizeIndex && isSpinning
+                            ? '#10b981'
+                            : prize.remaining <= 0
+                              ? 'rgba(212,168,67,0.1)'
+                              : 'rgba(212,168,67,0.4)',
+                          color: prize.remaining <= 0 ? 'rgba(212,168,67,0.25)' : '#f5d870',
+                          cursor: !isAvailable ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        <IconComp className="w-3 h-3" />
+                        <span>{prize.name}</span>
+                        <span className="text-[9px] px-1 py-0.5 rounded-full"
+                          style={{
+                            background: prize.remaining <= 0 ? 'rgba(212,168,67,0.1)' : 'rgba(13,90,63,0.4)',
+                            color: prize.remaining <= 0 ? 'rgba(212,168,67,0.3)' : '#10b981',
+                          }}>
+                          {prize.remaining}
                         </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* === DESKTOP LAYOUT - Left sidebar 1/4 + Right slot machine 3/4 === */}
-      <div className="flex-1 min-h-0 hidden md:flex md:flex-row">
-
-        {/* === LEFT SIDEBAR - 1/4 width: Gift Tiers + Customer List === */}
-        <div className="w-[25%] min-w-[280px] max-w-[400px] flex flex-col border-r-2 border-yellow-600/30 bg-white/95 backdrop-blur-sm">
-
-          {/* Gift Tiers Section */}
-          <div className="flex-shrink-0 border-b border-yellow-600/20">
-            <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 flex items-center px-3 py-2">
-              <Gift className="w-4 h-4 text-yellow-400" />
-              <span className="text-yellow-400 font-extrabold text-sm uppercase ml-1.5">Bậc Quà Tặng</span>
-            </div>
-            <div className="px-2 py-2 space-y-1.5">
-              {(Array.isArray(store.giftTiers) ? store.giftTiers : [])
-                .sort((a, b) => a.order - b.order)
-                .map((tier, idx) => {
-                  const tierColors = [
-                    { bg: 'bg-slate-50', border: 'border-slate-300', icon: '🥈', text: 'text-slate-700' },
-                    { bg: 'bg-yellow-50', border: 'border-yellow-600/30', icon: '🥇', text: 'text-green-700' },
-                    { bg: 'bg-cyan-50', border: 'border-cyan-300', icon: '💎', text: 'text-cyan-700' },
-                    { bg: 'bg-purple-50', border: 'border-purple-300', icon: '👑', text: 'text-purple-700' },
-                  ];
-                  const color = tierColors[idx % tierColors.length];
-                  return (
-                    <div
-                      key={tier.id}
-                      className={`${color.bg} border ${color.border} rounded-lg px-2.5 py-1.5 flex items-center gap-2`}
-                    >
-                      <span className="text-base flex-shrink-0">{color.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-xs font-bold ${color.text} truncate`}>{tier.giftName}</p>
-                        <p className="text-[10px] text-slate-400">
-                          {tier.minFee >= 1000000 ? `${(tier.minFee / 1000000).toFixed(0)}tr` : `${(tier.minFee / 1000).toFixed(0)}K`} -
-                          {tier.maxFee >= 999999999 ? ' ∞' : tier.maxFee >= 1000000 ? ` ${(tier.maxFee / 1000000).toFixed(0)}tr` : ` ${(tier.maxFee / 1000).toFixed(0)}K`}
-                        </p>
-                      </div>
-                      <span className="text-[10px] font-bold text-emerald-600 flex-shrink-0">
-                        {tier.giftValue >= 1000000 ? `${(tier.giftValue / 1000000).toFixed(1)}tr` : `${(tier.giftValue / 1000).toFixed(0)}K`}
-                      </span>
-                    </div>
-                  );
-                })}
-              {(Array.isArray(store.giftTiers) ? store.giftTiers : []).length === 0 && (
-                <p className="text-xs text-slate-400 text-center py-2 italic">Chưa có bậc quà</p>
+                      </motion.button>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
 
-          {/* Customer List Section */}
-          <div className="flex-1 min-h-0 flex flex-col">
-            {/* Customer header */}
-            <div className="flex-shrink-0 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 flex items-center px-3 py-2">
+          {/* Customer list with KH/TVV toggle inside */}
+          <div className="flex-1 min-h-0 flex flex-col" style={{ background: 'rgba(10,22,40,0.95)' }}>
+            {/* Header with toggle */}
+            <div className="flex-shrink-0 flex items-center px-3 py-1.5" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
               <div className="flex-1 flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-yellow-400" />
-                <span className="text-yellow-400 font-extrabold text-sm uppercase">Khách Hàng</span>
-                <span className="text-yellow-400/80 text-xs ml-0.5">({allCustomers.length})</span>
+                <Users className="w-3.5 h-3.5" style={{ color: '#f5d870' }} />
+                <span style={{ color: '#f5d870' }} className="font-extrabold text-xs uppercase">DS Tham Dự</span>
+                <span style={{ color: 'rgba(212,168,67,0.6)' }} className="text-[10px]">({allCustomers.length})</span>
+              </div>
+              {/* KH/TVV toggle inside customer box */}
+              <div className="flex gap-0.5 p-0.5 rounded-md" style={{ background: 'rgba(10,22,40,0.6)' }}>
+                <button
+                  onClick={() => setDrawMode('customer')}
+                  className="px-2 py-0.5 rounded text-[9px] font-bold uppercase transition-all"
+                  style={{
+                    background: drawMode === 'customer' ? 'linear-gradient(135deg, #d4a843, #c9a227)' : 'transparent',
+                    color: drawMode === 'customer' ? '#0a1628' : 'rgba(212,168,67,0.5)',
+                  }}
+                >
+                  KH
+                </button>
+                <button
+                  onClick={() => setDrawMode('advisor')}
+                  className="px-2 py-0.5 rounded text-[9px] font-bold uppercase transition-all"
+                  style={{
+                    background: drawMode === 'advisor' ? 'linear-gradient(135deg, #d4a843, #c9a227)' : 'transparent',
+                    color: drawMode === 'advisor' ? '#0a1628' : 'rgba(212,168,67,0.5)',
+                  }}
+                >
+                  TVV
+                </button>
               </div>
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setAutoScroll(!autoScroll)}
-                className={`ml-1 p-1 rounded-md transition-all ${
-                  autoScroll ? 'bg-emerald-500/20 text-emerald-700' : 'bg-blue-500/30 text-blue-900/60'
-                }`}
+                className="ml-1.5 p-1 rounded-md transition-all"
+                style={{
+                  background: autoScroll ? 'rgba(13,90,63,0.3)' : 'rgba(212,168,67,0.1)',
+                  color: autoScroll ? '#10b981' : 'rgba(212,168,67,0.4)',
+                }}
                 title={autoScroll ? 'Tắt cuộn' : 'Bật cuộn'}
               >
-                {autoScroll ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                {autoScroll ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
               </motion.button>
             </div>
 
-            {/* Scrollable customer list - desktop sidebar */}
-            <div
-              ref={customerTableRef}
-              className="flex-1 overflow-y-auto"
-              style={{ scrollbarWidth: 'thin', scrollbarColor: '#f59e0b transparent' }}
-            >
+            {/* Scrollable body */}
+            <div ref={customerTableRef} className="flex-1 overflow-y-auto">
               {(autoScroll ? [0, 1] : [0]).map(dup => (
                 <div key={dup}>
                   {allCustomers.map((c, idx) => {
@@ -993,36 +852,36 @@ export default function LuckyDrawPage() {
                     return (
                       <div
                         key={`${c.id}-${dup}`}
-                        className={`flex items-center px-2.5 py-1.5 border-b border-blue-100/40 transition-colors ${
-                          isWon ? 'bg-blue-50/50 opacity-50' : ''
-                        }`}
+                        className="flex items-center px-3 py-1.5 transition-colors"
+                        style={{
+                          borderBottom: '1px solid rgba(212,168,67,0.08)',
+                          background: isWon ? 'rgba(13,90,63,0.1)' : 'transparent',
+                          opacity: isWon ? 0.4 : 1,
+                        }}
                       >
-                        <span className="text-slate-400 font-mono text-[10px] w-5 flex-shrink-0">{idx + 1}</span>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1">
-                            <span className={`text-xs font-bold truncate ${isWon ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-[10px] w-5 flex-shrink-0" style={{ color: 'rgba(212,168,67,0.3)' }}>{idx + 1}</span>
+                            <span className={`text-sm font-bold truncate ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(212,168,67,0.3)' : '#f5d870' }}>
                               {titleCase(c.name)}
                             </span>
-                            {c.investmentFee > 0 && (
-                              <span className={`text-[10px] font-semibold flex-shrink-0 ${isWon ? 'text-slate-300' : 'text-emerald-600'}`}>
-                                {c.investmentFee}tr
-                              </span>
-                            )}
                           </div>
-                          <div className="flex items-center gap-1">
-                            {c.advisor && (
-                              <span className={`text-[9px] italic ${isWon ? 'text-slate-300' : 'text-slate-400'}`}>
-                                TVV {titleCase(c.advisor)}
-                              </span>
-                            )}
-                            <span className={`text-[9px] font-bold truncate ${isWon ? 'text-slate-300 line-through' : 'text-rose-600'}`}>
-                              {c.gift || ''}
-                            </span>
-                          </div>
+                          {c.advisor && (
+                            <div className="pl-[22px]">
+                              <span className="text-[10px] italic" style={{ color: isWon ? 'rgba(212,168,67,0.15)' : 'rgba(212,168,67,0.45)' }}>TVV {titleCase(c.advisor)}</span>
+                            </div>
+                          )}
                         </div>
-                        {isWon && (
-                          <span className="text-[8px] bg-green-200/50 text-green-700 px-1 rounded flex-shrink-0">Trúng</span>
-                        )}
+                        <div className="flex items-center gap-2 flex-shrink-0 ml-1">
+                          {c.investmentFee > 0 && (
+                            <span className="text-[10px] font-semibold" style={{ color: isWon ? 'rgba(212,168,67,0.15)' : '#10b981' }}>
+                              {c.investmentFee}tr
+                            </span>
+                          )}
+                          <span className={`text-xs font-bold max-w-[120px] truncate ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(212,168,67,0.2)' : '#d4a843' }}>
+                            {c.gift || '—'}
+                          </span>
+                        </div>
                       </div>
                     );
                   })}
@@ -1031,84 +890,96 @@ export default function LuckyDrawPage() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* === RIGHT AREA - 3/4 width: Slot Machine (prominent for projection) === */}
-        <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-6 py-3 relative">
-          {/* Decorative glow behind slot machine */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[70%] bg-gradient-radial from-blue-900/10 via-blue-800/5 to-transparent rounded-full blur-3xl" />
+      {/* === DESKTOP LAYOUT - Slot Machine TOP (prominent) + Info BOTTOM === */}
+      <div className="flex-1 min-h-0 hidden md:flex md:flex-col">
+
+        {/* === TOP: Slot Machine (PROMINENT - takes ~65% height) === */}
+        <div className="flex-[1.8] min-h-0 flex flex-col items-center justify-center px-8 py-4 relative">
+          {/* Background tech grid */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: 0.03 }}>
+            <div className="absolute inset-0" style={{
+              backgroundImage: 'linear-gradient(rgba(212,168,67,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(212,168,67,0.3) 1px, transparent 1px)',
+              backgroundSize: '50px 50px',
+            }} />
           </div>
+
+          {/* Decorative glow behind slot machine */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[80%] rounded-full blur-3xl pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse, rgba(212,168,67,0.08) 0%, transparent 60%)' }} />
 
           {/* Desktop: show prize name prominently */}
           {currentPrize && (
-            <div className="relative flex items-center justify-center gap-3 mb-2">
-              <Crown className="w-8 h-8 text-yellow-600" />
-              <span className="text-blue-900 font-extrabold text-2xl md:text-3xl">{currentPrize.name}</span>
-              <span className="text-slate-500 text-lg">(còn {currentPrize.remaining})</span>
+            <div className="relative flex items-center justify-center gap-3 mb-3">
+              <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+                <Crown className="w-10 h-10" style={{ color: '#f5d870', filter: 'drop-shadow(0 0 10px rgba(212,168,67,0.4))' }} />
+              </motion.div>
+              <span className="font-extrabold text-3xl md:text-4xl" style={{ color: '#f5d870', textShadow: '0 0 30px rgba(212,168,67,0.3)' }}>{currentPrize.name}</span>
+              <span style={{ color: 'rgba(212,168,67,0.5)' }} className="text-xl">(còn {currentPrize.remaining})</span>
             </div>
           )}
 
-          {/* Slot Machine - MUCH bigger for desktop/projection */}
+          {/* Slot Machine - HUGE for projection with LED border */}
           <div
-            className={`relative w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl transition-shadow duration-1000 ${
-              canSpin ? 'animate-pulse-shadow' : ''
-            }`}
+            className={`relative w-full max-w-6xl rounded-2xl overflow-hidden shadow-2xl ${canSpin ? 'animate-pulse-shadow' : ''}`}
             style={{
-              background: 'linear-gradient(180deg, #fffbeb 0%, #fef3c7 50%, #fffbeb 100%)',
-              border: '4px solid #f59e0b',
+              background: 'linear-gradient(180deg, #0f2042 0%, #162d50 50%, #0f2042 100%)',
+              border: '4px solid #d4a843',
               boxShadow: isSpinning
-                ? '0 0 80px rgba(245, 158, 11, 0.5), inset 0 0 50px rgba(245, 158, 11, 0.08)'
+                ? '0 0 100px rgba(212,168,67,0.4), 0 0 50px rgba(212,168,67,0.2), inset 0 0 60px rgba(212,168,67,0.08)'
                 : canSpin
-                  ? '0 0 60px rgba(245, 158, 11, 0.4), inset 0 0 50px rgba(245, 158, 11, 0.08)'
-                  : '0 0 30px rgba(245, 158, 11, 0.15), inset 0 0 25px rgba(245, 158, 11, 0.04)',
+                  ? '0 0 80px rgba(212,168,67,0.3), 0 0 30px rgba(212,168,67,0.1), inset 0 0 50px rgba(212,168,67,0.05)'
+                  : '0 0 40px rgba(212,168,67,0.1), inset 0 0 25px rgba(212,168,67,0.02)',
             }}
           >
-            {/* Top decoration */}
-            <div className="h-3 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
+            {/* LED border animation */}
+            <LEDBorder />
 
             {/* Slot viewport - big for projection */}
             <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 3}px` }}>
               {/* Highlight lines */}
               <div className="absolute inset-0 pointer-events-none z-10">
-                <div className="absolute top-0 left-0 right-0 h-24" style={{ background: 'linear-gradient(to bottom, #fffbeb, transparent)' }} />
-                <div className="absolute bottom-0 left-0 right-0 h-24" style={{ background: 'linear-gradient(to top, #fffbeb, transparent)' }} />
+                <div className="absolute top-0 left-0 right-0 h-24" style={{ background: 'linear-gradient(to bottom, #0f2042, transparent)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-24" style={{ background: 'linear-gradient(to top, #0f2042, transparent)' }} />
                 <div
                   className="absolute left-0 right-0"
                   style={{
                     top: `calc(50% - ${SLOT_ITEM_HEIGHT_DESKTOP / 2}px)`,
                     height: `${SLOT_ITEM_HEIGHT_DESKTOP}px`,
-                    borderTop: '4px solid rgba(245, 158, 11, 0.5)',
-                    borderBottom: '4px solid rgba(245, 158, 11, 0.5)',
-                    background: 'rgba(245, 158, 11, 0.08)',
+                    borderTop: '4px solid rgba(212,168,67,0.5)',
+                    borderBottom: '4px solid rgba(212,168,67,0.5)',
+                    background: 'rgba(13,90,63,0.12)',
+                    boxShadow: 'inset 0 0 30px rgba(13,90,63,0.1)',
                   }}
                 />
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                  <div className="w-0 h-0" style={{ borderTop: '14px solid transparent', borderBottom: '14px solid transparent', borderLeft: '20px solid #f59e0b' }} />
+                  <div className="w-0 h-0" style={{ borderTop: '14px solid transparent', borderBottom: '14px solid transparent', borderLeft: '20px solid #d4a843', filter: 'drop-shadow(0 0 8px rgba(212,168,67,0.6))' }} />
                 </div>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                  <div className="w-0 h-0" style={{ borderTop: '14px solid transparent', borderBottom: '14px solid transparent', borderRight: '20px solid #f59e0b' }} />
+                  <div className="w-0 h-0" style={{ borderTop: '14px solid transparent', borderBottom: '14px solid transparent', borderRight: '20px solid #d4a843', filter: 'drop-shadow(0 0 8px rgba(212,168,67,0.6))' }} />
                 </div>
               </div>
 
-              {/* Placeholder - React managed, OUTSIDE the track ref */}
+              {/* Placeholder */}
               {!isSpinning && !showResult && (
                 <div className="absolute inset-0 flex items-center justify-center z-[5]">
-                  <p className="text-slate-400 text-3xl font-medium">
-                    {prizes.length === 0
-                      ? 'Thêm giải thưởng trong Cài đặt'
-                      : drawItems.length === 0
-                        ? 'Không có người tham gia'
-                        : 'Nhấn nút giải thưởng để quay số'}
-                  </p>
+                  <div className="text-center">
+                    <Zap className="w-12 h-12 mx-auto mb-3" style={{ color: 'rgba(212,168,67,0.2)' }} />
+                    <p style={{ color: 'rgba(212,168,67,0.35)' }} className="text-3xl font-medium">
+                      {prizes.length === 0
+                        ? 'Thêm giải thưởng trong Cài đặt'
+                        : drawItems.length === 0
+                          ? 'Không có người tham gia'
+                          : 'Nhấn nút giải thưởng để quay số'}
+                    </p>
+                  </div>
                 </div>
               )}
 
-              {/* Track - NO React children, only manipulated by JS */}
+              {/* Track */}
               <div ref={desktopTrackRef} className="absolute left-0 right-0 top-0" />
             </div>
-
-            {/* Bottom decoration */}
-            <div className="h-3 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
           </div>
 
           {/* STOP button - desktop, only visible when spinning */}
@@ -1137,7 +1008,7 @@ export default function LuckyDrawPage() {
             )}
           </AnimatePresence>
 
-          {/* Winner result overlay - desktop (inside right area) */}
+          {/* Winner result overlay - desktop */}
           <AnimatePresence>
             {showResult && currentWinner && (
               <motion.div
@@ -1145,19 +1016,226 @@ export default function LuckyDrawPage() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -20, scale: 0.9 }}
                 transition={{ type: 'spring', duration: 0.5 }}
-                className="absolute inset-0 flex items-center justify-center z-20 bg-black/30 backdrop-blur-sm"
+                className="absolute inset-0 flex items-center justify-center z-20 bg-black/40 backdrop-blur-sm"
               >
-                <div className="rounded-2xl p-8 md:p-10 text-center bg-white/95 backdrop-blur-sm border-2 border-yellow-600/50 shadow-2xl max-w-2xl mx-4">
-                  <p className="text-slate-500 text-sm uppercase tracking-wider mb-2">Chúc mừng người trúng giải</p>
-                  <p className="text-5xl md:text-6xl font-black text-blue-900 mb-2">{currentWinner.customerName}</p>
+                <div className="rounded-2xl p-8 md:p-10 text-center border-2 shadow-2xl max-w-2xl mx-4"
+                  style={{ background: 'rgba(15,32,66,0.95)', borderColor: 'rgba(212,168,67,0.6)' }}>
+                  <p style={{ color: 'rgba(212,168,67,0.6)' }} className="text-sm uppercase tracking-wider mb-2">Chúc mừng người trúng giải</p>
+                  <p className="text-5xl md:text-6xl font-black mb-2" style={{ color: '#f5d870', textShadow: '0 0 30px rgba(212,168,67,0.4)' }}>{currentWinner.customerName}</p>
                   {drawMode === 'customer' && currentWinner.advisor && (
-                    <p className="text-slate-500 text-xl md:text-2xl">TVV: {currentWinner.advisor}</p>
+                    <p style={{ color: 'rgba(212,168,67,0.5)' }} className="text-xl md:text-2xl">TVV: {currentWinner.advisor}</p>
                   )}
-                  <p className="text-green-700 font-semibold mt-2 text-2xl md:text-3xl">🏆 {currentWinner.prizeName}</p>
+                  <p className="font-semibold mt-2 text-2xl md:text-3xl" style={{ color: '#10b981' }}>🏆 {currentWinner.prizeName}</p>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* === BOTTOM: Combined Info Panel - Gift Tiers + Prizes | Customers === */}
+        <div className="flex-[1] min-h-0 flex flex-row" style={{ borderTop: '2px solid rgba(212,168,67,0.3)' }}>
+
+          {/* LEFT: Gift Tiers + Prize Buttons (combined) */}
+          <div className="w-[30%] min-w-[300px] max-w-[420px] flex flex-col"
+            style={{ background: 'rgba(10,22,40,0.95)', borderRight: '1px solid rgba(212,168,67,0.2)' }}>
+
+            {/* Section header */}
+            <div className="flex-shrink-0 flex items-center px-3 py-1.5" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
+              <Gift className="w-3.5 h-3.5" style={{ color: '#f5d870' }} />
+              <span style={{ color: '#f5d870' }} className="font-extrabold text-xs uppercase ml-1.5">Quà Tặng & Giải</span>
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-y-auto px-2 py-2 space-y-2">
+              {/* Gift Tiers */}
+              {(Array.isArray(store.giftTiers) ? store.giftTiers : [])
+                .sort((a, b) => a.order - b.order)
+                .map((tier, idx) => {
+                  const tierStyles = [
+                    { bg: 'rgba(100,116,139,0.15)', border: 'rgba(100,116,139,0.3)', icon: '🥈', color: '#94a3b8' },
+                    { bg: 'rgba(212,168,67,0.1)', border: 'rgba(212,168,67,0.3)', icon: '🥇', color: '#f5d870' },
+                    { bg: 'rgba(13,90,63,0.15)', border: 'rgba(13,90,63,0.4)', icon: '💎', color: '#10b981' },
+                    { bg: 'rgba(139,92,246,0.15)', border: 'rgba(139,92,246,0.3)', icon: '👑', color: '#a78bfa' },
+                  ];
+                  const style = tierStyles[idx % tierStyles.length];
+                  return (
+                    <div
+                      key={tier.id}
+                      className="rounded-lg px-2.5 py-1.5 flex items-center gap-2"
+                      style={{ background: style.bg, border: `1px solid ${style.border}` }}
+                    >
+                      <span className="text-base flex-shrink-0">{style.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold truncate" style={{ color: style.color }}>{tier.giftName}</p>
+                        <p className="text-[10px]" style={{ color: 'rgba(212,168,67,0.35)' }}>
+                          {tier.minFee >= 1000000 ? `${(tier.minFee / 1000000).toFixed(0)}tr` : `${(tier.minFee / 1000).toFixed(0)}K`} -
+                          {tier.maxFee >= 999999999 ? ' ∞' : tier.maxFee >= 1000000 ? ` ${(tier.maxFee / 1000000).toFixed(0)}tr` : ` ${(tier.maxFee / 1000).toFixed(0)}K`}
+                        </p>
+                      </div>
+                      <span className="text-[10px] font-bold flex-shrink-0" style={{ color: '#10b981' }}>
+                        {tier.giftValue >= 1000000 ? `${(tier.giftValue / 1000000).toFixed(1)}tr` : `${(tier.giftValue / 1000).toFixed(0)}K`}
+                      </span>
+                    </div>
+                  );
+                })}
+
+              {/* Divider */}
+              {(Array.isArray(store.giftTiers) ? store.giftTiers : []).length > 0 && prizes.length > 0 && (
+                <div style={{ borderTop: '1px solid rgba(212,168,67,0.15)' }} />
+              )}
+
+              {/* Prize Spin Buttons */}
+              {prizes.length > 0 && (
+                <div className="space-y-1.5">
+                  <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'rgba(212,168,67,0.5)' }}>Giải quay số:</span>
+                  {prizes.map((prize, idx) => {
+                    const IconComp = PRIZE_ICONS[idx % PRIZE_ICONS.length];
+                    const isAvailable = prize.remaining > 0 && !isSpinning;
+                    return (
+                      <motion.button
+                        key={prize.id}
+                        whileTap={isAvailable ? { scale: 0.95 } : {}}
+                        whileHover={isAvailable ? { scale: 1.02 } : {}}
+                        onClick={() => handlePrizeSpin(idx)}
+                        disabled={!isAvailable}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all border"
+                        style={{
+                          background: idx === currentPrizeIndex && isSpinning
+                            ? 'linear-gradient(135deg, #0d5a3f, #0a7a4a)'
+                            : prize.remaining <= 0
+                              ? 'rgba(15,32,66,0.5)'
+                              : 'rgba(22,45,80,0.6)',
+                          borderColor: idx === currentPrizeIndex && isSpinning
+                            ? '#10b981'
+                            : prize.remaining <= 0
+                              ? 'rgba(212,168,67,0.1)'
+                              : 'rgba(212,168,67,0.3)',
+                          color: prize.remaining <= 0 ? 'rgba(212,168,67,0.25)' : '#f5d870',
+                          cursor: !isAvailable ? 'not-allowed' : 'pointer',
+                          boxShadow: idx === currentPrizeIndex && isSpinning ? '0 0 15px rgba(16,185,129,0.3)' : 'none',
+                        }}
+                      >
+                        <IconComp className="w-4 h-4 flex-shrink-0" />
+                        <span className="flex-1 text-left">{prize.name}</span>
+                        <span className="text-xs px-1.5 py-0.5 rounded-full"
+                          style={{
+                            background: prize.remaining <= 0 ? 'rgba(212,168,67,0.08)' : 'rgba(13,90,63,0.3)',
+                            color: prize.remaining <= 0 ? 'rgba(212,168,67,0.2)' : '#10b981',
+                          }}>
+                          {prize.remaining}
+                        </span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {prizes.length === 0 && (Array.isArray(store.giftTiers) ? store.giftTiers : []).length === 0 && (
+                <p className="text-xs text-center py-4 italic" style={{ color: 'rgba(212,168,67,0.3)' }}>Chưa có dữ liệu</p>
+              )}
+            </div>
+          </div>
+
+          {/* RIGHT: Customer List with KH/TVV toggle inside */}
+          <div className="flex-1 min-h-0 flex flex-col" style={{ background: 'rgba(8,16,32,0.95)' }}>
+            {/* Customer header with toggle inside */}
+            <div className="flex-shrink-0 flex items-center px-3 py-1.5" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
+              <div className="flex-1 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5" style={{ color: '#f5d870' }} />
+                <span style={{ color: '#f5d870' }} className="font-extrabold text-xs uppercase">Khách Hàng</span>
+                <span style={{ color: 'rgba(212,168,67,0.6)' }} className="text-[10px]">({allCustomers.length})</span>
+              </div>
+              {/* KH/TVV toggle inside customer section */}
+              <div className="flex gap-1 p-0.5 rounded-lg" style={{ background: 'rgba(10,22,40,0.6)' }}>
+                <button
+                  onClick={() => setDrawMode('customer')}
+                  className="px-3 py-1 rounded-md text-xs font-bold uppercase transition-all"
+                  style={{
+                    background: drawMode === 'customer' ? 'linear-gradient(135deg, #d4a843, #c9a227)' : 'transparent',
+                    color: drawMode === 'customer' ? '#0a1628' : 'rgba(212,168,67,0.5)',
+                    boxShadow: drawMode === 'customer' ? '0 0 10px rgba(212,168,67,0.3)' : 'none',
+                  }}
+                >
+                  Khách hàng
+                </button>
+                <button
+                  onClick={() => setDrawMode('advisor')}
+                  className="px-3 py-1 rounded-md text-xs font-bold uppercase transition-all"
+                  style={{
+                    background: drawMode === 'advisor' ? 'linear-gradient(135deg, #d4a843, #c9a227)' : 'transparent',
+                    color: drawMode === 'advisor' ? '#0a1628' : 'rgba(212,168,67,0.5)',
+                    boxShadow: drawMode === 'advisor' ? '0 0 10px rgba(212,168,67,0.3)' : 'none',
+                  }}
+                >
+                  TVV
+                </button>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setAutoScroll(!autoScroll)}
+                className="ml-2 p-1 rounded-md transition-all"
+                style={{
+                  background: autoScroll ? 'rgba(13,90,63,0.3)' : 'rgba(212,168,67,0.08)',
+                  color: autoScroll ? '#10b981' : 'rgba(212,168,67,0.35)',
+                }}
+                title={autoScroll ? 'Tắt cuộn' : 'Bật cuộn'}
+              >
+                {autoScroll ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+              </motion.button>
+            </div>
+
+            {/* Scrollable customer list - desktop */}
+            <div
+              ref={customerTableRef}
+              className="flex-1 overflow-y-auto"
+              style={{ scrollbarWidth: 'thin', scrollbarColor: '#d4a843 transparent' }}
+            >
+              {(autoScroll ? [0, 1] : [0]).map(dup => (
+                <div key={dup}>
+                  {allCustomers.map((c, idx) => {
+                    const isWon = wonCustomerIds.has(c.id);
+                    return (
+                      <div
+                        key={`${c.id}-${dup}`}
+                        className="flex items-center px-3 py-1.5 transition-colors"
+                        style={{
+                          borderBottom: '1px solid rgba(212,168,67,0.06)',
+                          background: isWon ? 'rgba(13,90,63,0.08)' : 'transparent',
+                          opacity: isWon ? 0.4 : 1,
+                        }}
+                      >
+                        <span className="font-mono text-[10px] w-5 flex-shrink-0" style={{ color: 'rgba(212,168,67,0.25)' }}>{idx + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span className={`text-xs font-bold truncate ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(212,168,67,0.25)' : '#f5d870' }}>
+                              {titleCase(c.name)}
+                            </span>
+                            {c.investmentFee > 0 && (
+                              <span className="text-[10px] font-semibold flex-shrink-0" style={{ color: isWon ? 'rgba(212,168,67,0.15)' : '#10b981' }}>
+                                {c.investmentFee}tr
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {c.advisor && (
+                              <span className="text-[9px] italic" style={{ color: isWon ? 'rgba(212,168,67,0.1)' : 'rgba(212,168,67,0.4)' }}>
+                                TVV {titleCase(c.advisor)}
+                              </span>
+                            )}
+                            <span className={`text-[9px] font-bold truncate ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(212,168,67,0.1)' : '#d4a843' }}>
+                              {c.gift || ''}
+                            </span>
+                          </div>
+                        </div>
+                        {isWon && (
+                          <span className="text-[8px] px-1.5 py-0.5 rounded font-bold" style={{ background: 'rgba(13,90,63,0.3)', color: '#10b981' }}>Trúng</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1168,7 +1246,7 @@ export default function LuckyDrawPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
             onClick={() => { setSettingsOpen(false); setSettingsAuthenticated(false); }}
           >
             <motion.div
@@ -1176,41 +1254,49 @@ export default function LuckyDrawPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', duration: 0.4 }}
-              className="w-full max-w-lg max-h-[85vh] overflow-auto rounded-2xl bg-white border-2 border-blue-200 shadow-2xl"
+              className="w-full max-w-lg max-h-[85vh] overflow-auto rounded-2xl shadow-2xl"
+              style={{ background: '#0f2042', border: '2px solid rgba(212,168,67,0.3)' }}
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="relative overflow-hidden p-4 flex justify-between items-center bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 rounded-t-2xl">
-                <h2 className="text-xl font-bold text-yellow-400">Cài đặt Quay Số</h2>
+              <div className="relative overflow-hidden p-4 flex justify-between items-center"
+                style={{ background: 'linear-gradient(135deg, #0a1628, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
+                <h2 className="text-xl font-bold" style={{ color: '#f5d870' }}>Cài đặt Quay Số</h2>
                 <button
                   onClick={() => { setSettingsOpen(false); setSettingsAuthenticated(false); }}
-                  className="p-1 hover:bg-black/10 rounded-lg transition-colors"
+                  className="p-1 hover:bg-white/5 rounded-lg transition-colors"
                 >
-                  <X className="w-6 h-6 text-yellow-400" />
+                  <X className="w-6 h-6" style={{ color: '#d4a843' }} />
                 </button>
               </div>
 
               {!settingsAuthenticated ? (
                 <div className="p-6 text-center">
-                  <div className="mb-4 p-4 rounded-xl bg-blue-50 border border-blue-200">
-                    <Settings className="w-10 h-10 text-blue-500 mx-auto mb-3" />
-                    <p className="text-slate-600 text-sm mb-3">Nhập mật khẩu để tiếp tục</p>
+                  <div className="mb-4 p-4 rounded-xl" style={{ background: 'rgba(10,22,40,0.8)', border: '1px solid rgba(212,168,67,0.2)' }}>
+                    <Settings className="w-10 h-10 mx-auto mb-3" style={{ color: '#d4a843' }} />
+                    <p className="text-sm mb-3" style={{ color: 'rgba(212,168,67,0.6)' }}>Nhập mật khẩu để tiếp tục</p>
                     <input
                       type="password"
                       value={settingsPassword}
                       onChange={e => setSettingsPassword(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleSettingsAuth()}
                       placeholder="Mật khẩu"
-                      className="w-full p-3 rounded-lg text-center font-mono text-lg tracking-widest outline-none transition-all border-2 border-blue-200 focus:border-blue-400 bg-white text-blue-900"
+                      className="w-full p-3 rounded-lg text-center font-mono text-lg tracking-widest outline-none transition-all"
+                      style={{
+                        border: '2px solid rgba(212,168,67,0.3)',
+                        background: 'rgba(10,22,40,0.8)',
+                        color: '#f5d870',
+                      }}
                       autoFocus
                     />
                     {settingsPassword && settingsPassword !== '0969774224' && (
-                      <p className="text-rose-500 text-xs mt-2">Mật khẩu không đúng</p>
+                      <p className="text-xs mt-2" style={{ color: '#ef4444' }}>Mật khẩu không đúng</p>
                     )}
                   </div>
                   <button
                     onClick={handleSettingsAuth}
-                    className="px-6 py-2.5 rounded-lg font-bold transition-all bg-gradient-to-r from-green-700 via-green-600 to-green-700 text-white shadow-md hover:shadow-lg"
+                    className="px-6 py-2.5 rounded-lg font-bold transition-all shadow-md hover:shadow-lg"
+                    style={{ background: 'linear-gradient(135deg, #0d5a3f, #0a7a4a)', color: '#f5d870' }}
                   >
                     Xác nhận
                   </button>
@@ -1218,16 +1304,17 @@ export default function LuckyDrawPage() {
               ) : (
                 <div className="p-5 space-y-4">
                   {/* Tabs */}
-                  <div className="flex gap-1 p-1 rounded-lg bg-blue-100/80">
+                  <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'rgba(10,22,40,0.6)' }}>
                     {(['general', 'prizes', 'customers'] as const).map(tab => (
                       <button
                         key={tab}
                         onClick={() => setSettingsTab(tab)}
-                        className={`flex-1 px-3 py-1.5 rounded-md text-xs font-bold uppercase transition-all ${
-                          settingsTab === tab
-                            ? 'bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-yellow-400 shadow-md'
-                            : 'text-slate-500 hover:text-green-700'
-                        }`}
+                        className="flex-1 px-3 py-1.5 rounded-md text-xs font-bold uppercase transition-all"
+                        style={{
+                          background: settingsTab === tab ? 'linear-gradient(135deg, #0f2042, #162d50)' : 'transparent',
+                          color: settingsTab === tab ? '#f5d870' : 'rgba(212,168,67,0.4)',
+                          boxShadow: settingsTab === tab ? '0 0 10px rgba(212,168,67,0.15)' : 'none',
+                        }}
                       >
                         {tab === 'general' ? 'Chung' : tab === 'prizes' ? 'Giải thưởng' : 'Khách hàng'}
                       </button>
@@ -1237,39 +1324,41 @@ export default function LuckyDrawPage() {
                   {/* General tab */}
                   {settingsTab === 'general' && (
                     <div className="space-y-4">
-                      <div className="p-3 rounded-xl bg-blue-50 border border-blue-200">
-                        <h4 className="text-blue-800 text-sm font-semibold mb-2">Tiêu đề chương trình</h4>
+                      <div className="p-3 rounded-xl" style={{ background: 'rgba(10,22,40,0.6)', border: '1px solid rgba(212,168,67,0.15)' }}>
+                        <h4 className="text-sm font-semibold mb-2" style={{ color: '#d4a843' }}>Tiêu đề chương trình</h4>
                         <input
                           value={store.eventInfo.name}
                           onChange={(e) => store.saveEventInfo({ name: e.target.value })}
                           placeholder="Nhập tiêu đề chương trình"
-                          className="w-full p-2.5 border-2 border-blue-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm"
+                          className="w-full p-2.5 rounded-lg focus:ring-2 outline-none transition-all text-sm"
+                          style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }}
                         />
                       </div>
-                      <div className="p-3 rounded-xl bg-blue-50 border border-blue-200">
-                        <h4 className="text-blue-800 text-sm font-semibold mb-2">Thống kê</h4>
+                      <div className="p-3 rounded-xl" style={{ background: 'rgba(10,22,40,0.6)', border: '1px solid rgba(212,168,67,0.15)' }}>
+                        <h4 className="text-sm font-semibold mb-2" style={{ color: '#d4a843' }}>Thống kê</h4>
                         <div className="space-y-1.5 text-xs">
                           <div className="flex justify-between">
-                            <span className="text-slate-500">Tổng khách hàng:</span>
-                            <span className="text-blue-800 font-bold">{allCustomers.length}</span>
+                            <span style={{ color: 'rgba(212,168,67,0.5)' }}>Tổng khách hàng:</span>
+                            <span style={{ color: '#f5d870' }} className="font-bold">{allCustomers.length}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-slate-500">Tổng TVV:</span>
-                            <span className="text-blue-800 font-bold">{[...new Set(allCustomers.map(c => c.advisor).filter(Boolean))].length}</span>
+                            <span style={{ color: 'rgba(212,168,67,0.5)' }}>Tổng TVV:</span>
+                            <span style={{ color: '#f5d870' }} className="font-bold">{[...new Set(allCustomers.map(c => c.advisor).filter(Boolean))].length}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-slate-500">Số giải đã trao:</span>
-                            <span className="text-blue-800 font-bold">{winners.length}</span>
+                            <span style={{ color: 'rgba(212,168,67,0.5)' }}>Số giải đã trao:</span>
+                            <span style={{ color: '#f5d870' }} className="font-bold">{winners.length}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-slate-500">Còn lại:</span>
-                            <span className="text-emerald-700 font-bold">{drawItems.length}</span>
+                            <span style={{ color: 'rgba(212,168,67,0.5)' }}>Còn lại:</span>
+                            <span style={{ color: '#10b981' }} className="font-bold">{drawItems.length}</span>
                           </div>
                         </div>
                       </div>
                       <button
                         onClick={handleResetWinners}
-                        className="w-full px-4 py-2.5 rounded-lg font-bold text-sm transition-all hover:opacity-90 bg-rose-50 border-2 border-rose-200 text-rose-600"
+                        className="w-full px-4 py-2.5 rounded-lg font-bold text-sm transition-all hover:opacity-90"
+                        style={{ background: 'rgba(239,68,68,0.1)', border: '2px solid rgba(239,68,68,0.3)', color: '#ef4444' }}
                       >
                         Đặt lại toàn bộ kết quả
                       </button>
@@ -1284,9 +1373,10 @@ export default function LuckyDrawPage() {
                         return (
                           <div
                             key={prize.id}
-                            className="p-3 rounded-xl flex items-center gap-2 bg-blue-50 border border-blue-200"
+                            className="p-3 rounded-xl flex items-center gap-2"
+                            style={{ background: 'rgba(10,22,40,0.6)', border: '1px solid rgba(212,168,67,0.15)' }}
                           >
-                            <IconComp className="w-4 h-4 text-yellow-600 flex-shrink-0" />
+                            <IconComp className="w-4 h-4 flex-shrink-0" style={{ color: '#d4a843' }} />
                             <input
                               value={prize.name}
                               onChange={e => {
@@ -1294,18 +1384,21 @@ export default function LuckyDrawPage() {
                                 updated[idx] = { ...updated[idx], name: e.target.value };
                                 setEditPrizes(updated);
                               }}
-                              className="flex-1 p-1.5 border border-blue-200 rounded-md text-sm outline-none focus:border-blue-400"
+                              className="flex-1 p-1.5 rounded-md text-sm outline-none"
+                              style={{ border: '1px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }}
                             />
                             <input
                               type="number"
                               min={1}
                               value={prize.quantity}
                               onChange={e => handleUpdatePrizeQty(prize.id, parseInt(e.target.value) || 1)}
-                              className="w-16 p-1.5 border border-blue-200 rounded-md text-sm text-center outline-none focus:border-blue-400"
+                              className="w-16 p-1.5 rounded-md text-sm text-center outline-none"
+                              style={{ border: '1px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }}
                             />
                             <button
                               onClick={() => handleRemovePrize(prize.id)}
-                              className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-md transition-colors"
+                              className="p-1.5 rounded-md transition-colors"
+                              style={{ color: '#ef4444' }}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -1317,25 +1410,29 @@ export default function LuckyDrawPage() {
                           value={newPrizeName}
                           onChange={e => setNewPrizeName(e.target.value)}
                           placeholder="Tên giải"
-                          className="flex-1 p-2 border-2 border-blue-200 rounded-lg text-sm outline-none focus:border-blue-400"
+                          className="flex-1 p-2 rounded-lg text-sm outline-none"
+                          style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }}
                         />
                         <input
                           type="number"
                           min={1}
                           value={newPrizeQty}
                           onChange={e => setNewPrizeQty(e.target.value)}
-                          className="w-20 p-2 border-2 border-blue-200 rounded-lg text-sm text-center outline-none focus:border-blue-400"
+                          className="w-20 p-2 rounded-lg text-sm text-center outline-none"
+                          style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }}
                         />
                         <button
                           onClick={handleAddPrize}
-                          className="px-3 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg font-bold text-sm transition-colors"
+                          className="px-3 py-2 rounded-lg font-bold text-sm transition-colors"
+                          style={{ background: 'linear-gradient(135deg, #0d5a3f, #0a7a4a)', color: '#f5d870' }}
                         >
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
                       <button
                         onClick={handleSaveSettings}
-                        className="w-full px-4 py-2.5 rounded-lg font-bold text-sm transition-all bg-gradient-to-r from-green-700 via-green-600 to-green-700 text-white shadow-md hover:shadow-lg"
+                        className="w-full px-4 py-2.5 rounded-lg font-bold text-sm transition-all shadow-md hover:shadow-lg"
+                        style={{ background: 'linear-gradient(135deg, #0d5a3f, #0a7a4a)', color: '#f5d870' }}
                       >
                         Lưu giải thưởng
                       </button>
@@ -1345,17 +1442,18 @@ export default function LuckyDrawPage() {
                   {/* Customers tab */}
                   {settingsTab === 'customers' && (
                     <div className="space-y-2">
-                      <div className="p-3 rounded-xl bg-blue-50 border border-blue-200">
-                        <p className="text-slate-500 text-sm">
-                          Quản lý khách hàng từ <Link href="/" className="text-green-700 underline font-semibold">trang chính</Link>.
+                      <div className="p-3 rounded-xl" style={{ background: 'rgba(10,22,40,0.6)', border: '1px solid rgba(212,168,67,0.15)' }}>
+                        <p className="text-sm" style={{ color: 'rgba(212,168,67,0.5)' }}>
+                          Quản lý khách hàng từ <Link href="/" style={{ color: '#10b981' }} className="underline font-semibold">trang chính</Link>.
                         </p>
                       </div>
-                      <div className="max-h-60 overflow-y-auto space-y-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#f59e0b transparent' }}>
+                      <div className="max-h-60 overflow-y-auto space-y-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#d4a843 transparent' }}>
                         {allCustomers.map(c => (
-                          <div key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded text-xs bg-white border border-blue-100">
-                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${wonCustomerIds.has(c.id) ? 'bg-rose-400' : 'bg-emerald-500'}`} />
-                            <span className="font-semibold text-slate-700 truncate">{c.name}</span>
-                            <span className="text-slate-400 ml-auto text-[10px]">{c.advisor}</span>
+                          <div key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded text-xs"
+                            style={{ background: 'rgba(10,22,40,0.5)', border: '1px solid rgba(212,168,67,0.08)' }}>
+                            <span className={`w-2 h-2 rounded-full flex-shrink-0`} style={{ background: wonCustomerIds.has(c.id) ? '#ef4444' : '#10b981' }} />
+                            <span className="font-semibold truncate" style={{ color: '#f5d870' }}>{c.name}</span>
+                            <span className="ml-auto text-[10px]" style={{ color: 'rgba(212,168,67,0.35)' }}>{c.advisor}</span>
                           </div>
                         ))}
                       </div>
@@ -1364,7 +1462,8 @@ export default function LuckyDrawPage() {
 
                   <button
                     onClick={() => { setSettingsOpen(false); setSettingsAuthenticated(false); }}
-                    className="w-full bg-slate-100 hover:bg-slate-200 py-2.5 rounded-lg font-semibold transition-colors mt-2"
+                    className="w-full py-2.5 rounded-lg font-semibold transition-colors mt-2"
+                    style={{ background: 'rgba(212,168,67,0.08)', color: 'rgba(212,168,67,0.5)' }}
                   >
                     Đóng
                   </button>

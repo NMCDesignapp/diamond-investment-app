@@ -162,6 +162,74 @@
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+/* LED dot animation - horizontal */
+@keyframes led-chase-h {
+  0%, 40% {
+    background: rgba(212, 168, 67, 0.15);
+    box-shadow: none;
+  }
+  50% {
+    background: #f5d870;
+    box-shadow: 0 0 6px #f5d870, 0 0 12px rgba(212, 168, 67, 0.5);
+  }
+  60%, 100% {
+    background: rgba(212, 168, 67, 0.15);
+    box-shadow: none;
+  }
+}
+
+/* LED dot animation - vertical */
+@keyframes led-chase-v {
+  0%, 40% {
+    background: rgba(212, 168, 67, 0.15);
+    box-shadow: none;
+  }
+  50% {
+    background: #f5d870;
+    box-shadow: 0 0 6px #f5d870, 0 0 12px rgba(212, 168, 67, 0.5);
+  }
+  60%, 100% {
+    background: rgba(212, 168, 67, 0.15);
+    box-shadow: none;
+  }
+}
+
+.led-dot {
+  animation: led-chase-h 3.2s ease-in-out infinite;
+  border-radius: 1px;
+  margin: 0 0.5px;
+}
+
+.led-dot-v {
+  animation: led-chase-v 3.2s ease-in-out infinite;
+  border-radius: 1px;
+  margin: 0.5px 0;
+}
+
+/* Tech scanline overlay */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.animate-scanline {
+  animation: scanline 8s linear infinite;
+}
+
+/* Neon text glow */
+@keyframes neon-pulse {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(212, 168, 67, 0.3), 0 0 20px rgba(212, 168, 67, 0.1);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(212, 168, 67, 0.6), 0 0 40px rgba(212, 168, 67, 0.3), 0 0 60px rgba(212, 168, 67, 0.1);
+  }
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
 /* Smooth number input - no spinners */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
