@@ -551,16 +551,16 @@ export default function LuckyDrawPage() {
           style={{ background: 'radial-gradient(ellipse, rgba(13,90,63,0.08) 0%, transparent 70%)' }} />
       </div>
 
-      {/* === HEADER BAR - Compact === */}
-      <div className="flex-shrink-0 relative" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50, #0f2042)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>
-        <div className="relative px-3 py-2 md:px-6 md:py-2.5 flex items-center justify-between">
+      {/* === HEADER BAR - Compact (mobile only) === */}
+      <div className="flex-shrink-0 relative md:hidden" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50, #0f2042)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>
+        <div className="relative px-3 py-2 flex items-center justify-between">
           <Link href="/" title="Quay lại">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               className="p-1.5 hover:bg-white/5 rounded-lg transition-all"
             >
-              <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" style={{ color: '#d4a843' }} />
+              <ArrowLeft className="w-4 h-4" style={{ color: '#d4a843' }} />
             </motion.button>
           </Link>
           <div className="flex items-center gap-2">
@@ -568,9 +568,9 @@ export default function LuckyDrawPage() {
               animate={{ rotate: [0, 8, -8, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <Diamond className="w-4 h-4 md:w-6 md:h-6" style={{ color: '#f5d870' }} />
+              <Diamond className="w-4 h-4" style={{ color: '#f5d870' }} />
             </motion.div>
-            <h1 className="text-sm md:text-2xl font-black uppercase tracking-wider" style={{ color: '#f5d870', textShadow: '0 0 20px rgba(212,168,67,0.3)' }}>
+            <h1 className="text-sm font-black uppercase tracking-wider" style={{ color: '#f5d870', textShadow: '0 0 20px rgba(212,168,67,0.3)' }}>
               Quay Số May Mắn
             </h1>
           </div>
@@ -578,7 +578,7 @@ export default function LuckyDrawPage() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => { setSettingsOpen(true); setSettingsAuthenticated(false); }}
-            className="p-2 md:p-1.5 hover:bg-white/5 rounded-lg transition-all"
+            className="p-2 hover:bg-white/5 rounded-lg transition-all"
             title="Cài đặt"
           >
             <Settings className="w-5 h-5" style={{ color: '#d4a843' }} />
@@ -897,112 +897,105 @@ export default function LuckyDrawPage() {
         </div>
       </div>
 
-      {/* === DESKTOP LAYOUT - LEFT sidebar (Gifts + Customers) | RIGHT Slot Machine === */}
-      <div className="flex-1 min-h-0 hidden md:flex md:flex-row">
+      {/* === DESKTOP LAYOUT - LEFT sidebar (Prizes + Customers) | RIGHT Slot Machine + Winners === */}
+      <div className="flex-1 min-h-0 hidden md:flex md:flex-row relative">
 
-        {/* === LEFT SIDEBAR: Gifts on top + Customers below === */}
+        {/* Desktop floating buttons (back + settings) - top right overlay */}
+        <div className="absolute top-2 right-3 z-40 flex items-center gap-2">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => { setSettingsOpen(true); setSettingsAuthenticated(false); }}
+            className="p-2 hover:bg-white/5 rounded-lg transition-all"
+            title="Cài đặt"
+          >
+            <Settings className="w-5 h-5" style={{ color: '#d4a843' }} />
+          </motion.button>
+          <Link href="/" title="Quay lại">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="p-2 hover:bg-white/5 rounded-lg transition-all"
+            >
+              <ArrowLeft className="w-5 h-5" style={{ color: '#d4a843' }} />
+            </motion.button>
+          </Link>
+        </div>
+
+        {/* === LEFT SIDEBAR: Seamless, Prizes on top (1/3) + Customers below (2/3) === */}
         <div className="w-[22%] min-w-[280px] max-w-[380px] flex flex-col" style={{ background: 'rgba(8,16,32,0.95)', borderRight: '2px solid rgba(212,168,67,0.3)' }}>
 
-          {/* GIFTS + PRIZES section (top) */}
-          <div className="flex-[1] min-h-0 flex flex-col" style={{ borderBottom: '1px solid rgba(212,168,67,0.2)' }}>
-            <div className="flex-shrink-0 flex items-center px-3 py-2" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
-              <Gift className="w-4 h-4" style={{ color: '#f5d870' }} />
-              <span style={{ color: '#f5d870' }} className="font-extrabold text-sm uppercase ml-1.5">Quà & Giải</span>
-            </div>
-            <div className="flex-1 min-h-0 overflow-y-auto px-2 py-2 space-y-1.5" style={{ fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
-              {/* Gift Tiers */}
-              {(Array.isArray(store.giftTiers) ? store.giftTiers : [])
-                .sort((a, b) => a.order - b.order)
-                .map((tier, idx) => {
-                  const tierStyles = [
-                    { bg: 'rgba(100,116,139,0.15)', border: 'rgba(100,116,139,0.3)', icon: '🥈', color: '#94a3b8' },
-                    { bg: 'rgba(212,168,67,0.1)', border: 'rgba(212,168,67,0.3)', icon: '🥇', color: '#f5d870' },
-                    { bg: 'rgba(13,90,63,0.1)', border: 'rgba(13,90,63,0.3)', icon: '🥉', color: '#10b981' },
-                  ];
-                  const s = tierStyles[idx % tierStyles.length];
-                  return (
-                    <div key={tier.id} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg" style={{ background: s.bg, border: `1px solid ${s.border}` }}>
-                      <span className="text-sm">{s.icon}</span>
-                      <span className="text-sm font-bold flex-1 truncate" style={{ color: s.color }}>{tier.giftName}</span>
-                      <span className="text-xs font-semibold" style={{ color: 'rgba(212,168,67,0.5)' }}>
-                        {tier.giftValue >= 1000000 ? `${(tier.giftValue / 1000000).toFixed(1)}tr` : `${(tier.giftValue / 1000).toFixed(0)}K`}
-                      </span>
-                    </div>
-                  );
-                })}
-
-              {/* Divider */}
-              {(Array.isArray(store.giftTiers) ? store.giftTiers : []).length > 0 && prizes.length > 0 && (
-                <div style={{ borderTop: '1px solid rgba(212,168,67,0.15)' }} />
-              )}
-
-              {/* Prize Spin Buttons */}
-              {prizes.length > 0 && (
-                <div className="space-y-1.5">
-                  <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'rgba(212,168,67,0.5)' }}>Giải quay số:</span>
-                  {prizes.map((prize, idx) => {
-                    const IconComp = PRIZE_ICONS[idx % PRIZE_ICONS.length];
-                    const isAvailable = prize.remaining > 0 && !isSpinning;
-                    return (
-                      <motion.button
-                        key={prize.id}
-                        whileTap={isAvailable ? { scale: 0.95 } : {}}
-                        whileHover={isAvailable ? { scale: 1.02 } : {}}
-                        onClick={() => handlePrizeSpin(idx)}
-                        disabled={!isAvailable}
-                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all border"
-                        style={{
-                          background: idx === currentPrizeIndex && isSpinning
-                            ? 'linear-gradient(135deg, #0d5a3f, #0a7a4a)'
-                            : prize.remaining <= 0
-                              ? 'rgba(15,32,66,0.5)'
-                              : 'rgba(22,45,80,0.6)',
-                          borderColor: idx === currentPrizeIndex && isSpinning
-                            ? '#10b981'
-                            : prize.remaining <= 0
-                              ? 'rgba(212,168,67,0.1)'
-                              : 'rgba(212,168,67,0.3)',
-                          color: prize.remaining <= 0 ? 'rgba(212,168,67,0.25)' : '#f5d870',
-                          cursor: !isAvailable ? 'not-allowed' : 'pointer',
-                          boxShadow: idx === currentPrizeIndex && isSpinning ? '0 0 15px rgba(16,185,129,0.3)' : 'none',
-                        }}
-                      >
-                        <IconComp className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1 text-left">{prize.name}</span>
-                        <span className="text-xs px-1.5 py-0.5 rounded-full"
-                          style={{
-                            background: prize.remaining <= 0 ? 'rgba(212,168,67,0.08)' : 'rgba(13,90,63,0.3)',
-                            color: prize.remaining <= 0 ? 'rgba(212,168,67,0.2)' : '#10b981',
-                          }}>
-                          {prize.remaining}
-                        </span>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              )}
-              {prizes.length === 0 && (Array.isArray(store.giftTiers) ? store.giftTiers : []).length === 0 && (
-                <p className="text-xs text-center py-4 italic" style={{ color: 'rgba(212,168,67,0.3)' }}>Chưa có dữ liệu</p>
-              )}
-            </div>
+          {/* PRIZES section (top 1/3) - no header bar */}
+          <div className="flex-[1] min-h-0 flex flex-col overflow-y-auto px-2 py-2 space-y-1.5" style={{ fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
+            {prizes.length > 0 ? (
+              prizes.map((prize, idx) => {
+                const IconComp = PRIZE_ICONS[idx % PRIZE_ICONS.length];
+                const isAvailable = prize.remaining > 0 && !isSpinning;
+                // Map prize index to gift tier if available
+                const giftTiers = Array.isArray(store.giftTiers) ? store.giftTiers : [];
+                const sortedTiers = [...giftTiers].sort((a, b) => a.order - b.order);
+                const mappedGift = sortedTiers[idx] ? sortedTiers[idx].giftName : prize.name;
+                return (
+                  <motion.button
+                    key={prize.id}
+                    whileTap={isAvailable ? { scale: 0.95 } : {}}
+                    whileHover={isAvailable ? { scale: 1.02, boxShadow: '0 0 12px rgba(212,168,67,0.3)' } : {}}
+                    onClick={() => handlePrizeSpin(idx)}
+                    disabled={!isAvailable}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all border"
+                    style={{
+                      background: idx === currentPrizeIndex && isSpinning
+                        ? 'linear-gradient(135deg, #0d5a3f, #0a7a4a)'
+                        : prize.remaining <= 0
+                          ? 'rgba(15,32,66,0.5)'
+                          : 'rgba(22,45,80,0.6)',
+                      borderColor: idx === currentPrizeIndex && isSpinning
+                        ? '#10b981'
+                        : prize.remaining <= 0
+                          ? 'rgba(212,168,67,0.1)'
+                          : 'rgba(212,168,67,0.3)',
+                      color: prize.remaining <= 0 ? 'rgba(212,168,67,0.25)' : '#f5d870',
+                      cursor: !isAvailable ? 'not-allowed' : 'pointer',
+                      boxShadow: idx === currentPrizeIndex && isSpinning ? '0 0 15px rgba(16,185,129,0.3)' : 'none',
+                    }}
+                  >
+                    <IconComp className="w-4 h-4 flex-shrink-0" />
+                    <span className="flex-1 text-left truncate">{prize.name}</span>
+                    <span style={{ color: 'rgba(212,168,67,0.4)' }}>→</span>
+                    <span className="text-xs truncate max-w-[100px]" style={{ color: '#10b981' }}>{mappedGift}</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0"
+                      style={{
+                        background: prize.remaining <= 0 ? 'rgba(212,168,67,0.08)' : 'rgba(13,90,63,0.3)',
+                        color: prize.remaining <= 0 ? 'rgba(212,168,67,0.2)' : '#10b981',
+                      }}>
+                      {prize.remaining}
+                    </span>
+                  </motion.button>
+                );
+              })
+            ) : (
+              <p className="text-xs text-center py-4 italic" style={{ color: 'rgba(212,168,67,0.3)' }}>Chưa có giải thưởng</p>
+            )}
           </div>
 
-          {/* CUSTOMERS section (below) */}
-          <div className="flex-[1] min-h-0 flex flex-col">
-            <div className="flex-shrink-0 flex items-center px-3 py-2" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
-              <Users className="w-4 h-4" style={{ color: '#f5d870' }} />
-              <span style={{ color: '#f5d870' }} className="font-extrabold text-sm uppercase ml-1.5">Khách Hàng</span>
-              <span style={{ color: 'rgba(212,168,67,0.6)' }} className="text-xs ml-1">({allCustomers.length})</span>
-              <div className="ml-auto flex gap-0.5 p-0.5 rounded" style={{ background: 'rgba(10,22,40,0.6)' }}>
-                <button onClick={() => setDrawMode('customer')} className="px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-all"
+          {/* Thin divider between prizes and customers */}
+          <div style={{ borderTop: '1px solid rgba(212,168,67,0.15)' }} />
+
+          {/* CUSTOMERS section (bottom 2/3) - no header bar, minimal inline controls */}
+          <div className="flex-[2] min-h-0 flex flex-col">
+            {/* Inline minimal controls */}
+            <div className="flex-shrink-0 flex items-center gap-1 px-2 py-1.5">
+              <span style={{ color: 'rgba(212,168,67,0.5)' }} className="text-[10px] font-bold">{allCustomers.length}</span>
+              <div className="flex gap-0.5 p-0.5 rounded" style={{ background: 'rgba(10,22,40,0.6)' }}>
+                <button onClick={() => setDrawMode('customer')} className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition-all"
                   style={{ background: drawMode === 'customer' ? 'linear-gradient(135deg, #d4a843, #c9a227)' : 'transparent', color: drawMode === 'customer' ? '#0a1628' : 'rgba(212,168,67,0.5)' }}>KH</button>
-                <button onClick={() => setDrawMode('advisor')} className="px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-all"
+                <button onClick={() => setDrawMode('advisor')} className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition-all"
                   style={{ background: drawMode === 'advisor' ? 'linear-gradient(135deg, #d4a843, #c9a227)' : 'transparent', color: drawMode === 'advisor' ? '#0a1628' : 'rgba(212,168,67,0.5)' }}>TVV</button>
               </div>
-              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setAutoScroll(!autoScroll)} className="ml-1 p-1 rounded transition-all"
+              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setAutoScroll(!autoScroll)} className="ml-auto p-1 rounded transition-all"
                 style={{ background: autoScroll ? 'rgba(13,90,63,0.3)' : 'rgba(212,168,67,0.1)', color: autoScroll ? '#10b981' : 'rgba(212,168,67,0.4)' }}
                 title={autoScroll ? 'Tắt cuộn' : 'Bật cuộn'}>
-                {autoScroll ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                {autoScroll ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
               </motion.button>
             </div>
             <div ref={customerTableRef} className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#d4a843 transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
@@ -1028,8 +1021,9 @@ export default function LuckyDrawPage() {
           </div>
         </div>
 
-        {/* === RIGHT: Slot Machine (PROMINENT) === */}
-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-8 py-4 relative">
+        {/* === RIGHT AREA: Title + Slot Machine + Bubble BG + Winners List === */}
+        <div className="flex-1 min-h-0 flex flex-col items-center px-8 pt-2 pb-2 relative overflow-hidden">
+
           {/* Background tech grid */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: 0.03 }}>
             <div className="absolute inset-0" style={{
@@ -1037,25 +1031,42 @@ export default function LuckyDrawPage() {
               backgroundSize: '50px 50px',
             }} />
           </div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[80%] rounded-full blur-3xl pointer-events-none"
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[60%] rounded-full blur-3xl pointer-events-none"
             style={{ background: 'radial-gradient(ellipse, rgba(212,168,67,0.08) 0%, transparent 60%)' }} />
 
-          {/* Desktop: show prize name prominently */}
+          {/* Big title: QUAY SỐ MAY MẮN */}
+          <div className="flex-shrink-0 flex items-center justify-center gap-3 mb-1">
+            <motion.div
+              animate={{ rotate: [0, 8, -8, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <Diamond className="w-8 h-8" style={{ color: '#f5d870' }} />
+            </motion.div>
+            <h1 className="text-4xl md:text-5xl font-black uppercase tracking-wider animate-neon-pulse" style={{ color: '#f5d870' }}>
+              Quay Số May Mắn
+            </h1>
+          </div>
+
+          {/* Current prize indicator */}
           {currentPrize && (
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <Crown className="w-8 h-8 text-amber-600" />
-              <span className="font-extrabold text-2xl md:text-3xl" style={{ color: '#f5d870' }}>{currentPrize.name}</span>
-              <span className="text-slate-500 text-lg">(còn {currentPrize.remaining})</span>
+            <div className="flex-shrink-0 flex items-center justify-center gap-2 mb-1">
+              <Crown className="w-6 h-6" style={{ color: '#f5d870' }} />
+              <span className="font-extrabold text-xl" style={{ color: '#f5d870' }}>{currentPrize.name}</span>
+              <span className="text-sm" style={{ color: 'rgba(212,168,67,0.5)' }}>(còn {currentPrize.remaining})</span>
             </div>
           )}
 
-          {/* Slot Machine - MUCH bigger for desktop/projection */}
-          <div className={`relative w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl transition-shadow duration-1000 ${canSpin ? 'animate-pulse-shadow' : ''}`}
+          {/* Slot Machine - clickable to stop */}
+          <div
+            className={`flex-shrink-0 relative w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl transition-shadow duration-1000 ${canSpin ? 'animate-pulse-shadow' : ''}`}
+            onClick={() => { if (isSpinning && !isStopping) handleStopClick(); }}
             style={{
               background: 'linear-gradient(180deg, #0f2042 0%, #162d50 50%, #0f2042 100%)',
               border: '4px solid rgba(212,168,67,0.5)',
               boxShadow: isSpinning ? '0 0 80px rgba(212,168,67,0.5), inset 0 0 50px rgba(212,168,67,0.08)' : canSpin ? '0 0 60px rgba(212,168,67,0.4), inset 0 0 50px rgba(212,168,67,0.08)' : '0 0 30px rgba(212,168,67,0.15), inset 0 0 25px rgba(212,168,67,0.04)',
-            }}>
+              cursor: isSpinning && !isStopping ? 'pointer' : 'default',
+            }}
+          >
             {/* Top decoration */}
             <div className="h-3 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
 
@@ -1063,9 +1074,9 @@ export default function LuckyDrawPage() {
             <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 5}px` }}>
               {/* Fading overlays - enhanced for diminishing effect */}
               <div className="absolute inset-0 pointer-events-none z-10">
-                {/* Top fade - strong diminishing effect */}
+                {/* Top fade */}
                 <div className="absolute top-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 2}px`, background: 'linear-gradient(to bottom, rgba(15,32,66,1) 0%, rgba(15,32,66,0.95) 30%, rgba(15,32,66,0.7) 60%, rgba(15,32,66,0.3) 85%, transparent 100%)' }} />
-                {/* Bottom fade - strong diminishing effect */}
+                {/* Bottom fade */}
                 <div className="absolute bottom-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 2}px`, background: 'linear-gradient(to top, rgba(15,32,66,1) 0%, rgba(15,32,66,0.95) 30%, rgba(15,32,66,0.7) 60%, rgba(15,32,66,0.3) 85%, transparent 100%)' }} />
                 {/* Center highlight */}
                 <div className="absolute left-0 right-0" style={{ top: `calc(50% - ${SLOT_ITEM_HEIGHT_DESKTOP / 2}px)`, height: `${SLOT_ITEM_HEIGHT_DESKTOP}px`, borderTop: '3px solid rgba(212,168,67,0.6)', borderBottom: '3px solid rgba(212,168,67,0.6)', background: 'rgba(212,168,67,0.1)' }} />
@@ -1081,6 +1092,23 @@ export default function LuckyDrawPage() {
                   </p>
                 </div>
               )}
+
+              {/* Click to stop hint while spinning */}
+              {isSpinning && !isStopping && (
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: 'rgba(239,68,68,0.2)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)', animation: 'pulse 1.5s infinite' }}>
+                    Nhấn để dừng
+                  </span>
+                </div>
+              )}
+              {isStopping && (
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: 'rgba(156,163,175,0.2)', color: '#d1d5db', border: '1px solid rgba(156,163,175,0.3)' }}>
+                    Đang dừng...
+                  </span>
+                </div>
+              )}
+
               <div ref={desktopTrackRef} className="absolute left-0 right-0 top-0" />
             </div>
 
@@ -1088,33 +1116,124 @@ export default function LuckyDrawPage() {
             <div className="h-3 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
           </div>
 
-          {/* STOP button - desktop */}
-          <AnimatePresence>
-            {isSpinning && (
-              <motion.button initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                whileTap={{ scale: 0.95 }} onClick={handleStopClick} disabled={isStopping}
-                className="mt-4 px-16 py-4 rounded-2xl font-bold text-2xl uppercase tracking-widest shadow-xl transition-all min-h-[64px]"
-                style={{ background: isStopping ? 'linear-gradient(135deg, #9ca3af, #6b7280, #9ca3af)' : 'linear-gradient(135deg, #ef4444, #f87171, #ef4444)', color: isStopping ? '#4b5563' : '#7f1d1d', border: '3px solid rgba(239, 68, 68, 0.5)', cursor: 'pointer', animation: 'pulse 1.5s infinite' }}>
-                {isStopping ? 'Đang dừng...' : 'Nhấn để dừng!'}
-              </motion.button>
-            )}
-          </AnimatePresence>
-        </div>
+          {/* Bubble background animation below slot machine */}
+          <div className="flex-1 min-h-0 relative w-full max-w-5xl">
+            {/* Bubbles */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {[...Array(8)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bubble"
+                  style={{
+                    width: `${30 + i * 10}px`,
+                    height: `${30 + i * 10}px`,
+                    left: `${20 + i * 8}%`,
+                    top: '30%',
+                    background: i % 2 === 0
+                      ? 'radial-gradient(circle, rgba(212,168,67,0.2) 0%, rgba(212,168,67,0.05) 60%, transparent 100%)'
+                      : 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.03) 60%, transparent 100%)',
+                    animationDelay: `${i * 0.8}s`,
+                    animationDuration: `${4 + i * 0.5}s`,
+                    filter: 'blur(4px)',
+                  }}
+                />
+              ))}
+            </div>
 
-        {/* Winner result overlay - desktop */}
-        <AnimatePresence>
-          {showResult && currentWinner && (
-            <motion.div initial={{ opacity: 0, y: 20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -20, scale: 0.9 }}
-              transition={{ type: 'spring', duration: 0.5 }} className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-              <div className="max-w-3xl mx-auto rounded-2xl p-8 text-center" style={{ background: 'rgba(10,22,40,0.95)', border: '3px solid rgba(212,168,67,0.6)', boxShadow: '0 0 60px rgba(212,168,67,0.3)' }}>
-                <p className="text-sm uppercase tracking-wider mb-1" style={{ color: 'rgba(212,168,67,0.5)' }}>Chúc mừng người trúng giải</p>
-                <p className="text-5xl font-black mb-1" style={{ color: '#f5d870' }}>{currentWinner.customerName}</p>
-                {drawMode === 'customer' && currentWinner.advisor && <p className="text-xl" style={{ color: 'rgba(212,168,67,0.6)' }}>TVV: {currentWinner.advisor}</p>}
-                <p className="text-2xl font-semibold mt-1" style={{ color: '#d4a843' }}>🏆 {currentWinner.prizeName}</p>
+            {/* Winners list */}
+            <div className="relative z-10 h-full flex flex-col">
+              {/* Winner list header with inline DỪNG button */}
+              <div className="flex-shrink-0 flex items-center justify-between px-2 py-1">
+                <div className="flex items-center gap-1.5">
+                  <Trophy className="w-4 h-4" style={{ color: '#f5d870' }} />
+                  <span className="font-extrabold text-sm uppercase" style={{ color: '#f5d870' }}>Người trúng giải</span>
+                  <span className="text-xs" style={{ color: 'rgba(212,168,67,0.5)' }}>({winners.length})</span>
+                </div>
+                {/* Inline DỪNG button that appears when spinning */}
+                <AnimatePresence>
+                  {isSpinning && (
+                    <motion.button
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleStopClick}
+                      disabled={isStopping}
+                      className="px-4 py-1 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+                      style={{
+                        background: isStopping
+                          ? 'linear-gradient(135deg, #9ca3af, #6b7280)'
+                          : 'linear-gradient(135deg, #ef4444, #f87171)',
+                        color: isStopping ? '#4b5563' : '#7f1d1d',
+                        border: '2px solid rgba(239, 68, 68, 0.4)',
+                        cursor: 'pointer',
+                        animation: isStopping ? 'none' : 'pulse 1.5s infinite',
+                      }}
+                    >
+                      {isStopping ? 'Đang dừng...' : 'DỪNG'}
+                    </motion.button>
+                  )}
+                </AnimatePresence>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+
+              {/* Scrollable winner cards */}
+              <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 px-2 pb-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#d4a843 transparent' }}>
+                {winners.length === 0 ? (
+                  <div className="flex items-center justify-center h-20">
+                    <p className="text-sm italic" style={{ color: 'rgba(212,168,67,0.25)' }}>Chưa có người trúng giải</p>
+                  </div>
+                ) : (
+                  [...winners].reverse().map((winner, idx) => {
+                    const isLatest = idx === 0;
+                    return (
+                      <div
+                        key={`${winner.id}-${idx}`}
+                        className={`relative rounded-lg overflow-hidden ${isLatest ? 'winner-glow' : ''}`}
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.05))',
+                        }}
+                      >
+                        {/* LED strip top */}
+                        <div className="absolute top-0 left-0 right-0 h-[3px] flex overflow-hidden">
+                          {Array.from({ length: 30 }).map((_, i) => (
+                            <div key={`wt-${i}`} className="flex-1 winner-led-dot" style={{ animationDelay: `${i * 0.05}s` }} />
+                          ))}
+                        </div>
+                        {/* LED strip bottom */}
+                        <div className="absolute bottom-0 left-0 right-0 h-[3px] flex overflow-hidden">
+                          {Array.from({ length: 30 }).map((_, i) => (
+                            <div key={`wb-${i}`} className="flex-1 winner-led-dot" style={{ animationDelay: `${(30 - i) * 0.05}s` }} />
+                          ))}
+                        </div>
+                        {/* LED strip left */}
+                        <div className="absolute top-0 left-0 bottom-0 w-[3px] flex flex-col overflow-hidden">
+                          {Array.from({ length: 8 }).map((_, i) => (
+                            <div key={`wl-${i}`} className="flex-1 winner-led-dot" style={{ animationDelay: `${(8 - i) * 0.06}s` }} />
+                          ))}
+                        </div>
+                        {/* LED strip right */}
+                        <div className="absolute top-0 right-0 bottom-0 w-[3px] flex flex-col overflow-hidden">
+                          {Array.from({ length: 8 }).map((_, i) => (
+                            <div key={`wr-${i}`} className="flex-1 winner-led-dot" style={{ animationDelay: `${i * 0.06}s` }} />
+                          ))}
+                        </div>
+                        {/* Content */}
+                        <div className="px-4 py-2.5 flex items-center gap-2">
+                          <Trophy className="w-4 h-4 flex-shrink-0" style={{ color: isLatest ? '#f5d870' : 'rgba(212,168,67,0.4)' }} />
+                          <span className="font-black text-base" style={{ color: isLatest ? '#f5d870' : 'rgba(212,168,67,0.7)' }}>{winner.customerName}</span>
+                          {drawMode === 'customer' && winner.advisor && (
+                            <span className="text-xs italic" style={{ color: 'rgba(212,168,67,0.4)' }}>TVV {winner.advisor}</span>
+                          )}
+                          <span style={{ color: '#10b981' }} className="text-sm font-semibold ml-auto">🏆 {winner.prizeName}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* === SETTINGS MODAL === */}

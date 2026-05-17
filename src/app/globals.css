@@ -286,3 +286,60 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+/* Bubble float animation for desktop lucky draw background */
+@keyframes bubble-rise {
+  0% {
+    transform: scale(0);
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.12;
+  }
+  100% {
+    transform: scale(3.5);
+    opacity: 0;
+  }
+}
+
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  animation: bubble-rise 5s ease-out infinite;
+  pointer-events: none;
+}
+
+/* Winner card LED chase border */
+@keyframes winner-led-chase {
+  0%, 30% {
+    background: rgba(212, 168, 67, 0.08);
+    box-shadow: none;
+  }
+  50% {
+    background: #f5d870;
+    box-shadow: 0 0 4px #f5d870, 0 0 8px rgba(212, 168, 67, 0.4);
+  }
+  70%, 100% {
+    background: rgba(212, 168, 67, 0.08);
+    box-shadow: none;
+  }
+}
+
+.winner-led-dot {
+  animation: winner-led-chase 2.4s ease-in-out infinite;
+  border-radius: 1px;
+}
+
+/* Latest winner glow pulse */
+@keyframes winner-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(245, 216, 112, 0.2), inset 0 0 4px rgba(245, 216, 112, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(245, 216, 112, 0.4), 0 0 40px rgba(212, 168, 67, 0.15), inset 0 0 8px rgba(245, 216, 112, 0.1);
+  }
+}
+
+.winner-glow {
+  animation: winner-glow-pulse 2s ease-in-out infinite;
+}
