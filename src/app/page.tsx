@@ -153,27 +153,28 @@ export default function InvestmentApp() {
       {/* === STATS === */}
       <div className="flex-shrink-0 grid grid-cols-3 gap-1.5 md:gap-3 px-2 md:px-5 pt-2 md:pt-3">
         {[
-          { label: 'Tổng KH', value: stats.totalCustomers, icon: Users },
-          { label: 'Tổng phí', value: stats.totalFee * 1e6, icon: DollarSign },
-          { label: 'Tổng quà', value: stats.totalGiftValue, icon: Gift },
+          { label: 'Tổng KH', value: stats.totalCustomers, icon: Users, accentColor: '#d4a843' },
+          { label: 'Tổng phí', value: stats.totalFee * 1e6, icon: DollarSign, accentColor: '#10b981' },
+          { label: 'Tổng quà', value: stats.totalGiftValue, icon: Gift, accentColor: '#f5d870' },
         ].map((stat, idx) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.08 * idx }}
-            className="flex items-center gap-1.5 md:gap-2 rounded-xl p-1.5 md:p-3 shadow-sm overflow-hidden"
+            className="metallic-grain flex items-center gap-1.5 md:gap-2 rounded-xl p-1.5 md:p-3 shadow-sm overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, #c0c0c0, #d8d8d8, #b8b8b8)',
-              border: '1px solid rgba(180,180,180,0.5)',
+              background: 'linear-gradient(145deg, #a8a8a8 0%, #c8c8c8 25%, #b8b8b8 50%, #d0d0d0 75%, #b0b0b0 100%)',
+              border: '1px solid rgba(180,180,180,0.6)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.15)',
             }}
           >
-            <div className="p-1 md:p-1.5 rounded-lg flex-shrink-0" style={{ background: 'rgba(0,0,0,0.08)' }}>
-              <stat.icon className="w-3 h-3 md:w-3.5 md:h-3.5" style={{ color: '#555' }} />
+            <div className="p-1 md:p-1.5 rounded-lg flex-shrink-0" style={{ background: 'rgba(0,0,0,0.1)' }}>
+              <stat.icon className="w-3 h-3 md:w-3.5 md:h-3.5" style={{ color: '#444' }} />
             </div>
             <div className="min-w-0">
-              <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-wide" style={{ color: '#666' }}>{stat.label}</p>
-              <p className="text-xs md:text-base font-black leading-tight" style={{ color: '#333' }}>
+              <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-wide" style={{ color: '#555' }}>{stat.label}</p>
+              <p className="text-xs md:text-base font-black leading-tight" style={{ color: stat.accentColor, textShadow: '0 0 8px rgba(212,168,67,0.3)' }}>
                 <span className="md:hidden">{typeof stat.value === 'number' ? formatCompactVND(stat.value) : stat.value}</span>
                 <span className="hidden md:inline">{typeof stat.value === 'number' ? formatVND(stat.value) : stat.value}</span>
               </p>

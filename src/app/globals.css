@@ -230,6 +230,53 @@
   animation: neon-pulse 2s ease-in-out infinite;
 }
 
+/* Metallic brushed grain texture overlay */
+.metallic-grain {
+  position: relative;
+}
+.metallic-grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(255,255,255,0.07) 1px,
+      rgba(255,255,255,0.07) 2px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+.metallic-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.25) 0%,
+    transparent 40%,
+    transparent 60%,
+    rgba(255,255,255,0.15) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+.metallic-grain > * {
+  position: relative;
+  z-index: 3;
+}
+
 /* Smooth number input - no spinners */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
