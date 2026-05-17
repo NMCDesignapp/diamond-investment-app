@@ -149,6 +149,54 @@ function titleCase(str: string) {
 const SLOT_ITEM_HEIGHT_MOBILE = 56;
 const SLOT_ITEM_HEIGHT_DESKTOP = 90;
 
+// LED border component for slot machine (static, no props)
+function LEDBorder() {
+  return (
+    <div className="absolute inset-0 pointer-events-none z-20">
+      {/* Top LED row */}
+      <div className="absolute top-0 left-0 right-0 h-2 flex overflow-hidden">
+        {Array.from({ length: 40 }).map((_, i) => (
+          <div
+            key={`top-${i}`}
+            className="flex-1 led-dot"
+            style={{ animationDelay: `${i * 0.08}s` }}
+          />
+        ))}
+      </div>
+      {/* Bottom LED row */}
+      <div className="absolute bottom-0 left-0 right-0 h-2 flex overflow-hidden">
+        {Array.from({ length: 40 }).map((_, i) => (
+          <div
+            key={`bot-${i}`}
+            className="flex-1 led-dot"
+            style={{ animationDelay: `${(40 - i) * 0.08}s` }}
+          />
+        ))}
+      </div>
+      {/* Left LED column */}
+      <div className="absolute top-0 left-0 bottom-0 w-2 flex flex-col overflow-hidden">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div
+            key={`left-${i}`}
+            className="flex-1 led-dot-v"
+            style={{ animationDelay: `${i * 0.08}s` }}
+          />
+        ))}
+      </div>
+      {/* Right LED column */}
+      <div className="absolute top-0 right-0 bottom-0 w-2 flex flex-col overflow-hidden">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div
+            key={`right-${i}`}
+            className="flex-1 led-dot-v"
+            style={{ animationDelay: `${(20 - i) * 0.08}s` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function LuckyDrawPage() {
   const store = useInvestmentStore();
   const mobileTrackRef = useRef<HTMLDivElement>(null);
@@ -269,7 +317,7 @@ export default function LuckyDrawPage() {
     const items = drawItems.map(item => item.name);
     if (items.length === 0) return [];
     const track: string[] = [];
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 50; i++) {
       const shuffled = [...items].sort(() => Math.random() - 0.5);
       track.push(...shuffled);
     }
@@ -312,11 +360,11 @@ export default function LuckyDrawPage() {
       }
 
       const totalHeight = track.length * itemH;
-      const scrollDistance = totalHeight * 0.7;
+      const scrollDistance = totalHeight * 0.85;
       trackEl.style.transition = 'none';
       trackEl.style.transform = 'translateY(0)';
       void trackEl.offsetHeight;
-      trackEl.style.transition = 'transform 10s linear';
+      trackEl.style.transition = 'transform 5s linear';
       trackEl.style.transform = `translateY(-${scrollDistance}px)`;
     });
   }, [isSpinning, drawItems, currentPrize, buildTrack, getTrackRef]);
@@ -486,52 +534,6 @@ export default function LuckyDrawPage() {
     });
   };
 
-  // LED border component for slot machine
-  const LEDBorder = () => (
-    <div className="absolute inset-0 pointer-events-none z-20">
-      {/* Top LED row */}
-      <div className="absolute top-0 left-0 right-0 h-2 flex overflow-hidden">
-        {Array.from({ length: 40 }).map((_, i) => (
-          <div
-            key={`top-${i}`}
-            className="flex-1 led-dot"
-            style={{ animationDelay: `${i * 0.08}s` }}
-          />
-        ))}
-      </div>
-      {/* Bottom LED row */}
-      <div className="absolute bottom-0 left-0 right-0 h-2 flex overflow-hidden">
-        {Array.from({ length: 40 }).map((_, i) => (
-          <div
-            key={`bot-${i}`}
-            className="flex-1 led-dot"
-            style={{ animationDelay: `${(40 - i) * 0.08}s` }}
-          />
-        ))}
-      </div>
-      {/* Left LED column */}
-      <div className="absolute top-0 left-0 bottom-0 w-2 flex flex-col overflow-hidden">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <div
-            key={`left-${i}`}
-            className="flex-1 led-dot-v"
-            style={{ animationDelay: `${i * 0.08}s` }}
-          />
-        ))}
-      </div>
-      {/* Right LED column */}
-      <div className="absolute top-0 right-0 bottom-0 w-2 flex flex-col overflow-hidden">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <div
-            key={`right-${i}`}
-            className="flex-1 led-dot-v"
-            style={{ animationDelay: `${(20 - i) * 0.08}s` }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-
   return (
     <div className="h-screen flex flex-col overflow-hidden" style={{ background: '#0a1628' }}>
       {/* Confetti Canvas */}
@@ -615,10 +617,12 @@ export default function LuckyDrawPage() {
 
             {/* Slot viewport - compact 5 items visible with fade */}
             <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 5}px` }}>
-              {/* Fading overlays - top and bottom fade */}
+              {/* Fading overlays - enhanced for diminishing effect */}
               <div className="absolute inset-0 pointer-events-none z-10">
-                <div className="absolute top-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 2}px`, background: 'linear-gradient(to bottom, rgba(15,32,66,0.95), rgba(15,32,66,0.5), transparent)' }} />
-                <div className="absolute bottom-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 2}px`, background: 'linear-gradient(to top, rgba(15,32,66,0.95), rgba(15,32,66,0.5), transparent)' }} />
+                {/* Top fade - strong diminishing effect */}
+                <div className="absolute top-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 2}px`, background: 'linear-gradient(to bottom, rgba(15,32,66,1) 0%, rgba(15,32,66,0.95) 30%, rgba(15,32,66,0.7) 60%, rgba(15,32,66,0.3) 85%, transparent 100%)' }} />
+                {/* Bottom fade - strong diminishing effect */}
+                <div className="absolute bottom-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 2}px`, background: 'linear-gradient(to top, rgba(15,32,66,1) 0%, rgba(15,32,66,0.95) 30%, rgba(15,32,66,0.7) 60%, rgba(15,32,66,0.3) 85%, transparent 100%)' }} />
                 {/* Center highlight */}
                 <div
                   className="absolute left-0 right-0"
@@ -1055,12 +1059,14 @@ export default function LuckyDrawPage() {
             {/* Top decoration */}
             <div className="h-3 w-full" style={{ background: 'linear-gradient(90deg, #d4a843, #f5d870, #ffe066, #f5d870, #d4a843)' }} />
 
-            {/* Slot viewport - 5 items visible with fade effect */}
+            {/* Slot viewport - 5 items visible with enhanced fade effect */}
             <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 5}px` }}>
-              {/* Fading overlays - top and bottom fade */}
+              {/* Fading overlays - enhanced for diminishing effect */}
               <div className="absolute inset-0 pointer-events-none z-10">
-                <div className="absolute top-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 2}px`, background: 'linear-gradient(to bottom, rgba(15,32,66,0.95), rgba(15,32,66,0.5), transparent)' }} />
-                <div className="absolute bottom-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 2}px`, background: 'linear-gradient(to top, rgba(15,32,66,0.95), rgba(15,32,66,0.5), transparent)' }} />
+                {/* Top fade - strong diminishing effect */}
+                <div className="absolute top-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 2}px`, background: 'linear-gradient(to bottom, rgba(15,32,66,1) 0%, rgba(15,32,66,0.95) 30%, rgba(15,32,66,0.7) 60%, rgba(15,32,66,0.3) 85%, transparent 100%)' }} />
+                {/* Bottom fade - strong diminishing effect */}
+                <div className="absolute bottom-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 2}px`, background: 'linear-gradient(to top, rgba(15,32,66,1) 0%, rgba(15,32,66,0.95) 30%, rgba(15,32,66,0.7) 60%, rgba(15,32,66,0.3) 85%, transparent 100%)' }} />
                 {/* Center highlight */}
                 <div className="absolute left-0 right-0" style={{ top: `calc(50% - ${SLOT_ITEM_HEIGHT_DESKTOP / 2}px)`, height: `${SLOT_ITEM_HEIGHT_DESKTOP}px`, borderTop: '3px solid rgba(212,168,67,0.6)', borderBottom: '3px solid rgba(212,168,67,0.6)', background: 'rgba(212,168,67,0.1)' }} />
                 {/* Side arrows */}
