@@ -198,26 +198,24 @@ export default function InvestmentApp() {
         ) : (
           <div className="h-full rounded-lg shadow-lg flex flex-col overflow-hidden"
             style={{ background: 'rgba(15,32,66,0.9)', border: '2px solid rgba(212,168,67,0.3)' }}>
-            {/* Fixed table header */}
-            <table className="w-full border-collapse">
-              <thead>
-                <tr style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)' }}>
-                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center w-16" style={{ color: '#f5d870' }}>STT</th>
-                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>Khách Hàng</th>
-                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>TVV</th>
-                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>Phí Đầu Tư</th>
-                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center" style={{ color: '#f5d870' }}>Quà Tặng</th>
-                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>Giá Trị</th>
-                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center w-32" style={{ color: '#f5d870' }}>Ghi Chú</th>
-                </tr>
-              </thead>
-            </table>
-            {/* Scrollable body */}
+            {/* Single table with sticky header - ensures column alignment */}
             <div
               ref={tableBodyRef}
               className={`flex-1 overflow-y-auto ${autoScroll ? 'overflow-y-hidden' : ''}`}
+              style={{ fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}
             >
               <table className="w-full border-collapse">
+                <thead className="sticky top-0 z-10">
+                  <tr style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)' }}>
+                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-center w-14" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>STT</th>
+                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-left whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Khách Hàng</th>
+                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-left whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>TVV</th>
+                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-right whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Phí Đầu Tư</th>
+                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-left" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Quà Tặng</th>
+                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-right whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Giá Trị</th>
+                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-center w-28" style={{ color: '#f5d870', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Ghi Chú</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {(autoScroll ? [filtered, filtered] : [filtered]).flat().map((c, idx) => {
                     const realIdx = idx % filtered.length;
@@ -230,27 +228,27 @@ export default function InvestmentApp() {
                         transition={{ duration: 0.25, delay: realIdx * 0.02 }}
                         className="transition-colors duration-100"
                         style={{
-                          borderBottom: '1px solid rgba(212,168,67,0.1)',
+                          borderBottom: '1px solid rgba(212,168,67,0.12)',
                         }}
                         onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,168,67,0.05)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
-                        <td className="px-4 py-3 text-center font-bold text-xl w-16" style={{ color: 'rgba(212,168,67,0.3)' }}>{realIdx + 1}</td>
-                        <td className="px-4 py-3 font-bold text-xl whitespace-nowrap" style={{ color: '#f5d870' }}>{titleCase(realC.name)}</td>
-                        <td className="px-4 py-3 text-lg whitespace-nowrap" style={{ color: 'rgba(212,168,67,0.6)' }}>{titleCase(realC.advisor) || '—'}</td>
-                        <td className="px-4 py-3 text-right font-mono font-bold text-xl whitespace-nowrap" style={{ color: '#10b981' }}>
+                        <td className="px-3 py-2.5 text-center font-bold text-xl w-14" style={{ color: 'rgba(212,168,67,0.3)', borderRight: '1px solid rgba(212,168,67,0.08)' }}>{realIdx + 1}</td>
+                        <td className="px-3 py-2.5 font-bold text-xl whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.08)' }}>{titleCase(realC.name)}</td>
+                        <td className="px-3 py-2.5 text-lg whitespace-nowrap" style={{ color: 'rgba(212,168,67,0.6)', borderRight: '1px solid rgba(212,168,67,0.08)' }}>{titleCase(realC.advisor) || '—'}</td>
+                        <td className="px-3 py-2.5 text-right font-bold text-xl whitespace-nowrap" style={{ color: '#10b981', borderRight: '1px solid rgba(212,168,67,0.08)' }}>
                           {formatVND(realC.investmentFee * 1e6)}
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold text-lg" style={{ color: '#d4a843' }}>
-                          <span className="inline-flex items-end justify-end gap-2 flex-wrap">
-                            <Gift className="w-6 h-6 flex-shrink-0" style={{ color: 'rgba(212,168,67,0.5)' }} />
-                            <span className="leading-tight">{realC.gift || '—'}</span>
+                        <td className="px-3 py-2.5 font-semibold text-lg whitespace-nowrap" style={{ color: '#d4a843', borderRight: '1px solid rgba(212,168,67,0.08)' }}>
+                          <span className="inline-flex items-center gap-2">
+                            <Gift className="w-5 h-5 flex-shrink-0" style={{ color: 'rgba(212,168,67,0.5)' }} />
+                            <span>{realC.gift || '—'}</span>
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono font-bold text-xl whitespace-nowrap" style={{ color: '#d4a843' }}>
+                        <td className="px-3 py-2.5 text-right font-bold text-xl whitespace-nowrap" style={{ color: '#d4a843', borderRight: '1px solid rgba(212,168,67,0.08)' }}>
                           {formatVND(realC.giftValue)}
                         </td>
-                        <td className="px-4 py-3 w-32">
+                        <td className="px-3 py-2.5 w-28">
                           <div className="flex flex-col items-center gap-1.5">
                             <StatusBadge status={realC.status} />
                             <motion.button

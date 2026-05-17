@@ -13,6 +13,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import { Roboto_Condensed } from "next/font/google";
+const robotoCondensed = Roboto_Condensed({
+  variable: "--font-roboto-condensed",
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Quản lý đầu tư - Kim cương",
   description: "Ứng dụng quản lý sự kiện đầu tư, khách hàng và quà tặng",
@@ -29,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${robotoCondensed.variable} antialiased`}
       >
         {children}
         <Toaster richColors position="top-center" />

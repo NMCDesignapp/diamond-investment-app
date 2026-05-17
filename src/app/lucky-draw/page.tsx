@@ -1187,7 +1187,7 @@ export default function LuckyDrawPage() {
             <div
               ref={customerTableRef}
               className="flex-1 overflow-y-auto"
-              style={{ scrollbarWidth: 'thin', scrollbarColor: '#d4a843 transparent' }}
+              style={{ scrollbarWidth: 'thin', scrollbarColor: '#d4a843 transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}
             >
               {(autoScroll ? [0, 1] : [0]).map(dup => (
                 <div key={dup}>
