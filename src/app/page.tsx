@@ -42,7 +42,7 @@ function StatusBadge({ status }: { status: string }) {
   const c = config[status] || config['Chưa nhận quà'];
   return (
     <span
-      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold whitespace-nowrap"
+      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-base font-semibold whitespace-nowrap"
       style={{ background: c.bg, color: c.text }}
     >
       <span>{c.icon}</span>{status.replace(' nhận quà', '')}
@@ -122,7 +122,7 @@ export default function InvestmentApp() {
             >
               <Diamond className="w-5 h-5 mx-auto" style={{ color: '#f5d870' }} />
             </motion.div>
-            <h1 className="text-lg md:text-xl font-black uppercase tracking-wider" style={{ color: '#f5d870', textShadow: '0 0 20px rgba(212,168,67,0.2)' }}>
+            <h1 className="text-xl md:text-2xl font-black uppercase tracking-wider" style={{ color: '#f5d870', textShadow: '0 0 20px rgba(212,168,67,0.2)' }}>
               {store.eventInfo.name}
             </h1>
             <p style={{ color: 'rgba(212,168,67,0.5)' }} className="font-medium text-[11px] md:text-xs">
@@ -207,13 +207,13 @@ export default function InvestmentApp() {
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 z-10">
                   <tr style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)' }}>
-                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-center w-14" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>STT</th>
-                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-left whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Khách Hàng</th>
-                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-left whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>TVV</th>
-                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-right whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Phí Đầu Tư</th>
-                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-left" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Quà Tặng</th>
-                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-right whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Giá Trị</th>
-                    <th className="px-3 py-3 font-extrabold text-xl uppercase text-center w-28" style={{ color: '#f5d870', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Ghi Chú</th>
+                    <th className="px-3 py-3 font-extrabold text-2xl uppercase text-center w-14" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>STT</th>
+                    <th className="px-3 py-3 font-extrabold text-2xl uppercase text-center whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Khách Hàng</th>
+                    <th className="px-3 py-3 font-extrabold text-2xl uppercase text-center whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>TVV</th>
+                    <th className="px-3 py-3 font-extrabold text-2xl uppercase text-center whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Phí Đầu Tư</th>
+                    <th className="px-3 py-3 font-extrabold text-2xl uppercase text-center" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Mức Quà</th>
+                    <th className="px-3 py-3 font-extrabold text-2xl uppercase text-center whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.15)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Giá Trị</th>
+                    <th className="px-3 py-3 font-extrabold text-2xl uppercase text-center w-28" style={{ color: '#f5d870', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>Ghi Chú</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -233,22 +233,22 @@ export default function InvestmentApp() {
                         onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,168,67,0.05)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
-                        <td className="px-3 py-2.5 text-center font-bold text-xl w-14" style={{ color: 'rgba(212,168,67,0.3)', borderRight: '1px solid rgba(212,168,67,0.08)' }}>{realIdx + 1}</td>
-                        <td className="px-3 py-2.5 font-bold text-xl whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.08)' }}>{titleCase(realC.name)}</td>
-                        <td className="px-3 py-2.5 text-lg whitespace-nowrap" style={{ color: 'rgba(212,168,67,0.6)', borderRight: '1px solid rgba(212,168,67,0.08)' }}>{titleCase(realC.advisor) || '—'}</td>
-                        <td className="px-3 py-2.5 text-right font-bold text-xl whitespace-nowrap" style={{ color: '#10b981', borderRight: '1px solid rgba(212,168,67,0.08)' }}>
+                        <td className="px-3 py-3 text-center font-bold text-2xl w-14" style={{ color: 'rgba(212,168,67,0.3)', borderRight: '1px solid rgba(212,168,67,0.08)' }}>{realIdx + 1}</td>
+                        <td className="px-3 py-3 text-left font-bold text-2xl whitespace-nowrap" style={{ color: '#f5d870', borderRight: '1px solid rgba(212,168,67,0.08)' }}>{titleCase(realC.name)}</td>
+                        <td className="px-3 py-3 text-left text-xl whitespace-nowrap" style={{ color: 'rgba(212,168,67,0.6)', borderRight: '1px solid rgba(212,168,67,0.08)' }}>{titleCase(realC.advisor) || '—'}</td>
+                        <td className="px-3 py-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#10b981', borderRight: '1px solid rgba(212,168,67,0.08)' }}>
                           {formatVND(realC.investmentFee * 1e6)}
                         </td>
-                        <td className="px-3 py-2.5 font-semibold text-lg whitespace-nowrap" style={{ color: '#d4a843', borderRight: '1px solid rgba(212,168,67,0.08)' }}>
+                        <td className="px-3 py-3 text-left font-semibold text-xl whitespace-nowrap" style={{ color: '#d4a843', borderRight: '1px solid rgba(212,168,67,0.08)' }}>
                           <span className="inline-flex items-center gap-2">
                             <Gift className="w-5 h-5 flex-shrink-0" style={{ color: 'rgba(212,168,67,0.5)' }} />
-                            <span>{realC.gift || '—'}</span>
+                            <span>{store.getGiftByFee(realC.investmentFee).name || '—'}</span>
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 text-right font-bold text-xl whitespace-nowrap" style={{ color: '#d4a843', borderRight: '1px solid rgba(212,168,67,0.08)' }}>
-                          {formatVND(realC.giftValue)}
+                        <td className="px-3 py-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#d4a843', borderRight: '1px solid rgba(212,168,67,0.08)' }}>
+                          {formatVND(store.getGiftByFee(realC.investmentFee).value)}
                         </td>
-                        <td className="px-3 py-2.5 w-28">
+                        <td className="px-3 py-3 w-28">
                           <div className="flex flex-col items-center gap-1.5">
                             <StatusBadge status={realC.status} />
                             <motion.button
@@ -326,11 +326,11 @@ export default function InvestmentApp() {
                       <div className="px-3 pb-3 space-y-1.5 pt-2 text-xs" style={{ borderTop: '1px solid rgba(212,168,67,0.1)' }}>
                         <div className="flex justify-between">
                           <span style={{ color: 'rgba(212,168,67,0.5)' }}>🎁 Quà</span>
-                          <span className="font-semibold" style={{ color: '#d4a843' }}>{c.gift || '—'}</span>
+                          <span className="font-semibold" style={{ color: '#d4a843' }}>{store.getGiftByFee(c.investmentFee).name || '—'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span style={{ color: 'rgba(212,168,67,0.5)' }}>💎 Giá trị</span>
-                          <span className="font-mono font-bold" style={{ color: '#d4a843' }}>{formatVND(c.giftValue)}</span>
+                          <span className="font-mono font-bold" style={{ color: '#d4a843' }}>{formatVND(store.getGiftByFee(c.investmentFee).value)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span style={{ color: 'rgba(212,168,67,0.5)' }}>📝 Ghi chú</span>
