@@ -802,9 +802,9 @@ export default function LuckyDrawPage() {
             {/* Header with toggle */}
             <div className="flex-shrink-0 flex items-center px-3 py-1.5" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
               <div className="flex-1 flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5" style={{ color: '#f5d870' }} />
-                <span style={{ color: '#f5d870' }} className="font-extrabold text-xs uppercase">DS Tham Dự</span>
-                <span style={{ color: 'rgba(212,168,67,0.6)' }} className="text-[10px]">({allCustomers.length})</span>
+                <Users className="w-4 h-4" style={{ color: '#f5d870' }} />
+                <span style={{ color: '#f5d870' }} className="font-extrabold text-sm uppercase">DS Tham Dự</span>
+                <span style={{ color: 'rgba(212,168,67,0.6)' }} className="text-xs">({allCustomers.length})</span>
               </div>
               {/* KH/TVV toggle inside customer box */}
               <div className="flex gap-0.5 p-0.5 rounded-md" style={{ background: 'rgba(10,22,40,0.6)' }}>
@@ -852,7 +852,7 @@ export default function LuckyDrawPage() {
                     return (
                       <div
                         key={`${c.id}-${dup}`}
-                        className="flex items-center px-3 py-1.5 transition-colors"
+                        className="flex items-center px-3 py-2 transition-colors"
                         style={{
                           borderBottom: '1px solid rgba(212,168,67,0.08)',
                           background: isWon ? 'rgba(13,90,63,0.1)' : 'transparent',
@@ -860,25 +860,25 @@ export default function LuckyDrawPage() {
                         }}
                       >
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-[10px] w-5 flex-shrink-0" style={{ color: 'rgba(212,168,67,0.3)' }}>{idx + 1}</span>
-                            <span className={`text-sm font-bold truncate ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(212,168,67,0.3)' : '#f5d870' }}>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs w-6 flex-shrink-0" style={{ color: 'rgba(212,168,67,0.3)' }}>{idx + 1}</span>
+                            <span className={`text-base font-bold truncate ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(212,168,67,0.3)' : '#f5d870' }}>
                               {titleCase(c.name)}
                             </span>
                           </div>
                           {c.advisor && (
-                            <div className="pl-[22px]">
-                              <span className="text-[10px] italic" style={{ color: isWon ? 'rgba(212,168,67,0.15)' : 'rgba(212,168,67,0.45)' }}>TVV {titleCase(c.advisor)}</span>
+                            <div className="pl-[28px]">
+                              <span className="text-xs italic" style={{ color: isWon ? 'rgba(212,168,67,0.15)' : 'rgba(212,168,67,0.5)' }}>TVV {titleCase(c.advisor)}</span>
                             </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0 ml-1">
+                        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                           {c.investmentFee > 0 && (
-                            <span className="text-[10px] font-semibold" style={{ color: isWon ? 'rgba(212,168,67,0.15)' : '#10b981' }}>
+                            <span className="text-xs font-semibold" style={{ color: isWon ? 'rgba(212,168,67,0.15)' : '#10b981' }}>
                               {c.investmentFee}tr
                             </span>
                           )}
-                          <span className={`text-xs font-bold max-w-[120px] truncate ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(212,168,67,0.2)' : '#d4a843' }}>
+                          <span className={`text-sm font-bold max-w-[140px] truncate ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(212,168,67,0.2)' : '#d4a843' }}>
                             {c.gift || '—'}
                           </span>
                         </div>
@@ -1140,9 +1140,9 @@ export default function LuckyDrawPage() {
             {/* Customer header with toggle inside */}
             <div className="flex-shrink-0 flex items-center px-3 py-1.5" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
               <div className="flex-1 flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5" style={{ color: '#f5d870' }} />
-                <span style={{ color: '#f5d870' }} className="font-extrabold text-xs uppercase">Khách Hàng</span>
-                <span style={{ color: 'rgba(212,168,67,0.6)' }} className="text-[10px]">({allCustomers.length})</span>
+                <Users className="w-5 h-5" style={{ color: '#f5d870' }} />
+                <span style={{ color: '#f5d870' }} className="font-extrabold text-base uppercase">Khách Hàng</span>
+                <span style={{ color: 'rgba(212,168,67,0.6)' }} className="text-sm">({allCustomers.length})</span>
               </div>
               {/* KH/TVV toggle inside customer section */}
               <div className="flex gap-1 p-0.5 rounded-lg" style={{ background: 'rgba(10,22,40,0.6)' }}>
@@ -1196,38 +1196,38 @@ export default function LuckyDrawPage() {
                     return (
                       <div
                         key={`${c.id}-${dup}`}
-                        className="flex items-center px-3 py-1.5 transition-colors"
+                        className="flex items-center px-4 py-2.5 transition-colors"
                         style={{
                           borderBottom: '1px solid rgba(212,168,67,0.06)',
                           background: isWon ? 'rgba(13,90,63,0.08)' : 'transparent',
                           opacity: isWon ? 0.4 : 1,
                         }}
                       >
-                        <span className="font-mono text-[10px] w-5 flex-shrink-0" style={{ color: 'rgba(212,168,67,0.25)' }}>{idx + 1}</span>
+                        <span className="font-mono text-sm w-8 flex-shrink-0" style={{ color: 'rgba(212,168,67,0.25)' }}>{idx + 1}</span>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1">
-                            <span className={`text-xs font-bold truncate ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(212,168,67,0.25)' : '#f5d870' }}>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-base font-bold truncate ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(212,168,67,0.25)' : '#f5d870' }}>
                               {titleCase(c.name)}
                             </span>
                             {c.investmentFee > 0 && (
-                              <span className="text-[10px] font-semibold flex-shrink-0" style={{ color: isWon ? 'rgba(212,168,67,0.15)' : '#10b981' }}>
+                              <span className="text-sm font-semibold flex-shrink-0" style={{ color: isWon ? 'rgba(212,168,67,0.15)' : '#10b981' }}>
                                 {c.investmentFee}tr
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-2">
                             {c.advisor && (
-                              <span className="text-[9px] italic" style={{ color: isWon ? 'rgba(212,168,67,0.1)' : 'rgba(212,168,67,0.4)' }}>
+                              <span className="text-sm italic" style={{ color: isWon ? 'rgba(212,168,67,0.1)' : 'rgba(212,168,67,0.5)' }}>
                                 TVV {titleCase(c.advisor)}
                               </span>
                             )}
-                            <span className={`text-[9px] font-bold truncate ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(212,168,67,0.1)' : '#d4a843' }}>
+                            <span className={`text-sm font-bold truncate ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(212,168,67,0.1)' : '#d4a843' }}>
                               {c.gift || ''}
                             </span>
                           </div>
                         </div>
                         {isWon && (
-                          <span className="text-[8px] px-1.5 py-0.5 rounded font-bold" style={{ background: 'rgba(13,90,63,0.3)', color: '#10b981' }}>Trúng</span>
+                          <span className="text-xs px-2 py-1 rounded font-bold" style={{ background: 'rgba(13,90,63,0.3)', color: '#10b981' }}>Trúng</span>
                         )}
                       </div>
                     );

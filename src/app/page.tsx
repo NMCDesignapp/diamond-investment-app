@@ -42,7 +42,7 @@ function StatusBadge({ status }: { status: string }) {
   const c = config[status] || config['Chưa nhận quà'];
   return (
     <span
-      className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap"
+      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold whitespace-nowrap"
       style={{ background: c.bg, color: c.text }}
     >
       <span>{c.icon}</span>{status.replace(' nhận quà', '')}
@@ -202,13 +202,13 @@ export default function InvestmentApp() {
             <table className="w-full border-collapse">
               <thead>
                 <tr style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)' }}>
-                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center w-12" style={{ color: '#f5d870' }}>STT</th>
-                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>Khách Hàng</th>
-                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>TVV</th>
-                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>Phí Đầu Tư</th>
-                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center" style={{ color: '#f5d870' }}>Quà Tặng</th>
-                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>Giá Trị</th>
-                  <th className="px-2 py-1.5 font-extrabold text-sm uppercase text-center w-24" style={{ color: '#f5d870' }}>Ghi Chú</th>
+                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center w-16" style={{ color: '#f5d870' }}>STT</th>
+                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>Khách Hàng</th>
+                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>TVV</th>
+                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>Phí Đầu Tư</th>
+                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center" style={{ color: '#f5d870' }}>Quà Tặng</th>
+                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center whitespace-nowrap" style={{ color: '#f5d870' }}>Giá Trị</th>
+                  <th className="px-4 py-3 font-extrabold text-xl uppercase text-center w-32" style={{ color: '#f5d870' }}>Ghi Chú</th>
                 </tr>
               </thead>
             </table>
@@ -235,36 +235,36 @@ export default function InvestmentApp() {
                         onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,168,67,0.05)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
-                        <td className="px-2 py-1.5 text-center font-bold text-sm w-12" style={{ color: 'rgba(212,168,67,0.3)' }}>{realIdx + 1}</td>
-                        <td className="px-2 py-1.5 font-semibold text-sm whitespace-nowrap" style={{ color: '#f5d870' }}>{titleCase(realC.name)}</td>
-                        <td className="px-2 py-1.5 text-sm whitespace-nowrap" style={{ color: 'rgba(212,168,67,0.5)' }}>{titleCase(realC.advisor) || '—'}</td>
-                        <td className="px-2 py-1.5 text-right font-mono font-semibold text-sm whitespace-nowrap" style={{ color: '#10b981' }}>
+                        <td className="px-4 py-3 text-center font-bold text-xl w-16" style={{ color: 'rgba(212,168,67,0.3)' }}>{realIdx + 1}</td>
+                        <td className="px-4 py-3 font-bold text-xl whitespace-nowrap" style={{ color: '#f5d870' }}>{titleCase(realC.name)}</td>
+                        <td className="px-4 py-3 text-lg whitespace-nowrap" style={{ color: 'rgba(212,168,67,0.6)' }}>{titleCase(realC.advisor) || '—'}</td>
+                        <td className="px-4 py-3 text-right font-mono font-bold text-xl whitespace-nowrap" style={{ color: '#10b981' }}>
                           {formatVND(realC.investmentFee * 1e6)}
                         </td>
-                        <td className="px-2 py-1.5 text-right font-semibold text-sm" style={{ color: '#d4a843' }}>
-                          <span className="inline-flex items-end justify-end gap-1 flex-wrap">
-                            <Gift className="w-4 h-4 flex-shrink-0" style={{ color: 'rgba(212,168,67,0.5)' }} />
+                        <td className="px-4 py-3 text-right font-semibold text-lg" style={{ color: '#d4a843' }}>
+                          <span className="inline-flex items-end justify-end gap-2 flex-wrap">
+                            <Gift className="w-6 h-6 flex-shrink-0" style={{ color: 'rgba(212,168,67,0.5)' }} />
                             <span className="leading-tight">{realC.gift || '—'}</span>
                           </span>
                         </td>
-                        <td className="px-2 py-1.5 text-right font-mono font-semibold text-sm whitespace-nowrap" style={{ color: '#d4a843' }}>
+                        <td className="px-4 py-3 text-right font-mono font-bold text-xl whitespace-nowrap" style={{ color: '#d4a843' }}>
                           {formatVND(realC.giftValue)}
                         </td>
-                        <td className="p-2 w-20">
-                          <div className="flex flex-col items-center gap-1">
+                        <td className="px-4 py-3 w-32">
+                          <div className="flex flex-col items-center gap-1.5">
                             <StatusBadge status={realC.status} />
                             <motion.button
                               whileHover={{ scale: 1.15 }}
                               whileTap={{ scale: 0.85 }}
                               onClick={() => store.toggleReceivedStatus(realC.id)}
-                              className="p-1 rounded-md transition-colors"
+                              className="p-1.5 rounded-md transition-colors"
                               style={{
                                 background: realC.status === 'Đã nhận quà' ? 'rgba(13,90,63,0.2)' : 'rgba(212,168,67,0.08)',
                                 color: realC.status === 'Đã nhận quà' ? '#10b981' : 'rgba(212,168,67,0.35)',
                               }}
                               title={realC.status === 'Đã nhận quà' ? 'Chưa nhận quà' : 'Đã nhận quà'}
                             >
-                              <Check className="w-3.5 h-3.5" />
+                              <Check className="w-5 h-5" />
                             </motion.button>
                           </div>
                         </td>
