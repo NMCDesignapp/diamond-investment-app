@@ -149,10 +149,17 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
   },
 
   saveEventInfo: async (info) => {
+    // Merge with existing eventInfo so partial updates don't wipe out other fields
+    const current = get().eventInfo;
+    const merged = {
+      name: info.name ?? current.name,
+      date: info.date ?? current.date,
+      location: info.location ?? current.location,
+    };
     const res = await fetch('/api/event-info', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(info),
+      body: JSON.stringify(merged),
     });
     const data = await res.json();
     if (data.success) {

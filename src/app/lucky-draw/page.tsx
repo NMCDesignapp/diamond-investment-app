@@ -1324,15 +1324,38 @@ export default function LuckyDrawPage() {
                   {/* General tab */}
                   {settingsTab === 'general' && (
                     <div className="space-y-4">
-                      <div className="p-3 rounded-xl" style={{ background: 'rgba(10,22,40,0.6)', border: '1px solid rgba(212,168,67,0.15)' }}>
-                        <h4 className="text-sm font-semibold mb-2" style={{ color: '#d4a843' }}>Tiêu đề chương trình</h4>
-                        <input
-                          value={store.eventInfo.name}
-                          onChange={(e) => store.saveEventInfo({ name: e.target.value })}
-                          placeholder="Nhập tiêu đề chương trình"
-                          className="w-full p-2.5 rounded-lg focus:ring-2 outline-none transition-all text-sm"
-                          style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }}
-                        />
+                      <div className="p-3 rounded-xl space-y-2.5" style={{ background: 'rgba(10,22,40,0.6)', border: '1px solid rgba(212,168,67,0.15)' }}>
+                        <h4 className="text-sm font-semibold mb-1" style={{ color: '#d4a843' }}>Thông tin chương trình</h4>
+                        <div>
+                          <label className="text-xs font-semibold mb-1 block" style={{ color: 'rgba(212,168,67,0.7)' }}>Tiêu đề chương trình</label>
+                          <input
+                            value={store.eventInfo.name}
+                            onChange={(e) => store.saveEventInfo({ name: e.target.value })}
+                            placeholder="Nhập tiêu đề chương trình"
+                            className="w-full p-2.5 rounded-lg focus:ring-2 outline-none transition-all text-sm"
+                            style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold mb-1 block" style={{ color: 'rgba(212,168,67,0.7)' }}>Ngày tháng</label>
+                          <input
+                            value={store.eventInfo.date}
+                            onChange={(e) => store.saveEventInfo({ date: e.target.value })}
+                            placeholder="VD: 20/03/2025"
+                            className="w-full p-2.5 rounded-lg focus:ring-2 outline-none transition-all text-sm"
+                            style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold mb-1 block" style={{ color: 'rgba(212,168,67,0.7)' }}>Địa điểm</label>
+                          <input
+                            value={store.eventInfo.location}
+                            onChange={(e) => store.saveEventInfo({ location: e.target.value })}
+                            placeholder="VD: TP. Hồ Chí Minh"
+                            className="w-full p-2.5 rounded-lg focus:ring-2 outline-none transition-all text-sm"
+                            style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }}
+                          />
+                        </div>
                       </div>
                       <div className="p-3 rounded-xl" style={{ background: 'rgba(10,22,40,0.6)', border: '1px solid rgba(212,168,67,0.15)' }}>
                         <h4 className="text-sm font-semibold mb-2" style={{ color: '#d4a843' }}>Thống kê</h4>
