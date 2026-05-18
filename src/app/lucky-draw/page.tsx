@@ -344,7 +344,7 @@ export default function LuckyDrawPage() {
 
   // Auto scroll
   const [autoScroll, setAutoScroll] = useState(false);
-  const [winnerAutoScroll, setWinnerAutoScroll] = useState(false);
+  const [winnerAutoScroll, setWinnerAutoScroll] = useState(true);
 
   // Track whether prizes have been initialized from store
   const [localPrizeOverrides, setLocalPrizeOverrides] = useState<Prize[] | null>(null);
@@ -352,6 +352,14 @@ export default function LuckyDrawPage() {
   // BUG 3 FIX: Ref for currentPrizeIndex to avoid stale closure
   const currentPrizeIndexRef = useRef(0);
   useEffect(() => { currentPrizeIndexRef.current = currentPrizeIndex; }, [currentPrizeIndex]);
+
+  // JS-based slot animation refs (for smooth deceleration)
+  const animFrameRef = useRef<number>(0);
+  const spinSpeedRef = useRef(0);
+  const spinPosRef = useRef(0);
+  const isDecelRef = useRef(false);
+  const pendingWinnerRef = useRef<Winner | null>(null);
+  const onStoppedRef = useRef<(() => void) | null>(null);
 
   // Lucky draw event info (separate from registration page)
   const [luckyDrawEventForm, setLuckyDrawEventForm] = useState({
@@ -381,6 +389,26 @@ export default function LuckyDrawPage() {
     }, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  // Cleanup animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, []);
+
+  // Auto-advance to next available prize when current prize is exhausted
+  useEffect(() => {
+    if (isSpinning) return; // Don't change prize while spinning
+    const currentPrize = prizes[currentPrizeIndex];
+    if (currentPrize && currentPrize.remaining <= 0) {
+      // Find next prize with remaining > 0
+      const nextIdx = prizes.findIndex(p => p.remaining > 0);
+      if (nextIdx !== -1 && nextIdx !== currentPrizeIndex) {
+        setCurrentPrizeIndex(nextIdx);
+      }
+    }
+  }, [prizes, currentPrizeIndex, isSpinning]);
 
   // Confetti canvas setup
   useEffect(() => {
@@ -493,7 +521,7 @@ export default function LuckyDrawPage() {
     return track;
   }, [drawItems]);
 
-  // BUG 1 & 2 & 3 FIX: startSpin - no overridePrizeIndex, use ref, 120s duration
+  // Start spin with JS animation for smooth speed control
   const startSpin = useCallback(() => {
     const prizeIdx = currentPrizeIndexRef.current;
     const prize = prizes[prizeIdx];
@@ -512,7 +540,9 @@ export default function LuckyDrawPage() {
 
     const isDesktop = window.innerWidth >= 768;
     const itemH = isDesktop ? SLOT_ITEM_HEIGHT_DESKTOP : SLOT_ITEM_HEIGHT_MOBILE;
+    const viewportH = itemH * 5;
 
+    // Populate DOM
     requestAnimationFrame(() => {
       if (!trackEl) return;
 
@@ -530,27 +560,77 @@ export default function LuckyDrawPage() {
         trackEl.appendChild(div);
       }
 
-      const totalHeight = track.length * itemH;
-      const scrollDistance = totalHeight * 0.95;
+      // Reset animation state - start FAST
+      spinPosRef.current = 0;
+      spinSpeedRef.current = itemH * 0.7; // ~42 items/second at 60fps
+      isDecelRef.current = false;
+      pendingWinnerRef.current = null;
+      onStoppedRef.current = null;
       trackEl.style.transition = 'none';
       trackEl.style.transform = 'translateY(0)';
-      void trackEl.offsetHeight;
-      trackEl.style.transition = 'transform 120s linear';
-      trackEl.style.transform = `translateY(-${scrollDistance}px)`;
+
+      const totalHeight = track.length * itemH;
+      const maxPos = totalHeight - viewportH;
+
+      const animate = () => {
+        // Deceleration phase
+        if (isDecelRef.current) {
+          spinSpeedRef.current *= 0.982; // Gradual slowdown (~1.8% per frame)
+          if (spinSpeedRef.current < 1.5) {
+            // Nearly stopped - find winner and snap
+            const items = trackEl!.querySelectorAll('.slot-item');
+            const totalItems = items.length;
+            const currentIdx = Math.floor(spinPosRef.current / itemH);
+            let targetIdx = -1;
+            // Find winner name ahead of current position
+            for (let i = currentIdx + 3; i < totalItems; i++) {
+              if (items[i].textContent === pendingWinnerRef.current?.customerName) {
+                targetIdx = i;
+                break;
+              }
+            }
+            if (targetIdx === -1) {
+              // Wrap around search
+              for (let i = 0; i < Math.min(currentIdx + 3, totalItems); i++) {
+                if (items[i].textContent === pendingWinnerRef.current?.customerName) {
+                  targetIdx = i;
+                  break;
+                }
+              }
+            }
+            if (targetIdx === -1) targetIdx = currentIdx + 5;
+            const targetY = (targetIdx - 2) * itemH;
+            // Final smooth transition to winner
+            trackEl!.style.transition = 'transform 2s cubic-bezier(0.1, 0.6, 0.15, 1)';
+            trackEl!.style.transform = `translateY(-${targetY}px)`;
+            // Trigger callback after final transition
+            if (onStoppedRef.current) {
+              setTimeout(onStoppedRef.current, 2200);
+            }
+            return; // Stop animation loop
+          }
+        }
+
+        // Normal spinning
+        spinPosRef.current += spinSpeedRef.current;
+        if (spinPosRef.current > maxPos) {
+          spinPosRef.current = spinPosRef.current % itemH; // Reset near top to loop
+        }
+        trackEl!.style.transform = `translateY(-${spinPosRef.current}px)`;
+        animFrameRef.current = requestAnimationFrame(animate);
+      };
+
+      animFrameRef.current = requestAnimationFrame(animate);
     });
   }, [isSpinning, drawItems, prizes, buildTrack, getTrackRef]);
 
-  // BUG 3 FIX: stopSpin - use currentPrizeIndexRef instead of currentPrizeIndex
+  // Stop spin - gradual deceleration, then land on winner
   const stopSpin = useCallback(() => {
     if (!isSpinning || isStopping) return;
     setIsStopping(true);
 
     const prizeIdx = currentPrizeIndexRef.current;
     const prize = prizes[prizeIdx];
-
-    const trackEl = getTrackRef();
-    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
-    const itemH = isDesktop ? SLOT_ITEM_HEIGHT_DESKTOP : SLOT_ITEM_HEIGHT_MOBILE;
 
     // Pick a random winner
     const winnerItem = drawItems[Math.floor(Math.random() * drawItems.length)];
@@ -566,45 +646,12 @@ export default function LuckyDrawPage() {
       gift: prize?.gift || '',
     };
 
-    if (trackEl) {
-      // Get the current computed position of the track
-      const computedStyle = window.getComputedStyle(trackEl);
-      const currentTransform = computedStyle.transform;
+    // Set up deceleration - the animation loop will handle the gradual slowdown
+    pendingWinnerRef.current = winner;
+    isDecelRef.current = true;
 
-      // Force stop the current transition at its current position
-      trackEl.style.transition = 'none';
-      trackEl.style.transform = currentTransform;
-      void trackEl.offsetHeight; // force reflow
-
-      // Find a slot item matching the winner name and scroll to it
-      const items = trackEl.querySelectorAll('.slot-item');
-      const totalItems = items.length;
-      let targetIdx = -1;
-      for (let i = totalItems - 1; i >= Math.floor(totalItems * 0.15); i--) {
-        if (items[i].textContent === winner.customerName) {
-          targetIdx = i;
-          break;
-        }
-      }
-      if (targetIdx === -1) {
-        for (let i = totalItems - 1; i >= 0; i--) {
-          if (items[i].textContent === winner.customerName) {
-            targetIdx = i;
-            break;
-          }
-        }
-      }
-      if (targetIdx !== -1) {
-        const centerOffset = targetIdx - 2;
-        const targetY = centerOffset * itemH;
-        // Smooth decelerate to the winner position
-        trackEl.style.transition = 'transform 3s cubic-bezier(0.1, 0.7, 0.1, 1)';
-        trackEl.style.transform = `translateY(-${targetY}px)`;
-      }
-    }
-
-    // After the deceleration animation, show the winner
-    setTimeout(() => {
+    // Set up callback for when animation fully stops
+    onStoppedRef.current = () => {
       setCurrentWinner(winner);
       setShowResult(true);
       setIsSpinning(false);
@@ -639,11 +686,11 @@ export default function LuckyDrawPage() {
         setTimeout(() => confettiRef.current?.stop(), 5000);
       }
 
-      // Auto-dismiss winner popup after 8 seconds
+      // Auto-dismiss winner popup after 6 seconds
       setTimeout(() => {
         setShowResult(false);
-      }, 8000);
-    }, 3200);
+      }, 6000);
+    };
   }, [isSpinning, isStopping, drawItems, allCustomers, drawMode, prizes, store.drawPrizes, getTrackRef]);
 
   // Handle stop button click
@@ -654,6 +701,7 @@ export default function LuckyDrawPage() {
       }
     } catch (err) {
       console.error('Stop error:', err);
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       setIsSpinning(false);
       setIsStopping(false);
     }
@@ -1239,8 +1287,8 @@ export default function LuckyDrawPage() {
             {/* BUG 5 FIX: Centered title with divider and auto-scroll toggle */}
             <div className="flex-shrink-0 flex items-center justify-center py-2">
               <div className="flex-1 h-px" style={{ background: 'rgba(255,224,138,0.2)' }} />
-              <span style={{ color: '#ffe08a' }} className="font-extrabold text-xs uppercase mx-3">DS Khách Hàng Trúng Giải</span>
-              <span style={{ color: 'rgba(232,184,74,0.5)' }} className="text-xs">({winners.length})</span>
+              <span style={{ color: '#ffe08a' }} className="font-extrabold text-3xl uppercase mx-3">DS Khách Hàng Trúng Giải</span>
+              <span style={{ color: 'rgba(232,184,74,0.5)' }} className="text-2xl">({winners.length})</span>
               <div className="flex-1 h-px" style={{ background: 'rgba(255,224,138,0.2)' }} />
               {/* BUG 4 FIX: Auto-scroll toggle for winner list */}
               <motion.button whileTap={{ scale: 0.9 }} onClick={() => setWinnerAutoScroll(!winnerAutoScroll)} className="ml-2 p-1 rounded transition-all"
@@ -1252,7 +1300,7 @@ export default function LuckyDrawPage() {
             <div ref={winnerTableRef} className="flex-1 min-h-0 overflow-y-auto rounded-lg" style={{ background: 'rgba(0,0,0,0.4)', scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
               {winners.length === 0 ? (
                 <div className="flex items-center justify-center py-3">
-                  <p className="text-xs italic" style={{ color: 'rgba(255,224,138,0.2)' }}>Chưa có người trúng giải</p>
+                  <p className="text-2xl italic" style={{ color: 'rgba(255,224,138,0.2)' }}>Chưa có người trúng giải</p>
                 </div>
               ) : (
                 (winnerAutoScroll ? [0, 1] : [0]).map(dup => (
@@ -1262,17 +1310,17 @@ export default function LuckyDrawPage() {
                       return (
                         <div
                           key={`${winner.id}-${idx}-${dup}`}
-                          className="flex items-center px-3 py-1 transition-all"
+                          className="flex items-center px-4 py-2.5 transition-all"
                           style={{
                             background: isLatest ? 'rgba(255,224,138,0.1)' : 'transparent',
                             borderBottom: '1px solid rgba(255,224,138,0.06)',
                           }}
                         >
-                          <span className="font-mono text-[10px] w-5 flex-shrink-0 font-bold" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.25)' }}>{winners.length - idx}</span>
-                          <span className="text-xs font-bold truncate" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.6)' }}>{titleCase(winner.customerName)}</span>
-                          <span className="mx-2 text-[10px]" style={{ color: 'rgba(255,224,138,0.15)' }}>—</span>
-                          <span className="text-[10px] font-semibold" style={{ color: isLatest ? '#ffe08a' : '#34d399' }}>{winner.prizeName}</span>
-                          {winner.gift && <span className="text-[10px] ml-2" style={{ color: 'rgba(232,184,74,0.5)' }}>🎁 {winner.gift}</span>}
+                          <span className="font-mono text-2xl w-10 flex-shrink-0 font-bold" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.25)' }}>{winners.length - idx}</span>
+                          <span className="text-2xl font-bold truncate" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.6)' }}>{titleCase(winner.customerName)}</span>
+                          <span className="mx-3 text-2xl" style={{ color: 'rgba(255,224,138,0.15)' }}>—</span>
+                          <span className="text-xl font-semibold" style={{ color: isLatest ? '#ffe08a' : '#34d399' }}>{winner.prizeName}</span>
+                          {winner.gift && <span className="text-xl ml-3" style={{ color: 'rgba(232,184,74,0.5)' }}>🎁 {winner.gift}</span>}
                         </div>
                       );
                     })}
