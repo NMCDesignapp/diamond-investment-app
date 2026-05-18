@@ -421,7 +421,7 @@ export default function LuckyDrawPage() {
     : availableAdvisors.map(a => ({ id: a, name: a, advisor: a }));
   const currentPrize = prizes[currentPrizeIndex] || null;
   const canSpin = !isSpinning && drawItems.length > 0 && currentPrize && currentPrize.remaining > 0;
-  const canStart = !isSpinning && !showResult && currentPrizeIndex >= 0 && drawItems.length > 0 && currentPrize && currentPrize.remaining > 0;
+  const canStart = !isSpinning && currentPrizeIndex >= 0 && drawItems.length > 0 && currentPrize && currentPrize.remaining > 0;
 
   // Helper: get the correct track ref based on viewport
   const getTrackRef = useCallback(() => {
@@ -638,6 +638,11 @@ export default function LuckyDrawPage() {
         confettiRef.current.start();
         setTimeout(() => confettiRef.current?.stop(), 5000);
       }
+
+      // Auto-dismiss winner popup after 8 seconds
+      setTimeout(() => {
+        setShowResult(false);
+      }, 8000);
     }, 3200);
   }, [isSpinning, isStopping, drawItems, allCustomers, drawMode, prizes, store.drawPrizes, getTrackRef]);
 
