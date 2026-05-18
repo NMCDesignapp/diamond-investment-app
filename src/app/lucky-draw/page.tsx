@@ -54,14 +54,14 @@ class ConfettiSystem {
       '#fd79a8', '#a29bfe', '#10b981', '#fdcb6e', '#6c5ce7',
     ];
     const shapes: Array<'rect' | 'circle' | 'star'> = ['rect', 'circle', 'star'];
-    for (let i = 0; i < 300; i++) {
+    for (let i = 0; i < 500; i++) {
       this.particles.push({
         x: Math.random() * this.canvas.width,
         y: -Math.random() * this.canvas.height * 0.5,
-        vx: (Math.random() - 0.5) * 8,
-        vy: Math.random() * 4 + 2,
+        vx: (Math.random() - 0.5) * 12,
+        vy: Math.random() * 6 + 2,
         color: colors[Math.floor(Math.random() * colors.length)],
-        size: Math.random() * 8 + 4,
+        size: Math.random() * 12 + 4,
         rotation: Math.random() * 360,
         rotationSpeed: (Math.random() - 0.5) * 10,
         opacity: 1,
@@ -342,8 +342,8 @@ export default function LuckyDrawPage() {
   const [newPrizeQty, setNewPrizeQty] = useState('1');
   const [newPrizeGift, setNewPrizeGift] = useState('');
 
-  // Auto scroll
-  const [autoScroll, setAutoScroll] = useState(false);
+  // Auto scroll - always on by default
+  const [autoScroll, setAutoScroll] = useState(true);
   const [winnerAutoScroll, setWinnerAutoScroll] = useState(true);
 
   // Track whether prizes have been initialized from store
@@ -457,31 +457,33 @@ export default function LuckyDrawPage() {
     return window.innerWidth >= 768 ? desktopTrackRef.current : mobileTrackRef.current;
   }, []);
 
-  // Auto-scroll for customer table (bottom to top)
+  // Auto-scroll for customer table - ALWAYS ON, bottom to top, continuous loop
   useEffect(() => {
     const el = customerTableRef.current;
-    if (!el || !autoScroll) return;
-    let scrollPos = el.scrollHeight;
-    el.scrollTop = scrollPos;
-    const speed = 0.5;
-    let animId: number;
-    const scroll = () => {
-      scrollPos -= speed;
-      if (scrollPos <= 0) {
-        scrollPos = el.scrollHeight / 2;
-      }
+    if (!el) return;
+    // Small delay to ensure DOM is populated
+    const timer = setTimeout(() => {
+      let scrollPos = el.scrollHeight;
       el.scrollTop = scrollPos;
+      const speed = 0.5;
+      let animId: number;
+      const scroll = () => {
+        scrollPos -= speed;
+        if (scrollPos <= 0) {
+          scrollPos = el.scrollHeight / 2;
+        }
+        el.scrollTop = scrollPos;
+        animId = requestAnimationFrame(scroll);
+      };
       animId = requestAnimationFrame(scroll);
+      // Store cleanup function
+      (el as any)._scrollCleanup = () => cancelAnimationFrame(animId);
+    }, 100);
+    return () => {
+      clearTimeout(timer);
+      if ((el as any)._scrollCleanup) (el as any)._scrollCleanup();
     };
-    animId = requestAnimationFrame(scroll);
-    return () => cancelAnimationFrame(animId);
-  }, [autoScroll, allCustomers, wonCustomerIds]);
-
-  useEffect(() => {
-    if (!autoScroll && customerTableRef.current) {
-      customerTableRef.current.scrollTop = 0;
-    }
-  }, [autoScroll]);
+  }, [allCustomers.length, wonCustomerIds.size]);
 
   // BUG 4 FIX: Auto-scroll for winner table (bottom to top)
   useEffect(() => {
@@ -562,7 +564,7 @@ export default function LuckyDrawPage() {
 
       // Reset animation state - start FAST
       spinPosRef.current = 0;
-      spinSpeedRef.current = itemH * 0.7; // ~42 items/second at 60fps
+      spinSpeedRef.current = itemH * 0.8; // Fast start speed
       isDecelRef.current = false;
       pendingWinnerRef.current = null;
       onStoppedRef.current = null;
@@ -575,47 +577,57 @@ export default function LuckyDrawPage() {
       const animate = () => {
         // Deceleration phase
         if (isDecelRef.current) {
-          spinSpeedRef.current *= 0.982; // Gradual slowdown (~1.8% per frame)
-          if (spinSpeedRef.current < 1.5) {
+          spinSpeedRef.current *= 0.975; // Gradual slowdown (~2.5% per frame)
+          
+          if (spinSpeedRef.current < 0.8) {
             // Nearly stopped - find winner and snap
             const items = trackEl!.querySelectorAll('.slot-item');
             const totalItems = items.length;
             const currentIdx = Math.floor(spinPosRef.current / itemH);
             let targetIdx = -1;
-            // Find winner name ahead of current position
-            for (let i = currentIdx + 3; i < totalItems; i++) {
+            // Find winner name ahead of current position (at least 2 items ahead)
+            for (let i = currentIdx + 2; i < totalItems; i++) {
               if (items[i].textContent === pendingWinnerRef.current?.customerName) {
                 targetIdx = i;
                 break;
               }
             }
             if (targetIdx === -1) {
-              // Wrap around search
-              for (let i = 0; i < Math.min(currentIdx + 3, totalItems); i++) {
+              // Search from beginning if close to end
+              for (let i = 0; i < Math.min(currentIdx + 2, totalItems); i++) {
                 if (items[i].textContent === pendingWinnerRef.current?.customerName) {
                   targetIdx = i;
                   break;
                 }
               }
             }
-            if (targetIdx === -1) targetIdx = currentIdx + 5;
+            if (targetIdx === -1) targetIdx = Math.min(currentIdx + 5, totalItems - 3);
             const targetY = (targetIdx - 2) * itemH;
-            // Final smooth transition to winner
-            trackEl!.style.transition = 'transform 2s cubic-bezier(0.1, 0.6, 0.15, 1)';
+            // Final smooth transition to winner - slow ease-out
+            trackEl!.style.transition = 'transform 3s cubic-bezier(0.0, 0.5, 0.1, 1)';
             trackEl!.style.transform = `translateY(-${targetY}px)`;
             // Trigger callback after final transition
             if (onStoppedRef.current) {
-              setTimeout(onStoppedRef.current, 2200);
+              setTimeout(onStoppedRef.current, 3200);
             }
             return; // Stop animation loop
           }
         }
 
-        // Normal spinning
+        // Normal spinning (or decelerating)
         spinPosRef.current += spinSpeedRef.current;
-        if (spinPosRef.current > maxPos) {
+        
+        // When wrapping during normal spin, reset seamlessly
+        // During deceleration, DON'T wrap - just keep going (track is long enough)
+        if (!isDecelRef.current && spinPosRef.current > maxPos) {
           spinPosRef.current = spinPosRef.current % itemH; // Reset near top to loop
         }
+        
+        // Safety: if position goes beyond track during decel, clamp
+        if (isDecelRef.current && spinPosRef.current > maxPos) {
+          spinPosRef.current = maxPos;
+        }
+        
         trackEl!.style.transform = `translateY(-${spinPosRef.current}px)`;
         animFrameRef.current = requestAnimationFrame(animate);
       };
@@ -683,7 +695,7 @@ export default function LuckyDrawPage() {
       // Start confetti celebration
       if (confettiRef.current) {
         confettiRef.current.start();
-        setTimeout(() => confettiRef.current?.stop(), 5000);
+        setTimeout(() => confettiRef.current?.stop(), 8000);
       }
 
       // Auto-dismiss winner popup after 6 seconds
@@ -706,6 +718,22 @@ export default function LuckyDrawPage() {
       setIsStopping(false);
     }
   }, [isSpinning, isStopping, stopSpin]);
+
+  // Spacebar key to start/stop spinning
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        if (isSpinning && !isStopping) {
+          stopSpin();
+        } else if (canStart && !isSpinning) {
+          startSpin();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSpinning, isStopping, canStart, startSpin, stopSpin]);
 
   // BUG 1 FIX: handleSelectPrize - only selects, does NOT start spin
   const handleSelectPrize = useCallback((prizeIndex: number) => {
@@ -913,18 +941,47 @@ export default function LuckyDrawPage() {
           </AnimatePresence>
         </div>
 
-        {/* Winner result overlay - mobile */}
+        {/* Winner result overlay - mobile - MUCH BIGGER */}
         <AnimatePresence>
           {showResult && currentWinner && (
-            <motion.div initial={{ opacity: 0, y: 20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -20, scale: 0.9 }}
-              transition={{ type: 'spring', duration: 0.5 }} className="flex-shrink-0 px-3 pb-1">
-              <div className="max-w-md mx-auto rounded-xl p-2.5 text-center border-2 shadow-lg"
-                style={{ background: 'rgba(15,32,66,0.95)', borderColor: 'rgba(212,168,67,0.6)', backdropFilter: 'blur(8px)' }}>
-                <p style={{ color: 'rgba(212,168,67,0.6)' }} className="text-[9px] uppercase tracking-wider mb-0.5">Chúc mừng người trúng giải</p>
-                <p className="text-lg font-black" style={{ color: '#f5d870', textShadow: '0 0 15px rgba(212,168,67,0.3)' }}>{currentWinner.customerName}</p>
-                {drawMode === 'customer' && currentWinner.advisor && <p style={{ color: 'rgba(212,168,67,0.5)' }} className="text-[10px] italic">TVV {currentWinner.advisor}</p>}
-                <p className="font-semibold text-xs" style={{ color: '#10b981' }}>{currentWinner.prizeName}</p>
-                {currentWinner.gift && <p className="text-xs" style={{ color: '#d4a843' }}>🎁 {currentWinner.gift}</p>}
+            <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}
+              transition={{ type: 'spring', duration: 0.6, bounce: 0.4 }}
+              className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+              style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+              <div className="w-[90vw] max-w-lg rounded-3xl p-6 text-center relative overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, #0f2042, #162d50, #0f2042)',
+                  boxShadow: '0 0 80px rgba(255,224,138,0.5), 0 0 200px rgba(255,224,138,0.15), inset 0 0 60px rgba(255,224,138,0.08)',
+                  border: '3px solid rgba(255,224,138,0.5)',
+                }}>
+                {/* LED strip around winner popup */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+                  <div className="absolute top-0 left-0 right-0 h-2 flex overflow-hidden">
+                    {Array.from({ length: 40 }).map((_, i) => (
+                      <div key={`wt-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${i * 0.05}s` }} />
+                    ))}
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 h-2 flex overflow-hidden">
+                    {Array.from({ length: 40 }).map((_, i) => (
+                      <div key={`wb-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${(40 - i) * 0.05}s` }} />
+                    ))}
+                  </div>
+                </div>
+                {/* Trophy icon */}
+                <motion.div animate={{ rotate: [0, -10, 10, -10, 0], scale: [1, 1.2, 1, 1.2, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                  className="mb-3">
+                  <Trophy className="w-16 h-16 mx-auto" style={{ color: '#ffe08a', filter: 'drop-shadow(0 0 15px rgba(255,224,138,0.5))' }} />
+                </motion.div>
+                <p className="text-lg uppercase tracking-widest mb-2 font-bold" style={{ color: 'rgba(232,184,74,0.7)' }}>🎉 Chúc Mừng 🎉</p>
+                <p className="text-4xl font-black mb-2 animate-neon-pulse" style={{ color: '#ffe08a', textShadow: '0 0 30px rgba(255,224,138,0.5), 0 0 60px rgba(255,224,138,0.2)' }}>
+                  {currentWinner.customerName}
+                </p>
+                {drawMode === 'customer' && currentWinner.advisor && <p className="text-lg mb-1" style={{ color: 'rgba(232,184,74,0.6)' }}>TVV: {currentWinner.advisor}</p>}
+                <div className="mt-3 py-2 px-4 rounded-xl inline-block" style={{ background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)' }}>
+                  <p className="text-xl font-bold" style={{ color: '#34d399' }}>{currentWinner.prizeName}</p>
+                </div>
+                {currentWinner.gift && <p className="text-lg mt-2" style={{ color: '#ffe08a' }}>🎁 {currentWinner.gift}</p>}
               </div>
             </motion.div>
           )}
@@ -979,15 +1036,9 @@ export default function LuckyDrawPage() {
                 <button onClick={() => setDrawMode('advisor')} className="px-2 py-0.5 rounded text-[9px] font-bold uppercase transition-all"
                   style={{ background: drawMode === 'advisor' ? 'linear-gradient(135deg, #d4a843, #c9a227)' : 'transparent', color: drawMode === 'advisor' ? '#0a1628' : 'rgba(212,168,67,0.5)' }}>TVV</button>
               </div>
-              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setAutoScroll(!autoScroll)}
-                className="ml-1.5 p-1 rounded-md transition-all"
-                style={{ background: autoScroll ? 'rgba(13,90,63,0.3)' : 'rgba(212,168,67,0.1)', color: autoScroll ? '#10b981' : 'rgba(212,168,67,0.4)' }}
-                title={autoScroll ? 'Tắt cuộn' : 'Bật cuộn'}>
-                {autoScroll ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              </motion.button>
             </div>
             <div ref={customerTableRef} className="flex-1 overflow-y-auto">
-              {(autoScroll ? [0, 1] : [0]).map(dup => (
+              {[0, 1].map(dup => (
                 <div key={dup}>
                   {allCustomers.map((c, idx) => {
                     const isWon = wonCustomerIds.has(c.id);
@@ -1038,14 +1089,9 @@ export default function LuckyDrawPage() {
                 <button onClick={() => setDrawMode('advisor')} className="px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-all"
                   style={{ background: drawMode === 'advisor' ? 'linear-gradient(135deg, #e8b84a, #c9a227)' : 'transparent', color: drawMode === 'advisor' ? '#0f2240' : 'rgba(232,184,74,0.5)' }}>TVV</button>
               </div>
-              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setAutoScroll(!autoScroll)} className="ml-1 p-1 rounded transition-all"
-                style={{ background: autoScroll ? 'rgba(52,211,153,0.2)' : 'rgba(232,184,74,0.1)', color: autoScroll ? '#34d399' : 'rgba(232,184,74,0.4)' }}
-                title={autoScroll ? 'Tắt cuộn' : 'Bật cuộn'}>
-                {autoScroll ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              </motion.button>
             </div>
             <div ref={customerTableRef} className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
-              {(autoScroll ? [0, 1] : [0]).map(dup => (
+              {[0, 1].map(dup => (
                 <div key={dup}>
                   {allCustomers.map((c, idx) => {
                     const isWon = wonCustomerIds.has(c.id);
@@ -1334,49 +1380,58 @@ export default function LuckyDrawPage() {
             </div>
           </div>
 
-          {/* Winner popup — aligned with slot machine (centered over right area) */}
+          {/* Winner popup — FULL SCREEN celebration */}
           <AnimatePresence>
             {showResult && currentWinner && (
               <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                transition={{ type: 'spring', duration: 0.5 }}
+                initial={{ opacity: 0, scale: 0.4 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.4 }}
+                transition={{ type: 'spring', duration: 0.7, bounce: 0.3 }}
                 className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none"
+                style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
               >
-                <div className="max-w-3xl mx-auto rounded-2xl p-8 text-center" style={{
-                  background: 'rgba(15,34,64,0.95)',
-                  boxShadow: '0 0 60px rgba(255,224,138,0.35), 0 0 120px rgba(255,224,138,0.12)',
-                  border: 'none',
+                <div className="w-[80vw] max-w-4xl rounded-3xl p-10 text-center relative overflow-hidden" style={{
+                  background: 'linear-gradient(135deg, #0f2042, #162d50, #0f2042)',
+                  boxShadow: '0 0 100px rgba(255,224,138,0.6), 0 0 250px rgba(255,224,138,0.15), inset 0 0 80px rgba(255,224,138,0.08)',
+                  border: '3px solid rgba(255,224,138,0.5)',
                 }}>
                   {/* LED strip around winner popup */}
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-                    <div className="absolute top-0 left-0 right-0 h-2 flex overflow-hidden">
-                      {Array.from({ length: 50 }).map((_, i) => (
-                        <div key={`wt-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${i * 0.05}s` }} />
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+                    <div className="absolute top-0 left-0 right-0 h-3 flex overflow-hidden">
+                      {Array.from({ length: 60 }).map((_, i) => (
+                        <div key={`wt-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${i * 0.04}s` }} />
                       ))}
                     </div>
-                    <div className="absolute bottom-0 left-0 right-0 h-2 flex overflow-hidden">
-                      {Array.from({ length: 50 }).map((_, i) => (
-                        <div key={`wb-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${(50 - i) * 0.05}s` }} />
+                    <div className="absolute bottom-0 left-0 right-0 h-3 flex overflow-hidden">
+                      {Array.from({ length: 60 }).map((_, i) => (
+                        <div key={`wb-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${(60 - i) * 0.04}s` }} />
                       ))}
                     </div>
-                    <div className="absolute top-2 left-0 bottom-2 w-2 flex flex-col overflow-hidden">
-                      {Array.from({ length: 20 }).map((_, i) => (
-                        <div key={`wl-${i}`} className="flex-1 led-dot-v" style={{ animationDelay: `${(50 + i) * 0.05}s` }} />
+                    <div className="absolute top-3 left-0 bottom-3 w-3 flex flex-col overflow-hidden">
+                      {Array.from({ length: 25 }).map((_, i) => (
+                        <div key={`wl-${i}`} className="flex-1 led-dot-v" style={{ animationDelay: `${(60 + i) * 0.04}s` }} />
                       ))}
                     </div>
-                    <div className="absolute top-2 right-0 bottom-2 w-2 flex flex-col overflow-hidden">
-                      {Array.from({ length: 20 }).map((_, i) => (
-                        <div key={`wr-${i}`} className="flex-1 led-dot-v" style={{ animationDelay: `${(90 - i) * 0.05}s` }} />
+                    <div className="absolute top-3 right-0 bottom-3 w-3 flex flex-col overflow-hidden">
+                      {Array.from({ length: 25 }).map((_, i) => (
+                        <div key={`wr-${i}`} className="flex-1 led-dot-v" style={{ animationDelay: `${(95 - i) * 0.04}s` }} />
                       ))}
                     </div>
                   </div>
-                  <p className="text-sm uppercase tracking-wider mb-1" style={{ color: 'rgba(232,184,74,0.5)' }}>Chúc mừng người trúng giải</p>
-                  <p className="text-5xl font-black mb-1 animate-neon-pulse" style={{ color: '#ffe08a' }}>{currentWinner.customerName}</p>
-                  {drawMode === 'customer' && currentWinner.advisor && <p className="text-xl" style={{ color: 'rgba(232,184,74,0.6)' }}>TVV: {currentWinner.advisor}</p>}
-                  <p className="text-2xl font-semibold mt-1" style={{ color: '#e8b84a' }}>{currentWinner.prizeName}</p>
-                  {currentWinner.gift && <p className="text-xl mt-1" style={{ color: '#34d399' }}>🎁 {currentWinner.gift}</p>}
+                  {/* Trophy icon animated */}
+                  <motion.div animate={{ rotate: [0, -15, 15, -10, 10, 0], scale: [1, 1.3, 1, 1.2, 1, 1.1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="mb-4">
+                    <Trophy className="w-24 h-24 mx-auto" style={{ color: '#ffe08a', filter: 'drop-shadow(0 0 20px rgba(255,224,138,0.6))' }} />
+                  </motion.div>
+                  <p className="text-2xl uppercase tracking-widest mb-3 font-bold" style={{ color: 'rgba(232,184,74,0.7)' }}>🎉 Chúc Mừng Người Trúng Giải 🎉</p>
+                  <p className="text-7xl font-black mb-3 animate-neon-pulse" style={{ color: '#ffe08a', textShadow: '0 0 40px rgba(255,224,138,0.5), 0 0 80px rgba(255,224,138,0.2)' }}>{currentWinner.customerName}</p>
+                  {drawMode === 'customer' && currentWinner.advisor && <p className="text-3xl mb-2" style={{ color: 'rgba(232,184,74,0.6)' }}>TVV: {currentWinner.advisor}</p>}
+                  <div className="mt-4 py-3 px-8 rounded-2xl inline-block" style={{ background: 'rgba(52,211,153,0.15)', border: '2px solid rgba(52,211,153,0.3)' }}>
+                    <p className="text-4xl font-bold" style={{ color: '#34d399' }}>{currentWinner.prizeName}</p>
+                  </div>
+                  {currentWinner.gift && <p className="text-3xl mt-3" style={{ color: '#ffe08a' }}>🎁 {currentWinner.gift}</p>}
                 </div>
               </motion.div>
             )}
