@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL_UNPOOLED")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model EventInfo {
@@ -41,5 +40,13 @@ model DrawPrize {
   id       String @id @default(cuid())
   name     String @default("Giải nhất")
   quantity Int    @default(1)
+  gift     String @default("")
   order    Int    @default(0)
+}
+
+model LuckyDrawEvent {
+  id       String @id @default("default")
+  name     String @default("QUAY SỐ MAY MẮN")
+  date     String @default("")
+  location String @default("")
 }

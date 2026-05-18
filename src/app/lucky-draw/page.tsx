@@ -15,6 +15,7 @@ interface Prize {
   name: string;
   quantity: number;
   remaining: number;
+  gift: string;
 }
 
 interface Winner {
@@ -22,6 +23,7 @@ interface Winner {
   customerName: string;
   advisor: string;
   prizeName: string;
+  gift: string;
 }
 
 // Confetti particle system
@@ -318,6 +320,7 @@ export default function LuckyDrawPage() {
   const fireworkCanvasRef = useRef<HTMLCanvasElement>(null);
   const fireworkRef = useRef<FireworkSystem | null>(null);
   const customerTableRef = useRef<HTMLDivElement>(null);
+  const winnerTableRef = useRef<HTMLDivElement>(null);
 
   // State
   const [currentPrizeIndex, setCurrentPrizeIndex] = useState(0);
@@ -337,12 +340,25 @@ export default function LuckyDrawPage() {
   const [editPrizes, setEditPrizes] = useState<Prize[]>([]);
   const [newPrizeName, setNewPrizeName] = useState('');
   const [newPrizeQty, setNewPrizeQty] = useState('1');
+  const [newPrizeGift, setNewPrizeGift] = useState('');
 
   // Auto scroll
   const [autoScroll, setAutoScroll] = useState(false);
+  const [winnerAutoScroll, setWinnerAutoScroll] = useState(false);
 
   // Track whether prizes have been initialized from store
   const [localPrizeOverrides, setLocalPrizeOverrides] = useState<Prize[] | null>(null);
+
+  // BUG 3 FIX: Ref for currentPrizeIndex to avoid stale closure
+  const currentPrizeIndexRef = useRef(0);
+  useEffect(() => { currentPrizeIndexRef.current = currentPrizeIndex; }, [currentPrizeIndex]);
+
+  // Lucky draw event info (separate from registration page)
+  const [luckyDrawEventForm, setLuckyDrawEventForm] = useState({
+    name: '',
+    date: '',
+    location: '',
+  });
 
   // Derive prizes from store drawPrizes
   const prizes: Prize[] = localPrizeOverrides ?? (Array.isArray(store.drawPrizes) ? store.drawPrizes.map((dp) => ({
@@ -350,6 +366,7 @@ export default function LuckyDrawPage() {
     name: dp.name,
     quantity: dp.quantity,
     remaining: dp.quantity,
+    gift: dp.gift || '',
   })) : []);
 
   // Load data + auto-sync (with strict mode guard)
@@ -404,6 +421,7 @@ export default function LuckyDrawPage() {
     : availableAdvisors.map(a => ({ id: a, name: a, advisor: a }));
   const currentPrize = prizes[currentPrizeIndex] || null;
   const canSpin = !isSpinning && drawItems.length > 0 && currentPrize && currentPrize.remaining > 0;
+  const canStart = !isSpinning && !showResult && currentPrizeIndex >= 0 && drawItems.length > 0 && currentPrize && currentPrize.remaining > 0;
 
   // Helper: get the correct track ref based on viewport
   const getTrackRef = useCallback(() => {
@@ -437,6 +455,32 @@ export default function LuckyDrawPage() {
     }
   }, [autoScroll]);
 
+  // BUG 4 FIX: Auto-scroll for winner table (bottom to top)
+  useEffect(() => {
+    const el = winnerTableRef.current;
+    if (!el || !winnerAutoScroll) return;
+    let scrollPos = el.scrollHeight;
+    el.scrollTop = scrollPos;
+    const speed = 0.5;
+    let animId: number;
+    const scroll = () => {
+      scrollPos -= speed;
+      if (scrollPos <= 0) {
+        scrollPos = el.scrollHeight / 2;
+      }
+      el.scrollTop = scrollPos;
+      animId = requestAnimationFrame(scroll);
+    };
+    animId = requestAnimationFrame(scroll);
+    return () => cancelAnimationFrame(animId);
+  }, [winnerAutoScroll, winners]);
+
+  useEffect(() => {
+    if (!winnerAutoScroll && winnerTableRef.current) {
+      winnerTableRef.current.scrollTop = 0;
+    }
+  }, [winnerAutoScroll]);
+
   // Build track for slot machine
   const buildTrack = useCallback(() => {
     const items = drawItems.map(item => item.name);
@@ -449,9 +493,10 @@ export default function LuckyDrawPage() {
     return track;
   }, [drawItems]);
 
-  // Start spinning — optionally accepts prizeIndex to avoid stale closure
-  const startSpin = useCallback((overridePrizeIndex?: number) => {
-    const prize = overridePrizeIndex !== undefined ? prizes[overridePrizeIndex] : currentPrize;
+  // BUG 1 & 2 & 3 FIX: startSpin - no overridePrizeIndex, use ref, 120s duration
+  const startSpin = useCallback(() => {
+    const prizeIdx = currentPrizeIndexRef.current;
+    const prize = prizes[prizeIdx];
     if (isSpinning || drawItems.length === 0 || !prize || prize.remaining <= 0) return;
 
     const trackEl = getTrackRef();
@@ -486,19 +531,22 @@ export default function LuckyDrawPage() {
       }
 
       const totalHeight = track.length * itemH;
-      const scrollDistance = totalHeight * 0.85;
+      const scrollDistance = totalHeight * 0.95;
       trackEl.style.transition = 'none';
       trackEl.style.transform = 'translateY(0)';
       void trackEl.offsetHeight;
-      trackEl.style.transition = 'transform 5s linear';
+      trackEl.style.transition = 'transform 120s linear';
       trackEl.style.transform = `translateY(-${scrollDistance}px)`;
     });
-  }, [isSpinning, drawItems, currentPrize, prizes, buildTrack, getTrackRef]);
+  }, [isSpinning, drawItems, prizes, buildTrack, getTrackRef]);
 
-  // Stop spinning
+  // BUG 3 FIX: stopSpin - use currentPrizeIndexRef instead of currentPrizeIndex
   const stopSpin = useCallback(() => {
     if (!isSpinning || isStopping) return;
     setIsStopping(true);
+
+    const prizeIdx = currentPrizeIndexRef.current;
+    const prize = prizes[prizeIdx];
 
     const trackEl = getTrackRef();
     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
@@ -514,7 +562,8 @@ export default function LuckyDrawPage() {
       id: winnerItem.id,
       customerName: drawMode === 'customer' ? winnerItem.name : winnerItem.name,
       advisor: customer?.advisor || winnerItem.name,
-      prizeName: currentPrize?.name || 'Giải thưởng',
+      prizeName: prize?.name || 'Giải thưởng',
+      gift: prize?.gift || '',
     };
 
     if (trackEl) {
@@ -577,9 +626,10 @@ export default function LuckyDrawPage() {
           name: dp.name,
           quantity: dp.quantity,
           remaining: dp.quantity,
+          gift: dp.gift || '',
         })) : []);
         return base.map((p, i) =>
-          i === currentPrizeIndex ? { ...p, remaining: p.remaining - 1 } : p
+          i === prizeIdx ? { ...p, remaining: p.remaining - 1 } : p
         );
       });
 
@@ -589,7 +639,7 @@ export default function LuckyDrawPage() {
         setTimeout(() => confettiRef.current?.stop(), 5000);
       }
     }, 3200);
-  }, [isSpinning, isStopping, drawItems, allCustomers, drawMode, currentPrize, currentPrizeIndex, store.drawPrizes, getTrackRef]);
+  }, [isSpinning, isStopping, drawItems, allCustomers, drawMode, prizes, store.drawPrizes, getTrackRef]);
 
   // Handle stop button click
   const handleStopClick = useCallback(() => {
@@ -604,16 +654,13 @@ export default function LuckyDrawPage() {
     }
   }, [isSpinning, isStopping, stopSpin]);
 
-  // Handle prize button click -> select prize AND start spin
-  const handlePrizeSpin = useCallback((prizeIndex: number) => {
+  // BUG 1 FIX: handleSelectPrize - only selects, does NOT start spin
+  const handleSelectPrize = useCallback((prizeIndex: number) => {
     if (isSpinning) return;
     const prize = prizes[prizeIndex];
     if (!prize || prize.remaining <= 0) return;
-    if (drawItems.length === 0) return;
-
     setCurrentPrizeIndex(prizeIndex);
-    startSpin(prizeIndex);
-  }, [isSpinning, prizes, drawItems.length, startSpin]);
+  }, [isSpinning, prizes]);
 
   // Settings handlers
   const handleSettingsAuth = () => {
@@ -630,10 +677,12 @@ export default function LuckyDrawPage() {
       name: newPrizeName.trim(),
       quantity: parseInt(newPrizeQty) || 1,
       remaining: parseInt(newPrizeQty) || 1,
+      gift: newPrizeGift.trim(),
     };
     setEditPrizes(prev => [...prev, newPrize]);
     setNewPrizeName('');
     setNewPrizeQty('1');
+    setNewPrizeGift('');
   };
 
   const handleRemovePrize = (id: string) => {
@@ -641,8 +690,10 @@ export default function LuckyDrawPage() {
   };
 
   const handleSaveSettings = () => {
-    store.saveDrawPrizes(editPrizes.map(p => ({ name: p.name, quantity: p.quantity })));
+    store.saveDrawPrizes(editPrizes.map(p => ({ name: p.name, quantity: p.quantity, gift: p.gift })));
     setLocalPrizeOverrides(editPrizes.map(p => ({ ...p })));
+    // Save lucky draw event info
+    store.saveLuckyDrawEvent(luckyDrawEventForm);
     setSettingsOpen(false);
     setSettingsAuthenticated(false);
     setSettingsPassword('');
@@ -663,6 +714,7 @@ export default function LuckyDrawPage() {
         name: dp.name,
         quantity: dp.quantity,
         remaining: dp.quantity,
+        gift: dp.gift || '',
       })) : []);
       return base.map(p => ({ ...p, remaining: p.quantity }));
     });
@@ -697,7 +749,15 @@ export default function LuckyDrawPage() {
               </h1>
             </div>
             <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-              onClick={() => { setSettingsOpen(true); setSettingsAuthenticated(false); }}
+              onClick={() => {
+                setSettingsOpen(true);
+                setSettingsAuthenticated(false);
+                setLuckyDrawEventForm({
+                  name: store.luckyDrawEvent?.name || '',
+                  date: store.luckyDrawEvent?.date || '',
+                  location: store.luckyDrawEvent?.location || '',
+                });
+              }}
               className="p-2 hover:bg-white/5 rounded-lg transition-all" title="Cài đặt">
               <Settings className="w-5 h-5" style={{ color: '#d4a843' }} />
             </motion.button>
@@ -710,15 +770,16 @@ export default function LuckyDrawPage() {
             <div className="w-full max-w-md flex items-center justify-center gap-1 mb-1">
               <Crown className="w-3.5 h-3.5" style={{ color: '#f5d870' }} />
               <span style={{ color: '#f5d870' }} className="font-bold text-sm">{currentPrize.name}</span>
+              {currentPrize.gift && <span style={{ color: '#10b981' }} className="text-xs">- {currentPrize.gift}</span>}
               <span style={{ color: 'rgba(212,168,67,0.5)' }} className="text-xs">(còn {currentPrize.remaining})</span>
             </div>
           )}
 
           {/* Slot Machine */}
-          <div className={`relative w-full max-w-md rounded-xl overflow-hidden ${canSpin ? 'animate-pulse-shadow' : ''}`}
+          <div className={`relative w-full max-w-md rounded-xl overflow-hidden ${canSpin || canStart ? 'animate-pulse-shadow' : ''}`}
             style={{
               background: 'linear-gradient(180deg, #0f2042 0%, #162d50 50%, #0f2042 100%)',
-              boxShadow: isSpinning ? '0 0 40px rgba(212,168,67,0.5), inset 0 0 30px rgba(212,168,67,0.1)' : canSpin ? '0 0 25px rgba(212,168,67,0.3), inset 0 0 20px rgba(212,168,67,0.05)' : '0 0 10px rgba(212,168,67,0.1), inset 0 0 10px rgba(212,168,67,0.02)',
+              boxShadow: isSpinning ? '0 0 40px rgba(212,168,67,0.5), inset 0 0 30px rgba(212,168,67,0.1)' : canSpin || canStart ? '0 0 25px rgba(212,168,67,0.3), inset 0 0 20px rgba(212,168,67,0.05)' : '0 0 10px rgba(212,168,67,0.1), inset 0 0 10px rgba(212,168,67,0.02)',
             }}>
             <CircularLEDStrip />
             <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 5}px` }}>
@@ -732,13 +793,40 @@ export default function LuckyDrawPage() {
               {!isSpinning && !showResult && (
                 <div className="absolute inset-0 flex items-center justify-center z-[5]">
                   <p style={{ color: 'rgba(212,168,67,0.4)' }} className="text-sm font-medium text-center px-4">
-                    {prizes.length === 0 ? 'Thêm giải thưởng trong Cài đặt' : drawItems.length === 0 ? 'Không có người tham gia' : 'Bấm nút giải thưởng để quay'}
+                    {prizes.length === 0 ? 'Thêm giải thưởng trong Cài đặt' : drawItems.length === 0 ? 'Không có người tham gia' : 'Chọn giải → Bấm QUAY'}
                   </p>
                 </div>
               )}
               <div ref={mobileTrackRef} className="absolute left-0 right-0 top-0" />
             </div>
           </div>
+
+          {/* START BUTTON (mobile) - BUG 1 FIX */}
+          <AnimatePresence>
+            {canStart && !isSpinning && (
+              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center justify-center mt-2 mb-1">
+                <motion.button whileTap={{ scale: 0.92 }} onClick={startSpin}
+                  className="relative" style={{ width: '80px', height: '80px', cursor: 'pointer' }}>
+                  <div className="absolute inset-0 rounded-full" style={{
+                    background: 'linear-gradient(145deg, #10b981, #059669)',
+                    boxShadow: '0 4px 0 #065f46, 0 8px 16px rgba(6, 95, 70, 0.4), inset 0 1px 2px rgba(255,255,255,0.3)',
+                  }} />
+                  <div className="absolute rounded-full flex items-center justify-center" style={{
+                    top: '3px', left: '3px', right: '3px', bottom: '5px',
+                    background: 'radial-gradient(circle at 35% 35%, #6ee7b7 0%, #10b981 40%, #059669 100%)',
+                    boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.4)',
+                    border: '2px solid rgba(110, 231, 183, 0.6)',
+                  }}>
+                    <span className="font-black uppercase tracking-wider leading-tight text-center" style={{ color: '#065f46', fontSize: '14px', textShadow: '0 1px 2px rgba(255,255,255,0.5)' }}>
+                      QUAY!
+                    </span>
+                  </div>
+                  <div className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(16, 185, 129, 0.2)', animationDuration: '1s' }} />
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* STOP BUTTON (mobile) */}
           <AnimatePresence>
@@ -779,6 +867,7 @@ export default function LuckyDrawPage() {
                 <p className="text-lg font-black" style={{ color: '#f5d870', textShadow: '0 0 15px rgba(212,168,67,0.3)' }}>{currentWinner.customerName}</p>
                 {drawMode === 'customer' && currentWinner.advisor && <p style={{ color: 'rgba(212,168,67,0.5)' }} className="text-[10px] italic">TVV {currentWinner.advisor}</p>}
                 <p className="font-semibold text-xs" style={{ color: '#10b981' }}>{currentWinner.prizeName}</p>
+                {currentWinner.gift && <p className="text-xs" style={{ color: '#d4a843' }}>🎁 {currentWinner.gift}</p>}
               </div>
             </motion.div>
           )}
@@ -786,7 +875,7 @@ export default function LuckyDrawPage() {
 
         {/* BOTTOM: Combined Prizes + Customers on mobile */}
         <div className="flex-1 min-h-0 flex flex-col" style={{ borderTop: '2px solid rgba(212,168,67,0.3)' }}>
-          {/* Prize spin buttons */}
+          {/* Prize select buttons - BUG 1 FIX: now only selects */}
           <div className="flex-shrink-0" style={{ background: 'rgba(15,32,66,0.9)', borderBottom: '1px solid rgba(212,168,67,0.2)' }}>
             <div className="flex items-center gap-1.5 px-2 py-1.5">
               <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#d4a843' }}>Giải:</span>
@@ -797,13 +886,14 @@ export default function LuckyDrawPage() {
                   {prizes.map((prize, idx) => {
                     const IconComp = PRIZE_ICONS[idx % PRIZE_ICONS.length];
                     const isAvailable = prize.remaining > 0 && !isSpinning;
+                    const isSelected = idx === currentPrizeIndex;
                     return (
                       <motion.button key={prize.id} whileTap={isAvailable ? { scale: 0.92 } : {}}
-                        onClick={() => handlePrizeSpin(idx)} disabled={!isAvailable}
-                        className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${idx === currentPrizeIndex && isSpinning ? 'animate-pulse' : ''}`}
+                        onClick={() => handleSelectPrize(idx)} disabled={!isAvailable}
+                        className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${isSelected ? 'animate-pulse' : ''}`}
                         style={{
-                          background: idx === currentPrizeIndex && isSpinning ? 'linear-gradient(135deg, #0d5a3f, #0a7a4a)' : prize.remaining <= 0 ? 'rgba(15,32,66,0.5)' : 'rgba(22,45,80,0.8)',
-                          borderColor: idx === currentPrizeIndex && isSpinning ? '#10b981' : prize.remaining <= 0 ? 'rgba(212,168,67,0.1)' : 'rgba(212,168,67,0.4)',
+                          background: isSelected ? 'linear-gradient(135deg, #0d5a3f, #0a7a4a)' : prize.remaining <= 0 ? 'rgba(15,32,66,0.5)' : 'rgba(22,45,80,0.8)',
+                          borderColor: isSelected ? '#10b981' : prize.remaining <= 0 ? 'rgba(212,168,67,0.1)' : 'rgba(212,168,67,0.4)',
                           color: prize.remaining <= 0 ? 'rgba(212,168,67,0.25)' : '#f5d870',
                           cursor: !isAvailable ? 'not-allowed' : 'pointer',
                         }}>
@@ -929,32 +1019,36 @@ export default function LuckyDrawPage() {
               {prizes.length > 0 && prizes.map((prize, idx) => {
                 const IconComp = PRIZE_ICONS[idx % PRIZE_ICONS.length];
                 const isAvailable = prize.remaining > 0 && !isSpinning;
+                const isSelected = idx === currentPrizeIndex;
                 return (
                   <motion.button
                     key={prize.id}
                     whileTap={isAvailable ? { scale: 0.95 } : {}}
                     whileHover={isAvailable ? { scale: 1.02 } : {}}
-                    onClick={() => handlePrizeSpin(idx)}
+                    onClick={() => handleSelectPrize(idx)}
                     disabled={!isAvailable}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all"
                     style={{
-                      background: idx === currentPrizeIndex && isSpinning
+                      background: isSelected
                         ? 'linear-gradient(135deg, #0d5a3f, #0a7a4a)'
                         : prize.remaining <= 0
                           ? 'rgba(20,42,82,0.5)'
                           : 'rgba(28,58,110,0.6)',
-                      border: idx === currentPrizeIndex && isSpinning
+                      border: isSelected
                         ? '1px solid #34d399'
                         : prize.remaining <= 0
                           ? '1px solid rgba(232,184,74,0.12)'
                           : '1px solid rgba(232,184,74,0.35)',
                       color: prize.remaining <= 0 ? 'rgba(232,184,74,0.25)' : '#ffe08a',
                       cursor: !isAvailable ? 'not-allowed' : 'pointer',
-                      boxShadow: idx === currentPrizeIndex && isSpinning ? '0 0 15px rgba(52,211,153,0.3)' : 'none',
+                      boxShadow: isSelected ? '0 0 15px rgba(52,211,153,0.3)' : 'none',
                     }}
                   >
                     <IconComp className="w-4 h-4 flex-shrink-0" />
-                    <span className="flex-1 text-left">Giải {idx + 1} - {prize.name}</span>
+                    <span className="flex-1 text-left">
+                      {prize.name}
+                      {prize.gift && <span className="text-xs ml-1" style={{ color: '#34d399' }}>- {prize.gift}</span>}
+                    </span>
                     <span className="text-xs px-1.5 py-0.5 rounded-full"
                       style={{
                         background: prize.remaining <= 0 ? 'rgba(232,184,74,0.08)' : 'rgba(52,211,153,0.2)',
@@ -998,11 +1092,19 @@ export default function LuckyDrawPage() {
                 <Diamond className="w-8 h-8" style={{ color: '#ffe08a' }} />
               </motion.div>
               <h1 className="text-4xl font-black uppercase tracking-wider animate-neon-pulse" style={{ color: '#ffe08a' }}>
-                Quay Số May Mắn
+                {store.luckyDrawEvent?.name || 'Quay Số May Mắn'}
               </h1>
             </div>
             <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-              onClick={() => { setSettingsOpen(true); setSettingsAuthenticated(false); }}
+              onClick={() => {
+                setSettingsOpen(true);
+                setSettingsAuthenticated(false);
+                setLuckyDrawEventForm({
+                  name: store.luckyDrawEvent?.name || '',
+                  date: store.luckyDrawEvent?.date || '',
+                  location: store.luckyDrawEvent?.location || '',
+                });
+              }}
               className="p-2 hover:bg-white/5 rounded-lg transition-all" title="Cài đặt">
               <Settings className="w-6 h-6" style={{ color: '#e8b84a' }} />
             </motion.button>
@@ -1015,14 +1117,15 @@ export default function LuckyDrawPage() {
               <div className="flex items-center justify-center gap-3 mb-2">
                 <Crown className="w-8 h-8" style={{ color: '#ffe08a' }} />
                 <span className="font-extrabold text-2xl" style={{ color: '#ffe08a' }}>{currentPrize.name}</span>
+                {currentPrize.gift && <span className="text-lg" style={{ color: '#34d399' }}>🎁 {currentPrize.gift}</span>}
                 <span className="text-lg" style={{ color: 'rgba(232,184,74,0.5)' }}>(còn {currentPrize.remaining})</span>
               </div>
             )}
 
-            <div className={`relative w-full max-w-6xl mx-auto rounded-2xl overflow-hidden shadow-2xl transition-shadow duration-1000 ${canSpin ? 'animate-pulse-shadow' : ''}`}
+            <div className={`relative w-full max-w-6xl mx-auto rounded-2xl overflow-hidden shadow-2xl transition-shadow duration-1000 ${canSpin || canStart ? 'animate-pulse-shadow' : ''}`}
               style={{
                 background: 'linear-gradient(180deg, #142a52 0%, #1c3a6e 30%, #1c3a6e 70%, #142a52 100%)',
-                boxShadow: isSpinning ? '0 0 100px rgba(255,224,138,0.6), inset 0 0 60px rgba(255,224,138,0.1)' : canSpin ? '0 0 80px rgba(255,224,138,0.45), inset 0 0 60px rgba(255,224,138,0.08)' : '0 0 40px rgba(255,224,138,0.2), inset 0 0 30px rgba(255,224,138,0.04)',
+                boxShadow: isSpinning ? '0 0 100px rgba(255,224,138,0.6), inset 0 0 60px rgba(255,224,138,0.1)' : canSpin || canStart ? '0 0 80px rgba(255,224,138,0.45), inset 0 0 60px rgba(255,224,138,0.08)' : '0 0 40px rgba(255,224,138,0.2), inset 0 0 30px rgba(255,224,138,0.04)',
                 border: '2px solid rgba(255,224,138,0.3)',
               }}>
               {/* LED strip running around in circles */}
@@ -1064,48 +1167,112 @@ export default function LuckyDrawPage() {
                 {!isSpinning && !showResult && (
                   <div className="absolute inset-0 flex items-center justify-center z-[5]">
                     <p className="text-3xl font-medium" style={{ color: 'rgba(255,224,138,0.4)' }}>
-                      {prizes.length === 0 ? 'Thêm giải thưởng trong Cài đặt' : drawItems.length === 0 ? 'Không có người tham gia' : 'Nhấn nút giải thưởng bên trái để quay số'}
+                      {prizes.length === 0 ? 'Thêm giải thưởng trong Cài đặt' : drawItems.length === 0 ? 'Không có người tham gia' : 'Chọn giải bên trái → Bấm QUAY'}
                     </p>
                   </div>
                 )}
                 <div ref={desktopTrackRef} className="absolute left-0 right-0 top-0" />
               </div>
             </div>
+
+            {/* START / STOP buttons below slot machine - desktop */}
+            <div className="flex items-center justify-center gap-4 mt-4">
+              {/* START button - BUG 1 FIX */}
+              <AnimatePresence>
+                {canStart && !isSpinning && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={startSpin}
+                    className="relative px-12 py-4 rounded-2xl font-black text-2xl uppercase tracking-wider"
+                    style={{
+                      background: 'linear-gradient(145deg, #10b981, #059669)',
+                      boxShadow: '0 6px 0 #065f46, 0 10px 20px rgba(6, 95, 70, 0.4), inset 0 1px 3px rgba(255,255,255,0.3)',
+                      color: '#ecfdf5',
+                      textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                      border: '2px solid rgba(110, 231, 183, 0.5)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Zap className="w-6 h-6 inline mr-2" />
+                    QUAY!
+                  </motion.button>
+                )}
+              </AnimatePresence>
+
+              {/* STOP button */}
+              <AnimatePresence>
+                {isSpinning && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleStopClick}
+                    disabled={isStopping}
+                    className="relative px-12 py-4 rounded-2xl font-black text-2xl uppercase tracking-wider"
+                    style={{
+                      background: isStopping ? 'linear-gradient(145deg, #9ca3af, #6b7280)' : 'linear-gradient(145deg, #ef4444, #b91c1c)',
+                      boxShadow: isStopping ? '0 6px 0 #4b5563, 0 10px 20px rgba(75, 85, 99, 0.4)' : '0 6px 0 #7f1d1d, 0 10px 20px rgba(127, 29, 29, 0.4)',
+                      color: '#fef2f2',
+                      textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                      border: isStopping ? '2px solid rgba(156, 163, 175, 0.5)' : '2px solid rgba(248, 113, 113, 0.5)',
+                      cursor: isStopping ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {isStopping ? 'Đang dừng...' : 'DỪNG!'}
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Winner list below slot machine — compact, dark transparent bg */}
           <div className="flex-[2.5] min-h-0 flex flex-col relative z-10 px-8 pb-4">
-            {/* Centered title with divider */}
+            {/* BUG 5 FIX: Centered title with divider and auto-scroll toggle */}
             <div className="flex-shrink-0 flex items-center justify-center py-2">
               <div className="flex-1 h-px" style={{ background: 'rgba(255,224,138,0.2)' }} />
               <span style={{ color: '#ffe08a' }} className="font-extrabold text-xs uppercase mx-3">DS Khách Hàng Trúng Giải</span>
               <span style={{ color: 'rgba(232,184,74,0.5)' }} className="text-xs">({winners.length})</span>
               <div className="flex-1 h-px" style={{ background: 'rgba(255,224,138,0.2)' }} />
+              {/* BUG 4 FIX: Auto-scroll toggle for winner list */}
+              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setWinnerAutoScroll(!winnerAutoScroll)} className="ml-2 p-1 rounded transition-all"
+                style={{ background: winnerAutoScroll ? 'rgba(52,211,153,0.2)' : 'rgba(232,184,74,0.1)', color: winnerAutoScroll ? '#34d399' : 'rgba(232,184,74,0.4)' }}
+                title={winnerAutoScroll ? 'Tắt cuộn' : 'Bật cuộn'}>
+                {winnerAutoScroll ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+              </motion.button>
             </div>
-            <div className="flex-1 min-h-0 overflow-y-auto rounded-lg" style={{ background: 'rgba(0,0,0,0.4)', scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
+            <div ref={winnerTableRef} className="flex-1 min-h-0 overflow-y-auto rounded-lg" style={{ background: 'rgba(0,0,0,0.4)', scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
               {winners.length === 0 ? (
                 <div className="flex items-center justify-center py-3">
                   <p className="text-xs italic" style={{ color: 'rgba(255,224,138,0.2)' }}>Chưa có người trúng giải</p>
                 </div>
               ) : (
-                [...winners].reverse().map((winner, idx) => {
-                  const isLatest = idx === 0 && showResult;
-                  return (
-                    <div
-                      key={`${winner.id}-${idx}`}
-                      className="flex items-center px-3 py-1 transition-all"
-                      style={{
-                        background: isLatest ? 'rgba(255,224,138,0.1)' : 'transparent',
-                        borderBottom: '1px solid rgba(255,224,138,0.06)',
-                      }}
-                    >
-                      <span className="font-mono text-[10px] w-5 flex-shrink-0 font-bold" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.25)' }}>{winners.length - idx}</span>
-                      <span className="text-xs font-bold truncate" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.6)' }}>{titleCase(winner.customerName)}</span>
-                      <span className="mx-2 text-[10px]" style={{ color: 'rgba(255,224,138,0.15)' }}>—</span>
-                      <span className="text-[10px] font-semibold" style={{ color: isLatest ? '#ffe08a' : '#34d399' }}>{winner.prizeName}</span>
-                    </div>
-                  );
-                })
+                (winnerAutoScroll ? [0, 1] : [0]).map(dup => (
+                  <div key={dup}>
+                    {[...winners].reverse().map((winner, idx) => {
+                      const isLatest = idx === 0 && showResult;
+                      return (
+                        <div
+                          key={`${winner.id}-${idx}-${dup}`}
+                          className="flex items-center px-3 py-1 transition-all"
+                          style={{
+                            background: isLatest ? 'rgba(255,224,138,0.1)' : 'transparent',
+                            borderBottom: '1px solid rgba(255,224,138,0.06)',
+                          }}
+                        >
+                          <span className="font-mono text-[10px] w-5 flex-shrink-0 font-bold" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.25)' }}>{winners.length - idx}</span>
+                          <span className="text-xs font-bold truncate" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.6)' }}>{titleCase(winner.customerName)}</span>
+                          <span className="mx-2 text-[10px]" style={{ color: 'rgba(255,224,138,0.15)' }}>—</span>
+                          <span className="text-[10px] font-semibold" style={{ color: isLatest ? '#ffe08a' : '#34d399' }}>{winner.prizeName}</span>
+                          {winner.gift && <span className="text-[10px] ml-2" style={{ color: 'rgba(232,184,74,0.5)' }}>🎁 {winner.gift}</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))
               )}
             </div>
           </div>
@@ -1152,6 +1319,7 @@ export default function LuckyDrawPage() {
                   <p className="text-5xl font-black mb-1 animate-neon-pulse" style={{ color: '#ffe08a' }}>{currentWinner.customerName}</p>
                   {drawMode === 'customer' && currentWinner.advisor && <p className="text-xl" style={{ color: 'rgba(232,184,74,0.6)' }}>TVV: {currentWinner.advisor}</p>}
                   <p className="text-2xl font-semibold mt-1" style={{ color: '#e8b84a' }}>{currentWinner.prizeName}</p>
+                  {currentWinner.gift && <p className="text-xl mt-1" style={{ color: '#34d399' }}>🎁 {currentWinner.gift}</p>}
                 </div>
               </motion.div>
             )}
@@ -1220,26 +1388,26 @@ export default function LuckyDrawPage() {
                     ))}
                   </div>
 
-                  {/* General tab */}
+                  {/* General tab - BUG 7 FIX: Uses luckyDrawEventForm (separate from registration) */}
                   {settingsTab === 'general' && (
                     <div className="space-y-4">
                       <div className="p-3 rounded-xl space-y-2.5" style={{ background: 'rgba(10,22,40,0.6)', border: '1px solid rgba(212,168,67,0.15)' }}>
-                        <h4 className="text-sm font-semibold mb-1" style={{ color: '#d4a843' }}>Thông tin chương trình</h4>
+                        <h4 className="text-sm font-semibold mb-1" style={{ color: '#d4a843' }}>Thông tin chương trình quay số</h4>
                         <div>
                           <label className="text-xs font-semibold mb-1 block" style={{ color: 'rgba(212,168,67,0.7)' }}>Tiêu đề chương trình</label>
-                          <input value={store.eventInfo.name} onChange={(e) => store.saveEventInfo({ name: e.target.value })} placeholder="Nhập tiêu đề chương trình"
+                          <input value={luckyDrawEventForm.name} onChange={(e) => setLuckyDrawEventForm({ ...luckyDrawEventForm, name: e.target.value })} placeholder="Nhập tiêu đề chương trình"
                             className="w-full p-2.5 rounded-lg focus:ring-2 outline-none transition-all text-sm"
                             style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }} />
                         </div>
                         <div>
                           <label className="text-xs font-semibold mb-1 block" style={{ color: 'rgba(212,168,67,0.7)' }}>Ngày tháng</label>
-                          <input value={store.eventInfo.date} onChange={(e) => store.saveEventInfo({ date: e.target.value })} placeholder="VD: 20/03/2025"
+                          <input value={luckyDrawEventForm.date} onChange={(e) => setLuckyDrawEventForm({ ...luckyDrawEventForm, date: e.target.value })} placeholder="VD: 20/03/2025"
                             className="w-full p-2.5 rounded-lg focus:ring-2 outline-none transition-all text-sm"
                             style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }} />
                         </div>
                         <div>
                           <label className="text-xs font-semibold mb-1 block" style={{ color: 'rgba(212,168,67,0.7)' }}>Địa điểm</label>
-                          <input value={store.eventInfo.location} onChange={(e) => store.saveEventInfo({ location: e.target.value })} placeholder="VD: TP. Hồ Chí Minh"
+                          <input value={luckyDrawEventForm.location} onChange={(e) => setLuckyDrawEventForm({ ...luckyDrawEventForm, location: e.target.value })} placeholder="VD: TP. Hồ Chí Minh"
                             className="w-full p-2.5 rounded-lg focus:ring-2 outline-none transition-all text-sm"
                             style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }} />
                         </div>
@@ -1258,38 +1426,55 @@ export default function LuckyDrawPage() {
                     </div>
                   )}
 
-                  {/* Prizes tab */}
+                  {/* Prizes tab - BUG 6 FIX: includes gift field */}
                   {settingsTab === 'prizes' && (
                     <div className="space-y-3">
                       {editPrizes.map((prize, idx) => {
                         const IconComp = PRIZE_ICONS[idx % PRIZE_ICONS.length];
                         return (
-                          <div key={prize.id} className="p-3 rounded-xl flex items-center gap-2"
+                          <div key={prize.id} className="p-3 rounded-xl space-y-2"
                             style={{ background: 'rgba(10,22,40,0.6)', border: '1px solid rgba(212,168,67,0.15)' }}>
-                            <IconComp className="w-4 h-4 flex-shrink-0" style={{ color: '#d4a843' }} />
-                            <input value={prize.name} onChange={e => { const updated = [...editPrizes]; updated[idx] = { ...updated[idx], name: e.target.value }; setEditPrizes(updated); }}
-                              className="flex-1 p-1.5 rounded-md text-sm outline-none"
-                              style={{ border: '1px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }} />
-                            <input type="number" min={1} value={prize.quantity} onChange={e => handleUpdatePrizeQty(prize.id, parseInt(e.target.value) || 1)}
-                              className="w-16 p-1.5 rounded-md text-sm text-center outline-none"
-                              style={{ border: '1px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }} />
-                            <button onClick={() => handleRemovePrize(prize.id)} className="p-1.5 rounded-md transition-colors" style={{ color: '#ef4444' }}>
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <IconComp className="w-4 h-4 flex-shrink-0" style={{ color: '#d4a843' }} />
+                              <input value={prize.name} onChange={e => { const updated = [...editPrizes]; updated[idx] = { ...updated[idx], name: e.target.value }; setEditPrizes(updated); }}
+                                className="flex-1 p-1.5 rounded-md text-sm outline-none"
+                                style={{ border: '1px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }} />
+                              <input type="number" min={1} value={prize.quantity} onChange={e => handleUpdatePrizeQty(prize.id, parseInt(e.target.value) || 1)}
+                                className="w-16 p-1.5 rounded-md text-sm text-center outline-none"
+                                style={{ border: '1px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }} />
+                              <button onClick={() => handleRemovePrize(prize.id)} className="p-1.5 rounded-md transition-colors" style={{ color: '#ef4444' }}>
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-2 pl-6">
+                              <Gift className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#10b981' }} />
+                              <input value={prize.gift} onChange={e => { const updated = [...editPrizes]; updated[idx] = { ...updated[idx], gift: e.target.value }; setEditPrizes(updated); }}
+                                placeholder="Quà tặng (VD: Tivi, Vàng...)"
+                                className="flex-1 p-1.5 rounded-md text-sm outline-none"
+                                style={{ border: '1px solid rgba(52,211,153,0.2)', background: 'rgba(10,22,40,0.8)', color: '#34d399' }} />
+                            </div>
                           </div>
                         );
                       })}
-                      <div className="flex gap-2">
-                        <input value={newPrizeName} onChange={e => setNewPrizeName(e.target.value)} placeholder="Tên giải"
-                          className="flex-1 p-2 rounded-lg text-sm outline-none"
-                          style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }} />
-                        <input type="number" min={1} value={newPrizeQty} onChange={e => setNewPrizeQty(e.target.value)}
-                          className="w-20 p-2 rounded-lg text-sm text-center outline-none"
-                          style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }} />
-                        <button onClick={handleAddPrize} className="px-3 py-2 rounded-lg font-bold text-sm transition-colors"
-                          style={{ background: 'linear-gradient(135deg, #0d5a3f, #0a7a4a)', color: '#f5d870' }}>
-                          <Plus className="w-4 h-4" />
-                        </button>
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <input value={newPrizeName} onChange={e => setNewPrizeName(e.target.value)} placeholder="Tên giải"
+                            className="flex-1 p-2 rounded-lg text-sm outline-none"
+                            style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }} />
+                          <input type="number" min={1} value={newPrizeQty} onChange={e => setNewPrizeQty(e.target.value)}
+                            className="w-20 p-2 rounded-lg text-sm text-center outline-none"
+                            style={{ border: '2px solid rgba(212,168,67,0.2)', background: 'rgba(10,22,40,0.8)', color: '#f5d870' }} />
+                          <button onClick={handleAddPrize} className="px-3 py-2 rounded-lg font-bold text-sm transition-colors"
+                            style={{ background: 'linear-gradient(135deg, #0d5a3f, #0a7a4a)', color: '#f5d870' }}>
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="flex gap-2 pl-1">
+                          <Gift className="w-4 h-4 flex-shrink-0 mt-2" style={{ color: '#10b981' }} />
+                          <input value={newPrizeGift} onChange={e => setNewPrizeGift(e.target.value)} placeholder="Quà tặng (VD: Tivi, Vàng...)"
+                            className="flex-1 p-2 rounded-lg text-sm outline-none"
+                            style={{ border: '2px solid rgba(52,211,153,0.2)', background: 'rgba(10,22,40,0.8)', color: '#34d399' }} />
+                        </div>
                       </div>
                       <button onClick={handleSaveSettings} className="w-full px-4 py-2.5 rounded-lg font-bold text-sm transition-all shadow-md hover:shadow-lg"
                         style={{ background: 'linear-gradient(135deg, #0d5a3f, #0a7a4a)', color: '#f5d870' }}>Lưu giải thưởng</button>

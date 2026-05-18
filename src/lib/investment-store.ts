@@ -33,7 +33,15 @@ export interface DrawPrize {
   id: string;
   name: string;
   quantity: number;
+  gift: string;
   order: number;
+}
+
+export interface LuckyDrawEventInfo {
+  id: string;
+  name: string;
+  date: string;
+  location: string;
 }
 
 interface InvestmentStore {
@@ -42,6 +50,7 @@ interface InvestmentStore {
   giftTiers: GiftTier[];
   drawPrizes: DrawPrize[];
   eventInfo: EventInfo;
+  luckyDrawEvent: LuckyDrawEventInfo;
   isLoading: boolean;
   searchKeyword: string;
   statusFilter: string;
@@ -55,7 +64,8 @@ interface InvestmentStore {
   toggleReceivedStatus: (id: string) => Promise<void>;
   saveEventInfo: (info: Partial<EventInfo>) => Promise<void>;
   saveGiftTiers: (tiers: Omit<GiftTier, 'id' | 'order'>[]) => Promise<void>;
-  saveDrawPrizes: (prizes: { name: string; quantity: number }[]) => Promise<void>;
+  saveDrawPrizes: (prizes: { name: string; quantity: number; gift?: string }[]) => Promise<void>;
+  saveLuckyDrawEvent: (info: Partial<LuckyDrawEventInfo>) => Promise<void>;
 
   // Computed
   getFilteredCustomers: () => Customer[];
@@ -68,6 +78,7 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
   giftTiers: [],
   drawPrizes: [],
   eventInfo: { id: 'default', name: 'SỰ KIỆN ĐẦU TƯ 2025', date: '20/03/2025', location: 'TP. Hồ Chí Minh' },
+  luckyDrawEvent: { id: 'default', name: 'QUAY SỐ MAY MẮN', date: '', location: '' },
   isLoading: true,
   searchKeyword: '',
   statusFilter: '',
@@ -94,22 +105,25 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
         throw new Error(`Failed to fetch ${url} after retries`);
       };
 
-      const [customersRes, tiersRes, eventRes, drawPrizesRes] = await Promise.all([
+      const [customersRes, tiersRes, eventRes, drawPrizesRes, luckyDrawEventRes] = await Promise.all([
         fetchWithRetry('/api/customers'),
         fetchWithRetry('/api/gift-tiers'),
         fetchWithRetry('/api/event-info'),
         fetchWithRetry('/api/draw-prizes'),
+        fetchWithRetry('/api/lucky-draw-event'),
       ]);
 
       const customersData = await customersRes.json();
       const tiersData = await tiersRes.json();
       const eventData = await eventRes.json();
       const drawPrizesData = await drawPrizesRes.json();
+      const luckyDrawEventData = await luckyDrawEventRes.json();
 
       if (customersData.success) set({ customers: customersData.customers || [] });
       if (tiersData.success) set({ giftTiers: tiersData.tiers || [] });
       if (eventData.success) set({ eventInfo: eventData.eventInfo || { id: 'default', name: 'SỰ KIỆN ĐẦU TƯ 2025', date: '20/03/2025', location: 'TP. Hồ Chí Minh' } });
       if (drawPrizesData.success) set({ drawPrizes: drawPrizesData.prizes || [] });
+      if (luckyDrawEventData.success) set({ luckyDrawEvent: luckyDrawEventData.eventInfo || { id: 'default', name: 'QUAY SỐ MAY MẮN', date: '', location: '' } });
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -188,6 +202,24 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
     const data = await res.json();
     if (data.success) {
       set({ drawPrizes: data.prizes });
+    }
+  },
+
+  saveLuckyDrawEvent: async (info) => {
+    const current = get().luckyDrawEvent;
+    const merged = {
+      name: info.name ?? current.name,
+      date: info.date ?? current.date,
+      location: info.location ?? current.location,
+    };
+    const res = await fetch('/api/lucky-draw-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(merged),
+    });
+    const data = await res.json();
+    if (data.success) {
+      set({ luckyDrawEvent: data.eventInfo });
     }
   },
 

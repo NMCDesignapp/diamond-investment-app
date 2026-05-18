@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
     // Delete all existing and recreate
     await db.drawPrize.deleteMany();
     const created = await Promise.all(
-      prizes.map((p: { name: string; quantity: number }, idx: number) =>
+      prizes.map((p: { name: string; quantity: number; gift?: string }, idx: number) =>
         db.drawPrize.create({
-          data: { name: p.name, quantity: p.quantity, order: idx },
+          data: { name: p.name, quantity: p.quantity, gift: p.gift || '', order: idx },
         })
       )
     );

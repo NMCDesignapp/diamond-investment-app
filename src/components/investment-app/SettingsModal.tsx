@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, X, Plus, Trash2, Diamond } from 'lucide-react';
+import { Settings, X, Plus, Trash2, Diamond, Gift } from 'lucide-react';
 import { useInvestmentStore, GiftTier } from '@/lib/investment-store';
 
 interface TierFormData {
@@ -15,6 +15,7 @@ interface TierFormData {
 interface DrawPrizeFormData {
   name: string;
   quantity: string;
+  gift: string;
 }
 
 export function SettingsModal() {
@@ -48,6 +49,7 @@ export function SettingsModal() {
         store.drawPrizes.map(p => ({
           name: p.name,
           quantity: String(p.quantity),
+          gift: p.gift || '',
         }))
       );
     }
@@ -87,7 +89,7 @@ export function SettingsModal() {
   };
 
   const addDrawPrize = () => {
-    setDrawPrizes([...drawPrizes, { name: 'Giải mới', quantity: '1' }]);
+    setDrawPrizes([...drawPrizes, { name: 'Giải mới', quantity: '1', gift: '' }]);
   };
 
   const removeDrawPrize = (idx: number) => {
@@ -114,7 +116,7 @@ export function SettingsModal() {
     await handleSaveEventInfo();
     await handleSaveTiers();
     await store.saveDrawPrizes(
-      drawPrizes.map(p => ({ name: p.name, quantity: parseInt(p.quantity) || 1 }))
+      drawPrizes.map(p => ({ name: p.name, quantity: parseInt(p.quantity) || 1, gift: p.gift }))
     );
     setIsOpen(false);
   };
@@ -326,18 +328,28 @@ export function SettingsModal() {
                             placeholder="Số lượng"
                             value={prize.quantity}
                             onChange={(e) => updateDrawPrize(idx, 'quantity', e.target.value)}
-                            className="w-24 p-2 rounded-lg outline-none transition-all text-sm"
+                            className="w-20 p-2 rounded-lg outline-none transition-all text-sm"
                             style={inputStyle}
                           />
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => removeDrawPrize(idx)}
-                            className="px-3 py-2 rounded-lg font-bold transition-colors shadow-sm"
+                            className="px-2 py-2 rounded-lg font-bold transition-colors shadow-sm"
                             style={{ background: 'rgba(239,68,68,0.2)', color: '#ef4444' }}
                           >
                             <Trash2 className="w-4 h-4" />
                           </motion.button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Gift className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#10b981' }} />
+                          <input
+                            placeholder="Quà tặng (VD: Tivi, Vàng...)"
+                            value={prize.gift}
+                            onChange={(e) => updateDrawPrize(idx, 'gift', e.target.value)}
+                            className="flex-1 p-2 rounded-lg outline-none transition-all text-sm"
+                            style={{ border: '1px solid rgba(52,211,153,0.25)', background: 'rgba(10,22,40,0.8)', color: '#34d399' }}
+                          />
                         </div>
                       </motion.div>
                     ))}
