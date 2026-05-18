@@ -215,10 +215,10 @@ export default function InvestmentApp() {
                 <thead className="sticky top-0 z-10">
                   <tr style={{ background: 'linear-gradient(135deg, #1a3560, #224a82)' }}>
                     <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center w-14" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>STT</th>
-                    <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center whitespace-nowrap" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>Khách Hàng</th>
-                    <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center whitespace-nowrap" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>TVV</th>
+                    <th className="px-3 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '15%' }}>Khách Hàng</th>
+                    <th className="px-3 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '12%' }}>TVV</th>
                     <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center whitespace-nowrap" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>Phí Đầu Tư</th>
-                    <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>Mức Quà</th>
+                    <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '22%' }}>Mức Quà</th>
                     <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center whitespace-nowrap" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>Giá Trị</th>
                     <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center w-28" style={{ color: '#ffe08a', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>Ghi Chú</th>
                   </tr>
@@ -241,8 +241,8 @@ export default function InvestmentApp() {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <td className="px-5 py-4 text-center font-bold text-3xl w-14" style={{ color: 'rgba(255,224,138,0.4)', borderRight: '1px solid rgba(255,224,138,0.12)' }}>{realIdx + 1}</td>
-                        <td className="px-5 py-4 text-left font-bold text-3xl whitespace-nowrap" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)' }}>{titleCase(realC.name)}</td>
-                        <td className="px-5 py-4 text-left text-2xl whitespace-nowrap" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)' }}>{titleCase(realC.advisor) || '—'}</td>
+                        <td className="px-3 py-4 text-left font-bold text-3xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', maxWidth: '15%' }}>{titleCase(realC.name)}</td>
+                        <td className="px-3 py-4 text-left text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', maxWidth: '12%' }}>{titleCase(realC.advisor) || '—'}</td>
                         <td className="px-5 py-4 text-center font-bold text-3xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.12)' }}>
                           {formatVND(realC.investmentFee * 1e6)}
                         </td>
