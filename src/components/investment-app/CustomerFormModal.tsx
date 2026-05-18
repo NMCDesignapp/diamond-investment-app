@@ -131,10 +131,16 @@ export function CustomerFormModal() {
           setEditingCustomer(null);
           setIsOpen(true);
         }}
-        className="p-0.5 hover:bg-white/5 rounded transition-all"
+        className="flex items-center justify-center rounded-full transition-all"
         title="Thêm khách hàng"
+        style={{
+          width: '36px', height: '36px',
+          border: '2px solid rgba(255,224,138,0.6)',
+          background: 'rgba(20,42,82,0.8)',
+          boxShadow: '0 0 8px rgba(255,224,138,0.15)',
+        }}
       >
-        <Plus className="w-3.5 h-3.5" style={{ color: 'rgba(212,168,67,0.5)' }} />
+        <Plus className="w-4 h-4" style={{ color: '#ffe08a' }} />
       </motion.button>
 
       <AnimatePresence>

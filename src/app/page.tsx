@@ -135,20 +135,29 @@ export default function InvestmentApp() {
               {store.eventInfo.date} &bull; {store.eventInfo.location}
             </p>
           </div>
-          {/* Right: small icon buttons */}
-          <div className="flex-1 flex flex-col items-end gap-1 pt-0.5">
-            <div className="flex items-center gap-0.5">
-              <Link href="/lucky-draw" title="Quay số may mắn">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="p-0.5 hover:bg-white/5 rounded transition-all"
+          {/* Right: icon buttons - vertical layout with gold borders */}
+          <div className="flex-1 flex flex-col items-end gap-1.5">
+            <Link href="/lucky-draw" title="Quay số may mắn">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="flex items-center justify-center rounded-full transition-all"
+                style={{
+                  width: '36px', height: '36px',
+                  border: '2px solid rgba(255,224,138,0.6)',
+                  background: 'rgba(20,42,82,0.8)',
+                  boxShadow: '0 0 8px rgba(255,224,138,0.15)',
+                }}
+              >
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
                 >
-                  <Dices className="w-3.5 h-3.5" style={{ color: 'rgba(255,224,138,0.6)' }} />
-                </motion.button>
-              </Link>
-              <SettingsModal />
-            </div>
+                  <Dices className="w-4 h-4" style={{ color: '#ffe08a' }} />
+                </motion.div>
+              </motion.button>
+            </Link>
+            <SettingsModal />
             <CustomerFormModal />
           </div>
         </div>

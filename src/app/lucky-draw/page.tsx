@@ -162,7 +162,7 @@ class BubbleSystem {
     this.centerY = this.canvas.height / 2;
     this.running = true;
     this.bubbles = [];
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 60; i++) {
       this.bubbles.push(this.createBubble());
     }
     this.animate();
@@ -174,7 +174,7 @@ class BubbleSystem {
     return {
       x: this.centerX + (Math.random() - 0.5) * 20,
       y: this.centerY + (Math.random() - 0.5) * 20,
-      r: 4 + Math.random() * 20,
+      r: 4 + Math.random() * 30,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
       opacity: 0.05 + Math.random() * 0.15,
@@ -205,8 +205,8 @@ class BubbleSystem {
       this.ctx.beginPath();
       this.ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
       this.ctx.fillStyle = b.hue === 45
-        ? `rgba(212, 168, 67, ${b.opacity})`
-        : `rgba(16, 185, 129, ${b.opacity * 0.6})`;
+        ? `rgba(255, 224, 138, ${b.opacity})`
+        : `rgba(52, 211, 153, ${b.opacity * 0.6})`;
       this.ctx.fill();
     }
     this.animFrame = requestAnimationFrame(this.animate);
@@ -219,12 +219,15 @@ type DrawMode = 'customer' | 'advisor';
 
 function titleCase(str: string) {
   if (!str) return '';
-  return str.replace(/\b\w/g, c => c.toUpperCase());
+  return str.split(/\s+/).map(word => {
+    if (!word) return word;
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }).join(' ');
 }
 
 // Slot item height - bigger for desktop projection
 const SLOT_ITEM_HEIGHT_MOBILE = 56;
-const SLOT_ITEM_HEIGHT_DESKTOP = 90;
+const SLOT_ITEM_HEIGHT_DESKTOP = 100;
 
 // LED strip component - runs around in circles
 function CircularLEDStrip() {
@@ -427,9 +430,10 @@ export default function LuckyDrawPage() {
     return track;
   }, [drawItems]);
 
-  // Start spinning
-  const startSpin = useCallback(() => {
-    if (isSpinning || drawItems.length === 0 || !currentPrize || currentPrize.remaining <= 0) return;
+  // Start spinning — optionally accepts prizeIndex to avoid stale closure
+  const startSpin = useCallback((overridePrizeIndex?: number) => {
+    const prize = overridePrizeIndex !== undefined ? prizes[overridePrizeIndex] : currentPrize;
+    if (isSpinning || drawItems.length === 0 || !prize || prize.remaining <= 0) return;
 
     const trackEl = getTrackRef();
     if (!trackEl) return;
@@ -455,9 +459,9 @@ export default function LuckyDrawPage() {
         div.textContent = name;
         div.style.cssText = `
           height: ${itemH}px; display: flex; align-items: center; justify-content: center;
-          font-size: ${isDesktop ? '48px' : '24px'}; font-weight: 800; color: #d4a843; white-space: nowrap;
+          font-size: ${isDesktop ? '48px' : '24px'}; font-weight: 800; color: ${isDesktop ? '#ffe08a' : '#d4a843'}; white-space: nowrap;
           padding: 0 ${isDesktop ? '50px' : '20px'}; text-align: center; letter-spacing: 0.05em;
-          text-shadow: 0 0 10px rgba(212,168,67,0.3);
+          text-shadow: 0 0 10px ${isDesktop ? 'rgba(255,224,138,0.3)' : 'rgba(212,168,67,0.3)'};
         `;
         trackEl.appendChild(div);
       }
@@ -470,7 +474,7 @@ export default function LuckyDrawPage() {
       trackEl.style.transition = 'transform 5s linear';
       trackEl.style.transform = `translateY(-${scrollDistance}px)`;
     });
-  }, [isSpinning, drawItems, currentPrize, buildTrack, getTrackRef]);
+  }, [isSpinning, drawItems, currentPrize, prizes, buildTrack, getTrackRef]);
 
   // Stop spinning
   const stopSpin = useCallback(() => {
@@ -579,9 +583,7 @@ export default function LuckyDrawPage() {
     if (drawItems.length === 0) return;
 
     setCurrentPrizeIndex(prizeIndex);
-    setTimeout(() => {
-      startSpin();
-    }, 50);
+    startSpin(prizeIndex);
   }, [isSpinning, prizes, drawItems.length, startSpin]);
 
   // Settings handlers
@@ -846,40 +848,40 @@ export default function LuckyDrawPage() {
 
         {/* === LEFT SIDEBAR: Continuous from top to bottom === */}
         {/* Customer 2/3, Prize+Gift 1/3 — no title/header cutting across */}
-        <div className="w-[22%] min-w-[280px] max-w-[380px] flex flex-col" style={{ background: 'rgba(8,16,32,0.95)', borderRight: '2px solid rgba(212,168,67,0.3)' }}>
+        <div className="w-[22%] min-w-[280px] max-w-[380px] flex flex-col" style={{ background: 'rgba(12,24,48,0.95)', borderRight: '2px solid rgba(232,184,74,0.35)' }}>
 
           {/* CUSTOMERS section — 2/3 height */}
           <div className="flex-[2] min-h-0 flex flex-col">
-            <div className="flex-shrink-0 flex items-center px-3 py-2" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
-              <Users className="w-4 h-4" style={{ color: '#f5d870' }} />
-              <span style={{ color: '#f5d870' }} className="font-extrabold text-sm uppercase ml-1.5">Khách Hàng</span>
-              <span style={{ color: 'rgba(212,168,67,0.6)' }} className="text-xs ml-1">({allCustomers.length})</span>
-              <div className="ml-auto flex gap-0.5 p-0.5 rounded" style={{ background: 'rgba(10,22,40,0.6)' }}>
+            <div className="flex-shrink-0 flex items-center px-3 py-2" style={{ background: 'linear-gradient(135deg, #142a52, #1c3a6e)', borderBottom: '1px solid rgba(232,184,74,0.35)' }}>
+              <Users className="w-4 h-4" style={{ color: '#ffe08a' }} />
+              <span style={{ color: '#ffe08a' }} className="font-extrabold text-sm uppercase ml-1.5">Khách Hàng</span>
+              <span style={{ color: 'rgba(232,184,74,0.6)' }} className="text-xs ml-1">({allCustomers.length})</span>
+              <div className="ml-auto flex gap-0.5 p-0.5 rounded" style={{ background: 'rgba(15,34,64,0.6)' }}>
                 <button onClick={() => setDrawMode('customer')} className="px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-all"
-                  style={{ background: drawMode === 'customer' ? 'linear-gradient(135deg, #d4a843, #c9a227)' : 'transparent', color: drawMode === 'customer' ? '#0a1628' : 'rgba(212,168,67,0.5)' }}>KH</button>
+                  style={{ background: drawMode === 'customer' ? 'linear-gradient(135deg, #e8b84a, #c9a227)' : 'transparent', color: drawMode === 'customer' ? '#0f2240' : 'rgba(232,184,74,0.5)' }}>KH</button>
                 <button onClick={() => setDrawMode('advisor')} className="px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-all"
-                  style={{ background: drawMode === 'advisor' ? 'linear-gradient(135deg, #d4a843, #c9a227)' : 'transparent', color: drawMode === 'advisor' ? '#0a1628' : 'rgba(212,168,67,0.5)' }}>TVV</button>
+                  style={{ background: drawMode === 'advisor' ? 'linear-gradient(135deg, #e8b84a, #c9a227)' : 'transparent', color: drawMode === 'advisor' ? '#0f2240' : 'rgba(232,184,74,0.5)' }}>TVV</button>
               </div>
               <motion.button whileTap={{ scale: 0.9 }} onClick={() => setAutoScroll(!autoScroll)} className="ml-1 p-1 rounded transition-all"
-                style={{ background: autoScroll ? 'rgba(13,90,63,0.3)' : 'rgba(212,168,67,0.1)', color: autoScroll ? '#10b981' : 'rgba(212,168,67,0.4)' }}
+                style={{ background: autoScroll ? 'rgba(52,211,153,0.2)' : 'rgba(232,184,74,0.1)', color: autoScroll ? '#34d399' : 'rgba(232,184,74,0.4)' }}
                 title={autoScroll ? 'Tắt cuộn' : 'Bật cuộn'}>
                 {autoScroll ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
               </motion.button>
             </div>
-            <div ref={customerTableRef} className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#d4a843 transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
+            <div ref={customerTableRef} className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
               {(autoScroll ? [0, 1] : [0]).map(dup => (
                 <div key={dup}>
                   {allCustomers.map((c, idx) => {
                     const isWon = wonCustomerIds.has(c.id);
                     return (
                       <div key={`${c.id}-${dup}`} className="flex items-center px-3 py-2 transition-colors"
-                        style={{ borderBottom: '1px solid rgba(212,168,67,0.06)', background: isWon ? 'rgba(13,90,63,0.08)' : 'transparent', opacity: isWon ? 0.4 : 1 }}>
-                        <span className="font-mono text-xs w-6 flex-shrink-0" style={{ color: 'rgba(212,168,67,0.25)' }}>{idx + 1}</span>
+                        style={{ borderBottom: '1px solid rgba(232,184,74,0.08)', background: isWon ? 'rgba(52,211,153,0.06)' : 'transparent', opacity: isWon ? 0.4 : 1 }}>
+                        <span className="font-mono text-xs w-6 flex-shrink-0" style={{ color: 'rgba(232,184,74,0.3)' }}>{idx + 1}</span>
                         <div className="flex-1 min-w-0">
-                          <span className={`text-sm font-bold truncate block ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(212,168,67,0.25)' : '#f5d870' }}>{titleCase(c.name)}</span>
-                          {c.advisor && <span className="text-[11px] italic block" style={{ color: isWon ? 'rgba(212,168,67,0.1)' : 'rgba(212,168,67,0.45)' }}>TVV {titleCase(c.advisor)}</span>}
+                          <span className={`text-sm font-bold truncate block ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(232,184,74,0.25)' : '#ffe08a' }}>{titleCase(c.name)}</span>
+                          {c.advisor && <span className="text-[11px] italic block" style={{ color: isWon ? 'rgba(232,184,74,0.12)' : 'rgba(232,184,74,0.5)' }}>TVV {titleCase(c.advisor)}</span>}
                         </div>
-                        {isWon && <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: 'rgba(13,90,63,0.3)', color: '#10b981' }}>Trúng</span>}
+                        {isWon && <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: 'rgba(52,211,153,0.2)', color: '#34d399' }}>Trúng</span>}
                       </div>
                     );
                   })}
@@ -889,10 +891,10 @@ export default function LuckyDrawPage() {
           </div>
 
           {/* PRIZE + GIFT section — 1/3 height — only "Giải X - Tên quà" format */}
-          <div className="flex-[1] min-h-0 flex flex-col" style={{ borderTop: '1px solid rgba(212,168,67,0.2)' }}>
-            <div className="flex-shrink-0 flex items-center px-3 py-2" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
-              <Gift className="w-4 h-4" style={{ color: '#f5d870' }} />
-              <span style={{ color: '#f5d870' }} className="font-extrabold text-sm uppercase ml-1.5">Giải & Quà</span>
+          <div className="flex-[1] min-h-0 flex flex-col" style={{ borderTop: '1px solid rgba(232,184,74,0.25)' }}>
+            <div className="flex-shrink-0 flex items-center px-3 py-2" style={{ background: 'linear-gradient(135deg, #142a52, #1c3a6e)', borderBottom: '1px solid rgba(232,184,74,0.35)' }}>
+              <Gift className="w-4 h-4" style={{ color: '#ffe08a' }} />
+              <span style={{ color: '#ffe08a' }} className="font-extrabold text-sm uppercase ml-1.5">Giải & Quà</span>
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto px-2 py-2 space-y-1" style={{ fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
               {prizes.length > 0 && prizes.map((prize, idx) => {
@@ -910,24 +912,24 @@ export default function LuckyDrawPage() {
                       background: idx === currentPrizeIndex && isSpinning
                         ? 'linear-gradient(135deg, #0d5a3f, #0a7a4a)'
                         : prize.remaining <= 0
-                          ? 'rgba(15,32,66,0.5)'
-                          : 'rgba(22,45,80,0.6)',
+                          ? 'rgba(20,42,82,0.5)'
+                          : 'rgba(28,58,110,0.6)',
                       border: idx === currentPrizeIndex && isSpinning
-                        ? '1px solid #10b981'
+                        ? '1px solid #34d399'
                         : prize.remaining <= 0
-                          ? '1px solid rgba(212,168,67,0.1)'
-                          : '1px solid rgba(212,168,67,0.3)',
-                      color: prize.remaining <= 0 ? 'rgba(212,168,67,0.25)' : '#f5d870',
+                          ? '1px solid rgba(232,184,74,0.12)'
+                          : '1px solid rgba(232,184,74,0.35)',
+                      color: prize.remaining <= 0 ? 'rgba(232,184,74,0.25)' : '#ffe08a',
                       cursor: !isAvailable ? 'not-allowed' : 'pointer',
-                      boxShadow: idx === currentPrizeIndex && isSpinning ? '0 0 15px rgba(16,185,129,0.3)' : 'none',
+                      boxShadow: idx === currentPrizeIndex && isSpinning ? '0 0 15px rgba(52,211,153,0.3)' : 'none',
                     }}
                   >
                     <IconComp className="w-4 h-4 flex-shrink-0" />
                     <span className="flex-1 text-left">Giải {idx + 1} - {prize.name}</span>
                     <span className="text-xs px-1.5 py-0.5 rounded-full"
                       style={{
-                        background: prize.remaining <= 0 ? 'rgba(212,168,67,0.08)' : 'rgba(13,90,63,0.3)',
-                        color: prize.remaining <= 0 ? 'rgba(212,168,67,0.2)' : '#10b981',
+                        background: prize.remaining <= 0 ? 'rgba(232,184,74,0.08)' : 'rgba(52,211,153,0.2)',
+                        color: prize.remaining <= 0 ? 'rgba(232,184,74,0.2)' : '#34d399',
                       }}>
                       {prize.remaining}
                     </span>
@@ -935,14 +937,14 @@ export default function LuckyDrawPage() {
                 );
               })}
               {prizes.length === 0 && (
-                <p className="text-xs text-center py-4 italic" style={{ color: 'rgba(212,168,67,0.3)' }}>Chưa có giải. Thêm trong Cài đặt</p>
+                <p className="text-xs text-center py-4 italic" style={{ color: 'rgba(232,184,74,0.3)' }}>Chưa có giải. Thêm trong Cài đặt</p>
               )}
             </div>
           </div>
         </div>
 
         {/* === RIGHT: Title + Slot Machine + Winner List + Bubble BG === */}
-        <div className="flex-1 min-h-0 flex flex-col relative" style={{ background: '#0a1628' }}>
+        <div className="flex-1 min-h-0 flex flex-col relative" style={{ background: '#0f2240' }}>
 
           {/* Bubble canvas background */}
           <canvas
@@ -952,7 +954,7 @@ export default function LuckyDrawPage() {
 
           {/* Background glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[80%] rounded-full blur-3xl pointer-events-none z-0"
-            style={{ background: 'radial-gradient(ellipse, rgba(212,168,67,0.08) 0%, transparent 60%)' }} />
+            style={{ background: 'radial-gradient(ellipse, rgba(255,224,138,0.1) 0%, transparent 60%)' }} />
 
           {/* Title bar — aligned with slot machine area, NOT cutting sidebar */}
           <div className="flex-shrink-0 relative z-10 px-8 pt-4 pb-2 flex items-center justify-between">
@@ -960,38 +962,38 @@ export default function LuckyDrawPage() {
               <Link href="/" title="Quay lại">
                 <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                   className="p-1.5 hover:bg-white/5 rounded-lg transition-all">
-                  <ArrowLeft className="w-5 h-5" style={{ color: '#d4a843' }} />
+                  <ArrowLeft className="w-5 h-5" style={{ color: '#e8b84a' }} />
                 </motion.button>
               </Link>
               <motion.div animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}>
-                <Diamond className="w-8 h-8" style={{ color: '#f5d870' }} />
+                <Diamond className="w-8 h-8" style={{ color: '#ffe08a' }} />
               </motion.div>
-              <h1 className="text-4xl font-black uppercase tracking-wider animate-neon-pulse" style={{ color: '#f5d870' }}>
+              <h1 className="text-4xl font-black uppercase tracking-wider animate-neon-pulse" style={{ color: '#ffe08a' }}>
                 Quay Số May Mắn
               </h1>
             </div>
             <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
               onClick={() => { setSettingsOpen(true); setSettingsAuthenticated(false); }}
               className="p-2 hover:bg-white/5 rounded-lg transition-all" title="Cài đặt">
-              <Settings className="w-6 h-6" style={{ color: '#d4a843' }} />
+              <Settings className="w-6 h-6" style={{ color: '#e8b84a' }} />
             </motion.button>
           </div>
 
-          {/* Slot Machine — moved up, no separate spin button */}
-          <div className="flex-shrink-0 relative z-10 px-8 pt-0 pb-2">
+          {/* Slot Machine — takes majority of the right side */}
+          <div className="flex-[7] min-h-0 relative z-10 px-8 pt-0 pb-2 flex flex-col justify-center">
             {/* Prize indicator */}
             {currentPrize && (
               <div className="flex items-center justify-center gap-3 mb-2">
-                <Crown className="w-8 h-8" style={{ color: '#f5d870' }} />
-                <span className="font-extrabold text-2xl" style={{ color: '#f5d870' }}>{currentPrize.name}</span>
-                <span className="text-lg" style={{ color: 'rgba(212,168,67,0.5)' }}>(còn {currentPrize.remaining})</span>
+                <Crown className="w-8 h-8" style={{ color: '#ffe08a' }} />
+                <span className="font-extrabold text-2xl" style={{ color: '#ffe08a' }}>{currentPrize.name}</span>
+                <span className="text-lg" style={{ color: 'rgba(232,184,74,0.5)' }}>(còn {currentPrize.remaining})</span>
               </div>
             )}
 
-            <div className={`relative w-full max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl transition-shadow duration-1000 ${canSpin ? 'animate-pulse-shadow' : ''}`}
+            <div className={`relative w-full max-w-6xl mx-auto rounded-2xl overflow-hidden shadow-2xl transition-shadow duration-1000 ${canSpin ? 'animate-pulse-shadow' : ''}`}
               style={{
-                background: 'linear-gradient(180deg, #0f2042 0%, #162d50 50%, #0f2042 100%)',
-                boxShadow: isSpinning ? '0 0 80px rgba(212,168,67,0.5), inset 0 0 50px rgba(212,168,67,0.08)' : canSpin ? '0 0 60px rgba(212,168,67,0.4), inset 0 0 50px rgba(212,168,67,0.08)' : '0 0 30px rgba(212,168,67,0.15), inset 0 0 25px rgba(212,168,67,0.04)',
+                background: 'linear-gradient(180deg, #142a52 0%, #1c3a6e 30%, #1c3a6e 70%, #142a52 100%)',
+                boxShadow: isSpinning ? '0 0 100px rgba(255,224,138,0.6), inset 0 0 60px rgba(255,224,138,0.1)' : canSpin ? '0 0 80px rgba(255,224,138,0.45), inset 0 0 60px rgba(255,224,138,0.08)' : '0 0 40px rgba(255,224,138,0.2), inset 0 0 30px rgba(255,224,138,0.04)',
               }}>
               {/* LED strip running around in circles */}
               <CircularLEDStrip />
@@ -999,15 +1001,15 @@ export default function LuckyDrawPage() {
               {/* Slot viewport - 5 items visible */}
               <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 5}px` }}>
                 <div className="absolute inset-0 pointer-events-none z-10">
-                  <div className="absolute top-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 2}px`, background: 'linear-gradient(to bottom, rgba(15,32,66,1) 0%, rgba(15,32,66,0.95) 30%, rgba(15,32,66,0.7) 60%, rgba(15,32,66,0.3) 85%, transparent 100%)' }} />
-                  <div className="absolute bottom-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 2}px`, background: 'linear-gradient(to top, rgba(15,32,66,1) 0%, rgba(15,32,66,0.95) 30%, rgba(15,32,66,0.7) 60%, rgba(15,32,66,0.3) 85%, transparent 100%)' }} />
-                  <div className="absolute left-0 right-0" style={{ top: `calc(50% - ${SLOT_ITEM_HEIGHT_DESKTOP / 2}px)`, height: `${SLOT_ITEM_HEIGHT_DESKTOP}px`, borderTop: '3px solid rgba(212,168,67,0.6)', borderBottom: '3px solid rgba(212,168,67,0.6)', background: 'rgba(212,168,67,0.1)' }} />
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2"><div className="w-0 h-0" style={{ borderTop: '14px solid transparent', borderBottom: '14px solid transparent', borderLeft: '20px solid #d4a843' }} /></div>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2"><div className="w-0 h-0" style={{ borderTop: '14px solid transparent', borderBottom: '14px solid transparent', borderRight: '20px solid #d4a843' }} /></div>
+                  <div className="absolute top-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 2}px`, background: 'linear-gradient(to bottom, rgba(20,42,82,1) 0%, rgba(20,42,82,0.95) 30%, rgba(20,42,82,0.7) 60%, rgba(20,42,82,0.3) 85%, transparent 100%)' }} />
+                  <div className="absolute bottom-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 2}px`, background: 'linear-gradient(to top, rgba(20,42,82,1) 0%, rgba(20,42,82,0.95) 30%, rgba(20,42,82,0.7) 60%, rgba(20,42,82,0.3) 85%, transparent 100%)' }} />
+                  <div className="absolute left-0 right-0" style={{ top: `calc(50% - ${SLOT_ITEM_HEIGHT_DESKTOP / 2}px)`, height: `${SLOT_ITEM_HEIGHT_DESKTOP}px`, borderTop: '3px solid rgba(255,224,138,0.7)', borderBottom: '3px solid rgba(255,224,138,0.7)', background: 'rgba(255,224,138,0.12)' }} />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2"><div className="w-0 h-0" style={{ borderTop: '20px solid transparent', borderBottom: '20px solid transparent', borderLeft: '28px solid #ffe08a' }} /></div>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2"><div className="w-0 h-0" style={{ borderTop: '20px solid transparent', borderBottom: '20px solid transparent', borderRight: '28px solid #ffe08a' }} /></div>
                 </div>
                 {!isSpinning && !showResult && (
                   <div className="absolute inset-0 flex items-center justify-center z-[5]">
-                    <p className="text-3xl font-medium" style={{ color: 'rgba(212,168,67,0.4)' }}>
+                    <p className="text-3xl font-medium" style={{ color: 'rgba(255,224,138,0.4)' }}>
                       {prizes.length === 0 ? 'Thêm giải thưởng trong Cài đặt' : drawItems.length === 0 ? 'Không có người tham gia' : 'Nhấn nút giải thưởng bên trái để quay số'}
                     </p>
                   </div>
@@ -1017,17 +1019,17 @@ export default function LuckyDrawPage() {
             </div>
           </div>
 
-          {/* Winner list below slot machine — integrated stop/spin into each row */}
-          <div className="flex-1 min-h-0 flex flex-col relative z-10 px-8 pb-4">
-            <div className="flex-shrink-0 flex items-center px-4 py-2 rounded-t-xl" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
-              <Trophy className="w-4 h-4" style={{ color: '#f5d870' }} />
-              <span style={{ color: '#f5d870' }} className="font-extrabold text-sm uppercase ml-1.5">Danh Sách Trúng Giải</span>
-              <span style={{ color: 'rgba(212,168,67,0.6)' }} className="text-xs ml-1">({winners.length})</span>
+          {/* Winner list below slot machine — compact/thin */}
+          <div className="flex-[3] min-h-0 flex flex-col relative z-10 px-8 pb-4">
+            <div className="flex-shrink-0 flex items-center px-3 py-1.5 rounded-t-xl" style={{ background: 'linear-gradient(135deg, #142a52, #1c3a6e)', borderBottom: '1px solid rgba(255,224,138,0.3)' }}>
+              <Trophy className="w-3.5 h-3.5" style={{ color: '#ffe08a' }} />
+              <span style={{ color: '#ffe08a' }} className="font-extrabold text-xs uppercase ml-1.5">Danh Sách Trúng Giải</span>
+              <span style={{ color: 'rgba(232,184,74,0.6)' }} className="text-xs ml-1">({winners.length})</span>
             </div>
-            <div className="flex-1 min-h-0 overflow-y-auto rounded-b-xl" style={{ background: 'rgba(10,22,40,0.9)', scrollbarWidth: 'thin', scrollbarColor: '#d4a843 transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
+            <div className="flex-1 min-h-0 overflow-y-auto rounded-b-xl" style={{ background: 'rgba(25,52,95,0.92)', scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
               {winners.length === 0 ? (
-                <div className="flex items-center justify-center py-8">
-                  <p className="text-lg italic" style={{ color: 'rgba(212,168,67,0.25)' }}>Chưa có người trúng giải</p>
+                <div className="flex items-center justify-center py-4">
+                  <p className="text-sm italic" style={{ color: 'rgba(255,224,138,0.25)' }}>Chưa có người trúng giải</p>
                 </div>
               ) : (
                 [...winners].reverse().map((winner, idx) => {
@@ -1035,20 +1037,20 @@ export default function LuckyDrawPage() {
                   return (
                     <div
                       key={`${winner.id}-${idx}`}
-                      className="flex items-center px-4 py-2.5 transition-all"
+                      className="flex items-center px-3 py-1.5 transition-all"
                       style={{
                         background: isLatest
-                          ? 'linear-gradient(90deg, rgba(212,168,67,0.15) 0%, rgba(212,168,67,0.08) 50%, rgba(212,168,67,0.15) 100%)'
-                          : 'rgba(212,168,67,0.03)',
-                        borderBottom: '1px solid rgba(212,168,67,0.08)',
+                          ? 'linear-gradient(90deg, rgba(255,224,138,0.15) 0%, rgba(255,224,138,0.08) 50%, rgba(255,224,138,0.15) 100%)'
+                          : 'rgba(255,224,138,0.03)',
+                        borderBottom: '1px solid rgba(255,224,138,0.08)',
                       }}
                     >
-                      <span className="font-mono text-sm w-8 flex-shrink-0 font-bold" style={{ color: isLatest ? '#f5d870' : 'rgba(212,168,67,0.3)' }}>{winners.length - idx}</span>
-                      <span className="text-lg font-bold truncate" style={{ color: isLatest ? '#f5d870' : 'rgba(212,168,67,0.7)' }}>{titleCase(winner.customerName)}</span>
-                      {winner.advisor && <span className="text-sm italic ml-3" style={{ color: 'rgba(212,168,67,0.4)' }}>TVV {titleCase(winner.advisor)}</span>}
-                      <span className="ml-auto text-sm font-semibold px-3 py-1 rounded-full" style={{
-                        background: isLatest ? 'rgba(212,168,67,0.2)' : 'rgba(13,90,63,0.15)',
-                        color: isLatest ? '#f5d870' : '#10b981',
+                      <span className="font-mono text-xs w-6 flex-shrink-0 font-bold" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.3)' }}>{winners.length - idx}</span>
+                      <span className="text-sm font-bold truncate" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.7)' }}>{titleCase(winner.customerName)}</span>
+                      {winner.advisor && <span className="text-xs italic ml-2" style={{ color: 'rgba(232,184,74,0.4)' }}>TVV {titleCase(winner.advisor)}</span>}
+                      <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full" style={{
+                        background: isLatest ? 'rgba(255,224,138,0.2)' : 'rgba(52,211,153,0.15)',
+                        color: isLatest ? '#ffe08a' : '#34d399',
                       }}>
                         {winner.prizeName}
                       </span>
@@ -1070,8 +1072,8 @@ export default function LuckyDrawPage() {
                 className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none"
               >
                 <div className="max-w-3xl mx-auto rounded-2xl p-8 text-center" style={{
-                  background: 'rgba(10,22,40,0.95)',
-                  boxShadow: '0 0 60px rgba(212,168,67,0.3), 0 0 120px rgba(212,168,67,0.1)',
+                  background: 'rgba(15,34,64,0.95)',
+                  boxShadow: '0 0 60px rgba(255,224,138,0.35), 0 0 120px rgba(255,224,138,0.12)',
                   border: 'none',
                 }}>
                   {/* LED strip around winner popup */}
@@ -1097,10 +1099,10 @@ export default function LuckyDrawPage() {
                       ))}
                     </div>
                   </div>
-                  <p className="text-sm uppercase tracking-wider mb-1" style={{ color: 'rgba(212,168,67,0.5)' }}>Chúc mừng người trúng giải</p>
-                  <p className="text-5xl font-black mb-1 animate-neon-pulse" style={{ color: '#f5d870' }}>{currentWinner.customerName}</p>
-                  {drawMode === 'customer' && currentWinner.advisor && <p className="text-xl" style={{ color: 'rgba(212,168,67,0.6)' }}>TVV: {currentWinner.advisor}</p>}
-                  <p className="text-2xl font-semibold mt-1" style={{ color: '#d4a843' }}>{currentWinner.prizeName}</p>
+                  <p className="text-sm uppercase tracking-wider mb-1" style={{ color: 'rgba(232,184,74,0.5)' }}>Chúc mừng người trúng giải</p>
+                  <p className="text-5xl font-black mb-1 animate-neon-pulse" style={{ color: '#ffe08a' }}>{currentWinner.customerName}</p>
+                  {drawMode === 'customer' && currentWinner.advisor && <p className="text-xl" style={{ color: 'rgba(232,184,74,0.6)' }}>TVV: {currentWinner.advisor}</p>}
+                  <p className="text-2xl font-semibold mt-1" style={{ color: '#e8b84a' }}>{currentWinner.prizeName}</p>
                 </div>
               </motion.div>
             )}

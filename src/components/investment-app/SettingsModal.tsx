@@ -131,10 +131,16 @@ export function SettingsModal() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(true)}
-        className="p-0.5 hover:bg-white/5 rounded transition-all"
+        className="flex items-center justify-center rounded-full transition-all"
         title="Cài đặt"
+        style={{
+          width: '36px', height: '36px',
+          border: '2px solid rgba(255,224,138,0.6)',
+          background: 'rgba(20,42,82,0.8)',
+          boxShadow: '0 0 8px rgba(255,224,138,0.15)',
+        }}
       >
-        <Settings className="w-3.5 h-3.5" style={{ color: 'rgba(212,168,67,0.5)' }} />
+        <Settings className="w-4 h-4" style={{ color: '#ffe08a' }} />
       </motion.button>
 
       <AnimatePresence>
