@@ -342,9 +342,8 @@ export default function LuckyDrawPage() {
   const [newPrizeQty, setNewPrizeQty] = useState('1');
   const [newPrizeGift, setNewPrizeGift] = useState('');
 
-  // Auto scroll - always on by default
-  const [autoScroll, setAutoScroll] = useState(true);
-  const [winnerAutoScroll, setWinnerAutoScroll] = useState(true);
+  // Auto scroll - customer list always on, winner list manual scroll
+  const [autoScroll] = useState(true);
 
   // Track whether prizes have been initialized from store
   const [localPrizeOverrides, setLocalPrizeOverrides] = useState<Prize[] | null>(null);
@@ -485,31 +484,7 @@ export default function LuckyDrawPage() {
     };
   }, [allCustomers.length, wonCustomerIds.size]);
 
-  // BUG 4 FIX: Auto-scroll for winner table (bottom to top)
-  useEffect(() => {
-    const el = winnerTableRef.current;
-    if (!el || !winnerAutoScroll) return;
-    let scrollPos = el.scrollHeight;
-    el.scrollTop = scrollPos;
-    const speed = 0.5;
-    let animId: number;
-    const scroll = () => {
-      scrollPos -= speed;
-      if (scrollPos <= 0) {
-        scrollPos = el.scrollHeight / 2;
-      }
-      el.scrollTop = scrollPos;
-      animId = requestAnimationFrame(scroll);
-    };
-    animId = requestAnimationFrame(scroll);
-    return () => cancelAnimationFrame(animId);
-  }, [winnerAutoScroll, winners]);
-
-  useEffect(() => {
-    if (!winnerAutoScroll && winnerTableRef.current) {
-      winnerTableRef.current.scrollTop = 0;
-    }
-  }, [winnerAutoScroll]);
+  // Winner table: manual scroll only (no auto-scroll)
 
   // Build track for slot machine
   const buildTrack = useCallback(() => {
@@ -1027,7 +1002,7 @@ export default function LuckyDrawPage() {
             <div className="flex-shrink-0 flex items-center px-3 py-1.5" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50)', borderBottom: '1px solid rgba(212,168,67,0.3)' }}>
               <div className="flex-1 flex items-center gap-1.5">
                 <Users className="w-4 h-4" style={{ color: '#f5d870' }} />
-                <span style={{ color: '#f5d870' }} className="font-extrabold text-sm uppercase">DS Tham Dự</span>
+                <span style={{ color: '#f5d870' }} className="font-extrabold text-base uppercase">DS Tham Dự</span>
                 <span style={{ color: 'rgba(212,168,67,0.6)' }} className="text-xs">({allCustomers.length})</span>
               </div>
               <div className="flex gap-0.5 p-0.5 rounded-md" style={{ background: 'rgba(10,22,40,0.6)' }}>
@@ -1081,7 +1056,7 @@ export default function LuckyDrawPage() {
           <div className="flex-[2] min-h-0 flex flex-col">
             <div className="flex-shrink-0 flex items-center px-3 py-2" style={{ background: 'linear-gradient(135deg, #142a52, #1c3a6e)', borderBottom: '1px solid rgba(232,184,74,0.35)' }}>
               <Users className="w-4 h-4" style={{ color: '#ffe08a' }} />
-              <span style={{ color: '#ffe08a' }} className="font-extrabold text-sm uppercase ml-1.5">Khách Hàng</span>
+              <span style={{ color: '#ffe08a' }} className="font-extrabold text-base uppercase ml-1.5">Khách Hàng</span>
               <span style={{ color: 'rgba(232,184,74,0.6)' }} className="text-xs ml-1">({allCustomers.length})</span>
               <div className="ml-auto flex gap-0.5 p-0.5 rounded" style={{ background: 'rgba(15,34,64,0.6)' }}>
                 <button onClick={() => setDrawMode('customer')} className="px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-all"
@@ -1116,7 +1091,7 @@ export default function LuckyDrawPage() {
           <div className="flex-[1] min-h-0 flex flex-col" style={{ borderTop: '1px solid rgba(232,184,74,0.25)' }}>
             <div className="flex-shrink-0 flex items-center px-3 py-2" style={{ background: 'linear-gradient(135deg, #142a52, #1c3a6e)', borderBottom: '1px solid rgba(232,184,74,0.35)' }}>
               <Gift className="w-4 h-4" style={{ color: '#ffe08a' }} />
-              <span style={{ color: '#ffe08a' }} className="font-extrabold text-sm uppercase ml-1.5">Giải & Quà</span>
+              <span style={{ color: '#ffe08a' }} className="font-extrabold text-base uppercase ml-1.5">Giải & Quà</span>
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto px-2 py-2 space-y-1" style={{ fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
               {prizes.length > 0 && prizes.map((prize, idx) => {
@@ -1334,18 +1309,12 @@ export default function LuckyDrawPage() {
 
           {/* Winner list below slot machine — compact, dark transparent bg */}
           <div className="flex-[2.5] min-h-0 flex flex-col relative z-10 px-8 pb-4">
-            {/* BUG 5 FIX: Centered title with divider and auto-scroll toggle */}
+            {/* Centered title with divider - no auto-scroll toggle */}
             <div className="flex-shrink-0 flex items-center justify-center py-2">
               <div className="flex-1 h-px" style={{ background: 'rgba(255,224,138,0.2)' }} />
-              <span style={{ color: '#ffe08a' }} className="font-extrabold text-3xl uppercase mx-3">DS Khách Hàng Trúng Giải</span>
+              <span style={{ color: '#ffe08a' }} className="font-extrabold text-4xl uppercase mx-3">DS Khách Hàng Trúng Giải</span>
               <span style={{ color: 'rgba(232,184,74,0.5)' }} className="text-2xl">({winners.length})</span>
               <div className="flex-1 h-px" style={{ background: 'rgba(255,224,138,0.2)' }} />
-              {/* BUG 4 FIX: Auto-scroll toggle for winner list */}
-              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setWinnerAutoScroll(!winnerAutoScroll)} className="ml-2 p-1 rounded transition-all"
-                style={{ background: winnerAutoScroll ? 'rgba(52,211,153,0.2)' : 'rgba(232,184,74,0.1)', color: winnerAutoScroll ? '#34d399' : 'rgba(232,184,74,0.4)' }}
-                title={winnerAutoScroll ? 'Tắt cuộn' : 'Bật cuộn'}>
-                {winnerAutoScroll ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              </motion.button>
             </div>
             <div ref={winnerTableRef} className="flex-1 min-h-0 overflow-y-auto rounded-lg" style={{ background: 'rgba(0,0,0,0.4)', scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
               {winners.length === 0 ? (
@@ -1353,18 +1322,16 @@ export default function LuckyDrawPage() {
                   <p className="text-2xl italic" style={{ color: 'rgba(255,224,138,0.2)' }}>Chưa có người trúng giải</p>
                 </div>
               ) : (
-                (winnerAutoScroll ? [0, 1] : [0]).map(dup => (
-                  <div key={dup}>
-                    {[...winners].reverse().map((winner, idx) => {
-                      const isLatest = idx === 0 && showResult;
-                      return (
-                        <div
-                          key={`${winner.id}-${idx}-${dup}`}
-                          className="flex items-center px-4 py-2.5 transition-all"
-                          style={{
-                            background: isLatest ? 'rgba(255,224,138,0.1)' : 'transparent',
-                            borderBottom: '1px solid rgba(255,224,138,0.06)',
-                          }}
+                [...winners].reverse().map((winner, idx) => {
+                  const isLatest = idx === 0 && showResult;
+                  return (
+                    <div
+                      key={`${winner.id}-${idx}`}
+                      className="flex items-center px-4 py-2.5 transition-all"
+                      style={{
+                        background: isLatest ? 'rgba(255,224,138,0.1)' : 'transparent',
+                        borderBottom: '1px solid rgba(255,224,138,0.06)',
+                      }}
                         >
                           <span className="font-mono text-2xl w-10 flex-shrink-0 font-bold" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.25)' }}>{winners.length - idx}</span>
                           <span className="text-2xl font-bold truncate" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.6)' }}>{titleCase(winner.customerName)}</span>
@@ -1373,9 +1340,7 @@ export default function LuckyDrawPage() {
                           {winner.gift && <span className="text-xl ml-3" style={{ color: 'rgba(232,184,74,0.5)' }}>🎁 {winner.gift}</span>}
                         </div>
                       );
-                    })}
-                  </div>
-                ))
+                    })
               )}
             </div>
           </div>
