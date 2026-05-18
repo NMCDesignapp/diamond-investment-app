@@ -320,6 +320,7 @@ export default function LuckyDrawPage() {
   const fireworkCanvasRef = useRef<HTMLCanvasElement>(null);
   const fireworkRef = useRef<FireworkSystem | null>(null);
   const customerTableRef = useRef<HTMLDivElement>(null);
+  const customerTableDesktopRef = useRef<HTMLDivElement>(null);
   const winnerTableRef = useRef<HTMLDivElement>(null);
 
   // State
@@ -457,30 +458,38 @@ export default function LuckyDrawPage() {
   }, []);
 
   // Auto-scroll for customer table - ALWAYS ON, bottom to top, continuous loop
+  // Handles both mobile and desktop refs
   useEffect(() => {
-    const el = customerTableRef.current;
-    if (!el) return;
-    // Small delay to ensure DOM is populated
-    const timer = setTimeout(() => {
-      let scrollPos = el.scrollHeight;
-      el.scrollTop = scrollPos;
-      const speed = 0.5;
-      let animId: number;
-      const scroll = () => {
-        scrollPos -= speed;
-        if (scrollPos <= 0) {
-          scrollPos = el.scrollHeight / 2;
-        }
+    const refs = [customerTableRef, customerTableDesktopRef];
+    const cleanups: Array<() => void> = [];
+
+    refs.forEach(ref => {
+      const el = ref.current;
+      if (!el) return;
+      // Small delay to ensure DOM is populated
+      const timer = setTimeout(() => {
+        // Wait for content to render
+        if (el.scrollHeight <= el.clientHeight) return;
+        let scrollPos = el.scrollHeight;
         el.scrollTop = scrollPos;
+        const speed = 0.5;
+        let animId: number;
+        const scroll = () => {
+          scrollPos -= speed;
+          if (scrollPos <= 0) {
+            scrollPos = el.scrollHeight / 2;
+          }
+          el.scrollTop = scrollPos;
+          animId = requestAnimationFrame(scroll);
+        };
         animId = requestAnimationFrame(scroll);
-      };
-      animId = requestAnimationFrame(scroll);
-      // Store cleanup function
-      (el as any)._scrollCleanup = () => cancelAnimationFrame(animId);
-    }, 100);
+        cleanups.push(() => cancelAnimationFrame(animId));
+      }, 300);
+      cleanups.push(() => clearTimeout(timer));
+    });
+
     return () => {
-      clearTimeout(timer);
-      if ((el as any)._scrollCleanup) (el as any)._scrollCleanup();
+      cleanups.forEach(fn => fn());
     };
   }, [allCustomers.length, wonCustomerIds.size]);
 
@@ -1065,7 +1074,7 @@ export default function LuckyDrawPage() {
                   style={{ background: drawMode === 'advisor' ? 'linear-gradient(135deg, #e8b84a, #c9a227)' : 'transparent', color: drawMode === 'advisor' ? '#0f2240' : 'rgba(232,184,74,0.5)' }}>TVV</button>
               </div>
             </div>
-            <div ref={customerTableRef} className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
+            <div ref={customerTableDesktopRef} className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
               {[0, 1].map(dup => (
                 <div key={dup}>
                   {allCustomers.map((c, idx) => {

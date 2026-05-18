@@ -76,21 +76,28 @@ export default function InvestmentApp() {
   useEffect(() => {
     const el = tableBodyRef.current;
     if (!el || !autoScroll) return;
-    let scrollPos = el.scrollHeight;
-    el.scrollTop = scrollPos;
-    const speed = 0.5;
-    let animId: number;
-    const scroll = () => {
-      scrollPos -= speed;
-      if (scrollPos <= 0) {
-        scrollPos = el.scrollHeight / 2;
-      }
+    const timer = setTimeout(() => {
+      if (el.scrollHeight <= el.clientHeight) return;
+      let scrollPos = el.scrollHeight;
       el.scrollTop = scrollPos;
+      const speed = 0.5;
+      let animId: number;
+      const scroll = () => {
+        scrollPos -= speed;
+        if (scrollPos <= 0) {
+          scrollPos = el.scrollHeight / 2;
+        }
+        el.scrollTop = scrollPos;
+        animId = requestAnimationFrame(scroll);
+      };
       animId = requestAnimationFrame(scroll);
+      (el as any)._scrollCleanup = () => cancelAnimationFrame(animId);
+    }, 300);
+    return () => {
+      clearTimeout(timer);
+      if ((el as any)._scrollCleanup) (el as any)._scrollCleanup();
     };
-    animId = requestAnimationFrame(scroll);
-    return () => cancelAnimationFrame(animId);
-  }, [autoScroll, filtered]);
+  }, [autoScroll, filtered.length]);
 
   useEffect(() => {
     if (!autoScroll && tableBodyRef.current) {
