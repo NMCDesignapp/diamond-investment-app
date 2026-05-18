@@ -277,6 +277,27 @@
   z-index: 3;
 }
 
+/* LED corner glow */
+@keyframes led-corner-glow {
+  0%, 30% {
+    background: rgba(212, 168, 67, 0.2);
+    box-shadow: none;
+  }
+  50% {
+    background: #f5d870;
+    box-shadow: 0 0 8px #f5d870, 0 0 16px rgba(212, 168, 67, 0.6);
+  }
+  70%, 100% {
+    background: rgba(212, 168, 67, 0.2);
+    box-shadow: none;
+  }
+}
+
+.led-corner {
+  animation: led-corner-glow 3.2s ease-in-out infinite;
+  border-radius: 50%;
+}
+
 /* Smooth number input - no spinners */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
