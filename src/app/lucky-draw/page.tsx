@@ -136,14 +136,15 @@ class ConfettiSystem {
   };
 }
 
-// Bubble animation system for background
-class BubbleSystem {
+// Firework ray animation system for background
+class FireworkSystem {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private bubbles: Array<{
-    x: number; y: number; r: number;
-    vx: number; vy: number; opacity: number;
-    opacityDir: number; hue: number;
+  private rays: Array<{
+    x: number; y: number; angle: number;
+    length: number; speed: number; opacity: number;
+    opacityDir: number; width: number; hue: number;
+    life: number; maxLife: number;
   }> = [];
   private animFrame: number = 0;
   private running = false;
@@ -159,55 +160,73 @@ class BubbleSystem {
     this.canvas.width = this.canvas.offsetWidth;
     this.canvas.height = this.canvas.offsetHeight;
     this.centerX = this.canvas.width / 2;
-    this.centerY = this.canvas.height / 2;
+    this.centerY = this.canvas.height * 0.45;
     this.running = true;
-    this.bubbles = [];
-    for (let i = 0; i < 60; i++) {
-      this.bubbles.push(this.createBubble());
+    this.rays = [];
+    for (let i = 0; i < 80; i++) {
+      this.rays.push(this.createRay());
     }
     this.animate();
   }
 
-  private createBubble() {
+  private createRay() {
     const angle = Math.random() * Math.PI * 2;
-    const speed = 0.3 + Math.random() * 1.2;
+    const dist = Math.random() * 40;
     return {
-      x: this.centerX + (Math.random() - 0.5) * 20,
-      y: this.centerY + (Math.random() - 0.5) * 20,
-      r: 4 + Math.random() * 30,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      opacity: 0.05 + Math.random() * 0.15,
-      opacityDir: (Math.random() > 0.5 ? 1 : -1) * 0.002,
-      hue: Math.random() > 0.5 ? 45 : 160, // gold or teal
+      x: this.centerX + Math.cos(angle) * dist,
+      y: this.centerY + Math.sin(angle) * dist,
+      angle: angle + (Math.random() - 0.5) * 0.3,
+      length: 30 + Math.random() * 120,
+      speed: 0.4 + Math.random() * 1.5,
+      opacity: 0.04 + Math.random() * 0.12,
+      opacityDir: (Math.random() > 0.5 ? 1 : -1) * 0.003,
+      width: 1 + Math.random() * 2.5,
+      hue: Math.random() > 0.6 ? 45 : Math.random() > 0.3 ? 160 : 30, // gold, teal, or warm
+      life: 0,
+      maxLife: 200 + Math.random() * 400,
     };
   }
 
   stop() {
     this.running = false;
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
-    this.bubbles = [];
+    this.rays = [];
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
   private animate = () => {
     if (!this.running) return;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    for (const b of this.bubbles) {
-      b.x += b.vx;
-      b.y += b.vy;
-      b.opacity += b.opacityDir;
-      if (b.opacity > 0.2 || b.opacity < 0.02) b.opacityDir *= -1;
-      // Reset if out of bounds
-      if (b.x < -50 || b.x > this.canvas.width + 50 || b.y < -50 || b.y > this.canvas.height + 50) {
-        Object.assign(b, this.createBubble());
+    for (const r of this.rays) {
+      r.x += Math.cos(r.angle) * r.speed;
+      r.y += Math.sin(r.angle) * r.speed;
+      r.life++;
+      r.opacity += r.opacityDir;
+      if (r.opacity > 0.15 || r.opacity < 0.02) r.opacityDir *= -1;
+      // Reset if out of bounds or life exceeded
+      if (r.x < -80 || r.x > this.canvas.width + 80 || r.y < -80 || r.y > this.canvas.height + 80 || r.life > r.maxLife) {
+        Object.assign(r, this.createRay());
+      }
+      const endX = r.x + Math.cos(r.angle) * r.length;
+      const endY = r.y + Math.sin(r.angle) * r.length;
+      const gradient = this.ctx.createLinearGradient(r.x, r.y, endX, endY);
+      if (r.hue === 45) {
+        gradient.addColorStop(0, `rgba(255, 224, 138, ${r.opacity})`);
+        gradient.addColorStop(1, `rgba(255, 224, 138, 0)`);
+      } else if (r.hue === 160) {
+        gradient.addColorStop(0, `rgba(52, 211, 153, ${r.opacity * 0.5})`);
+        gradient.addColorStop(1, `rgba(52, 211, 153, 0)`);
+      } else {
+        gradient.addColorStop(0, `rgba(232, 184, 74, ${r.opacity * 0.7})`);
+        gradient.addColorStop(1, `rgba(232, 184, 74, 0)`);
       }
       this.ctx.beginPath();
-      this.ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-      this.ctx.fillStyle = b.hue === 45
-        ? `rgba(255, 224, 138, ${b.opacity})`
-        : `rgba(52, 211, 153, ${b.opacity * 0.6})`;
-      this.ctx.fill();
+      this.ctx.moveTo(r.x, r.y);
+      this.ctx.lineTo(endX, endY);
+      this.ctx.strokeStyle = gradient;
+      this.ctx.lineWidth = r.width;
+      this.ctx.lineCap = 'round';
+      this.ctx.stroke();
     }
     this.animFrame = requestAnimationFrame(this.animate);
   };
@@ -296,8 +315,8 @@ export default function LuckyDrawPage() {
   const desktopTrackRef = useRef<HTMLDivElement>(null);
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null);
   const confettiRef = useRef<ConfettiSystem | null>(null);
-  const bubbleCanvasRef = useRef<HTMLCanvasElement>(null);
-  const bubbleRef = useRef<BubbleSystem | null>(null);
+  const fireworkCanvasRef = useRef<HTMLCanvasElement>(null);
+  const fireworkRef = useRef<FireworkSystem | null>(null);
   const customerTableRef = useRef<HTMLDivElement>(null);
 
   // State
@@ -358,12 +377,12 @@ export default function LuckyDrawPage() {
 
   // Bubble canvas setup
   useEffect(() => {
-    if (bubbleCanvasRef.current) {
-      bubbleRef.current = new BubbleSystem(bubbleCanvasRef.current);
-      bubbleRef.current.start();
+    if (fireworkCanvasRef.current) {
+      fireworkRef.current = new FireworkSystem(fireworkCanvasRef.current);
+      fireworkRef.current.start();
     }
     return () => {
-      bubbleRef.current?.stop();
+      fireworkRef.current?.stop();
     };
   }, []);
 
@@ -485,6 +504,7 @@ export default function LuckyDrawPage() {
     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
     const itemH = isDesktop ? SLOT_ITEM_HEIGHT_DESKTOP : SLOT_ITEM_HEIGHT_MOBILE;
 
+    // Pick a random winner
     const winnerItem = drawItems[Math.floor(Math.random() * drawItems.length)];
     const customer = allCustomers.find(c =>
       drawMode === 'customer' ? c.id === winnerItem.id : c.advisor === winnerItem.id
@@ -498,10 +518,20 @@ export default function LuckyDrawPage() {
     };
 
     if (trackEl) {
+      // Get the current computed position of the track
+      const computedStyle = window.getComputedStyle(trackEl);
+      const currentTransform = computedStyle.transform;
+
+      // Force stop the current transition at its current position
+      trackEl.style.transition = 'none';
+      trackEl.style.transform = currentTransform;
+      void trackEl.offsetHeight; // force reflow
+
+      // Find a slot item matching the winner name and scroll to it
       const items = trackEl.querySelectorAll('.slot-item');
       const totalItems = items.length;
       let targetIdx = -1;
-      for (let i = totalItems - 1; i >= Math.floor(totalItems * 0.3); i--) {
+      for (let i = totalItems - 1; i >= Math.floor(totalItems * 0.15); i--) {
         if (items[i].textContent === winner.customerName) {
           targetIdx = i;
           break;
@@ -518,15 +548,13 @@ export default function LuckyDrawPage() {
       if (targetIdx !== -1) {
         const centerOffset = targetIdx - 2;
         const targetY = centerOffset * itemH;
-        const currentTransform = trackEl.style.transform;
-        trackEl.style.transition = 'none';
-        trackEl.style.transform = currentTransform;
-        void trackEl.offsetHeight;
+        // Smooth decelerate to the winner position
         trackEl.style.transition = 'transform 3s cubic-bezier(0.1, 0.7, 0.1, 1)';
         trackEl.style.transform = `translateY(-${targetY}px)`;
       }
     }
 
+    // After the deceleration animation, show the winner
     setTimeout(() => {
       setCurrentWinner(winner);
       setShowResult(true);
@@ -555,11 +583,12 @@ export default function LuckyDrawPage() {
         );
       });
 
+      // Start confetti celebration
       if (confettiRef.current) {
         confettiRef.current.start();
         setTimeout(() => confettiRef.current?.stop(), 5000);
       }
-    }, 3500);
+    }, 3200);
   }, [isSpinning, isStopping, drawItems, allCustomers, drawMode, currentPrize, currentPrizeIndex, store.drawPrizes, getTrackRef]);
 
   // Handle stop button click
@@ -948,7 +977,7 @@ export default function LuckyDrawPage() {
 
           {/* Bubble canvas background */}
           <canvas
-            ref={bubbleCanvasRef}
+            ref={fireworkCanvasRef}
             className="absolute inset-0 w-full h-full pointer-events-none z-0"
           />
 
@@ -979,8 +1008,8 @@ export default function LuckyDrawPage() {
             </motion.button>
           </div>
 
-          {/* Slot Machine — takes majority of the right side */}
-          <div className="flex-[7] min-h-0 relative z-10 px-8 pt-0 pb-2 flex flex-col justify-center">
+          {/* Slot Machine — takes majority of the right side, moved down slightly */}
+          <div className="flex-[7] min-h-0 relative z-10 px-8 pt-6 pb-2 flex flex-col justify-center">
             {/* Prize indicator */}
             {currentPrize && (
               <div className="flex items-center justify-center gap-3 mb-2">
@@ -994,9 +1023,34 @@ export default function LuckyDrawPage() {
               style={{
                 background: 'linear-gradient(180deg, #142a52 0%, #1c3a6e 30%, #1c3a6e 70%, #142a52 100%)',
                 boxShadow: isSpinning ? '0 0 100px rgba(255,224,138,0.6), inset 0 0 60px rgba(255,224,138,0.1)' : canSpin ? '0 0 80px rgba(255,224,138,0.45), inset 0 0 60px rgba(255,224,138,0.08)' : '0 0 40px rgba(255,224,138,0.2), inset 0 0 30px rgba(255,224,138,0.04)',
+                border: '2px solid rgba(255,224,138,0.3)',
               }}>
               {/* LED strip running around in circles */}
               <CircularLEDStrip />
+              {/* LED circle dots around slot machine */}
+              <div className="absolute inset-0 pointer-events-none z-20">
+                {/* Circle of LED dots around the border */}
+                {Array.from({ length: 36 }).map((_, i) => {
+                  const angle = (i / 36) * Math.PI * 2 - Math.PI / 2;
+                  const rx = 50;
+                  const ry = 50;
+                  const x = 50 + rx * Math.cos(angle);
+                  const y = 50 + ry * Math.sin(angle);
+                  return (
+                    <div
+                      key={`circ-led-${i}`}
+                      className="absolute w-2.5 h-2.5 rounded-full led-corner"
+                      style={{
+                        left: `${x}%`,
+                        top: `${y}%`,
+                        transform: 'translate(-50%, -50%)',
+                        animationDelay: `${i * 0.09}s`,
+                        background: 'rgba(255,224,138,0.3)',
+                      }}
+                    />
+                  );
+                })}
+              </div>
 
               {/* Slot viewport - 5 items visible */}
               <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 5}px` }}>
@@ -1019,17 +1073,19 @@ export default function LuckyDrawPage() {
             </div>
           </div>
 
-          {/* Winner list below slot machine — compact/thin */}
-          <div className="flex-[3] min-h-0 flex flex-col relative z-10 px-8 pb-4">
-            <div className="flex-shrink-0 flex items-center px-3 py-1.5 rounded-t-xl" style={{ background: 'linear-gradient(135deg, #142a52, #1c3a6e)', borderBottom: '1px solid rgba(255,224,138,0.3)' }}>
-              <Trophy className="w-3.5 h-3.5" style={{ color: '#ffe08a' }} />
-              <span style={{ color: '#ffe08a' }} className="font-extrabold text-xs uppercase ml-1.5">Danh Sách Trúng Giải</span>
-              <span style={{ color: 'rgba(232,184,74,0.6)' }} className="text-xs ml-1">({winners.length})</span>
+          {/* Winner list below slot machine — compact, dark transparent bg */}
+          <div className="flex-[2.5] min-h-0 flex flex-col relative z-10 px-8 pb-4">
+            {/* Centered title with divider */}
+            <div className="flex-shrink-0 flex items-center justify-center py-2">
+              <div className="flex-1 h-px" style={{ background: 'rgba(255,224,138,0.2)' }} />
+              <span style={{ color: '#ffe08a' }} className="font-extrabold text-xs uppercase mx-3">DS Khách Hàng Trúng Giải</span>
+              <span style={{ color: 'rgba(232,184,74,0.5)' }} className="text-xs">({winners.length})</span>
+              <div className="flex-1 h-px" style={{ background: 'rgba(255,224,138,0.2)' }} />
             </div>
-            <div className="flex-1 min-h-0 overflow-y-auto rounded-b-xl" style={{ background: 'rgba(25,52,95,0.92)', scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
+            <div className="flex-1 min-h-0 overflow-y-auto rounded-lg" style={{ background: 'rgba(0,0,0,0.4)', scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
               {winners.length === 0 ? (
-                <div className="flex items-center justify-center py-4">
-                  <p className="text-sm italic" style={{ color: 'rgba(255,224,138,0.25)' }}>Chưa có người trúng giải</p>
+                <div className="flex items-center justify-center py-3">
+                  <p className="text-xs italic" style={{ color: 'rgba(255,224,138,0.2)' }}>Chưa có người trúng giải</p>
                 </div>
               ) : (
                 [...winners].reverse().map((winner, idx) => {
@@ -1037,23 +1093,16 @@ export default function LuckyDrawPage() {
                   return (
                     <div
                       key={`${winner.id}-${idx}`}
-                      className="flex items-center px-3 py-1.5 transition-all"
+                      className="flex items-center px-3 py-1 transition-all"
                       style={{
-                        background: isLatest
-                          ? 'linear-gradient(90deg, rgba(255,224,138,0.15) 0%, rgba(255,224,138,0.08) 50%, rgba(255,224,138,0.15) 100%)'
-                          : 'rgba(255,224,138,0.03)',
-                        borderBottom: '1px solid rgba(255,224,138,0.08)',
+                        background: isLatest ? 'rgba(255,224,138,0.1)' : 'transparent',
+                        borderBottom: '1px solid rgba(255,224,138,0.06)',
                       }}
                     >
-                      <span className="font-mono text-xs w-6 flex-shrink-0 font-bold" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.3)' }}>{winners.length - idx}</span>
-                      <span className="text-sm font-bold truncate" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.7)' }}>{titleCase(winner.customerName)}</span>
-                      {winner.advisor && <span className="text-xs italic ml-2" style={{ color: 'rgba(232,184,74,0.4)' }}>TVV {titleCase(winner.advisor)}</span>}
-                      <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full" style={{
-                        background: isLatest ? 'rgba(255,224,138,0.2)' : 'rgba(52,211,153,0.15)',
-                        color: isLatest ? '#ffe08a' : '#34d399',
-                      }}>
-                        {winner.prizeName}
-                      </span>
+                      <span className="font-mono text-[10px] w-5 flex-shrink-0 font-bold" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.25)' }}>{winners.length - idx}</span>
+                      <span className="text-xs font-bold truncate" style={{ color: isLatest ? '#ffe08a' : 'rgba(232,184,74,0.6)' }}>{titleCase(winner.customerName)}</span>
+                      <span className="mx-2 text-[10px]" style={{ color: 'rgba(255,224,138,0.15)' }}>—</span>
+                      <span className="text-[10px] font-semibold" style={{ color: isLatest ? '#ffe08a' : '#34d399' }}>{winner.prizeName}</span>
                     </div>
                   );
                 })
