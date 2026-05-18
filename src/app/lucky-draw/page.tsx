@@ -786,21 +786,25 @@ export default function LuckyDrawPage() {
       <div className="flex-1 min-h-0 flex flex-col md:hidden">
         {/* Header for mobile */}
         <div className="flex-shrink-0 relative" style={{ background: 'linear-gradient(135deg, #0f2042, #162d50, #0f2042)', borderBottom: '2px solid rgba(212,168,67,0.4)' }}>
-          <div className="relative px-3 py-2 flex items-center justify-between">
+          <div className="relative px-3 py-2 flex items-center">
             <Link href="/" title="Quay lại">
               <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-                className="p-1.5 hover:bg-white/5 rounded-lg transition-all">
+                className="p-1.5 hover:bg-white/5 rounded-lg transition-all z-10">
                 <ArrowLeft className="w-4 h-4" style={{ color: '#d4a843' }} />
               </motion.button>
             </Link>
-            <div className="flex items-center gap-2">
-              <motion.div animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}>
-                <Diamond className="w-4 h-4" style={{ color: '#f5d870' }} />
-              </motion.div>
-              <h1 className="text-sm font-black uppercase tracking-wider" style={{ color: '#f5d870', textShadow: '0 0 20px rgba(212,168,67,0.3)' }}>
-                Quay Số May Mắn
-              </h1>
+            {/* Title absolutely centered */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="flex items-center gap-2">
+                <motion.div animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}>
+                  <Diamond className="w-4 h-4" style={{ color: '#f5d870' }} />
+                </motion.div>
+                <h1 className="text-sm font-black uppercase tracking-wider" style={{ color: '#f5d870', textShadow: '0 0 20px rgba(212,168,67,0.3)' }}>
+                  Quay Số May Mắn
+                </h1>
+              </div>
             </div>
+            <div className="flex-1" />
             <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
               onClick={() => {
                 setSettingsOpen(true);
@@ -811,7 +815,7 @@ export default function LuckyDrawPage() {
                   location: store.luckyDrawEvent?.location || '',
                 });
               }}
-              className="p-2 hover:bg-white/5 rounded-lg transition-all" title="Cài đặt">
+              className="p-2 hover:bg-white/5 rounded-lg transition-all z-10" title="Cài đặt">
               <Settings className="w-5 h-5" style={{ color: '#d4a843' }} />
             </motion.button>
           </div>
