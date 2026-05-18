@@ -168,9 +168,9 @@ export default function InvestmentApp() {
             transition={{ duration: 0.4, delay: 0.08 * idx }}
             className="metallic-grain flex items-center gap-2 md:gap-3 rounded-xl p-2 md:p-4 shadow-sm overflow-hidden"
             style={{
-              background: 'linear-gradient(145deg, #c0c0c0 0%, #d8d8d8 25%, #c8c8c8 50%, #e0e0e0 75%, #c4c4c4 100%)',
-              border: '1px solid rgba(200,200,200,0.7)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.12)',
+              background: 'linear-gradient(145deg, #d4d4d4 0%, #e6e6e6 25%, #dcdcdc 50%, #ececec 75%, #d8d8d8 100%)',
+              border: '1px solid rgba(220,220,220,0.8)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,0,0,0.05), 0 2px 6px rgba(0,0,0,0.1)',
             }}
           >
             <div className="p-1 md:p-2 rounded-lg flex-shrink-0" style={{ background: 'rgba(0,0,0,0.08)' }}>
@@ -204,7 +204,7 @@ export default function InvestmentApp() {
           </div>
         ) : (
           <div className="h-full rounded-lg shadow-lg flex flex-col overflow-hidden"
-            style={{ background: 'rgba(20,42,82,0.92)', border: '2px solid rgba(255,224,138,0.45)' }}>
+            style={{ background: 'rgba(25,52,95,0.92)', border: '2px solid rgba(255,224,138,0.5)' }}>
             {/* Single table with sticky header - ensures column alignment */}
             <div
               ref={tableBodyRef}
@@ -213,7 +213,7 @@ export default function InvestmentApp() {
             >
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 z-10">
-                  <tr style={{ background: 'linear-gradient(135deg, #142a52, #1c3a6e)' }}>
+                  <tr style={{ background: 'linear-gradient(135deg, #1a3560, #224a82)' }}>
                     <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center w-14" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>STT</th>
                     <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center whitespace-nowrap" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>Khách Hàng</th>
                     <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center whitespace-nowrap" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>TVV</th>
@@ -306,7 +306,7 @@ export default function InvestmentApp() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: idx * 0.03 }}
                 className="rounded-xl shadow-md overflow-hidden"
-                style={{ background: 'rgba(20,42,82,0.92)', border: '1px solid rgba(255,224,138,0.25)' }}
+                style={{ background: 'rgba(25,52,95,0.92)', border: '1px solid rgba(255,224,138,0.3)' }}
               >
                 <div className="p-3 cursor-pointer" onClick={() => setExpandedMobile(expandedMobile === c.id ? null : c.id)}>
                   <div className="flex justify-between items-start">
