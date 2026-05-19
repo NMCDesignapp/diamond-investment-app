@@ -138,7 +138,8 @@ class ConfettiSystem {
   };
 }
 
-// Firework ray animation system for background
+// Enhanced background effect system: Firework rays + Burst fireworks + Sparkle particles
+// Effects radiate from center below the slot machine
 class FireworkSystem {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -148,10 +149,24 @@ class FireworkSystem {
     opacityDir: number; width: number; hue: number;
     life: number; maxLife: number;
   }> = [];
+  private sparkles: Array<{
+    x: number; y: number; vx: number; vy: number;
+    size: number; opacity: number; opacityDir: number;
+    color: string; life: number; maxLife: number;
+    twinkleSpeed: number; twinklePhase: number;
+  }> = [];
+  private burstGroups: Array<{
+    x: number; y: number; age: number; maxAge: number;
+    rays: Array<{
+      angle: number; length: number;
+      width: number; opacity: number; hue: number;
+    }>;
+  }> = [];
   private animFrame: number = 0;
   private running = false;
   private centerX: number = 0;
   private centerY: number = 0;
+  private frameCount: number = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -159,54 +174,129 @@ class FireworkSystem {
   }
 
   start() {
-    this.canvas.width = this.canvas.offsetWidth;
-    this.canvas.height = this.canvas.offsetHeight;
+    const parent = this.canvas.parentElement;
+    const w = this.canvas.offsetWidth || (parent ? parent.offsetWidth : 0);
+    const h = this.canvas.offsetHeight || (parent ? parent.offsetHeight : 0);
+    if (w === 0 || h === 0) return;
+    this.canvas.width = w;
+    this.canvas.height = h;
     this.centerX = this.canvas.width / 2;
-    this.centerY = this.canvas.height * 0.45;
+    this.centerY = this.canvas.height * 0.4;
     this.running = true;
     this.rays = [];
-    for (let i = 0; i < 80; i++) {
+    this.sparkles = [];
+    this.burstGroups = [];
+    for (let i = 0; i < 70; i++) {
       this.rays.push(this.createRay());
     }
+    for (let i = 0; i < 100; i++) {
+      this.sparkles.push(this.createSparkle());
+    }
+    this.createBurst();
     this.animate();
   }
 
   private createRay() {
     const angle = Math.random() * Math.PI * 2;
-    const dist = Math.random() * 40;
+    const dist = Math.random() * 50;
     return {
       x: this.centerX + Math.cos(angle) * dist,
       y: this.centerY + Math.sin(angle) * dist,
       angle: angle + (Math.random() - 0.5) * 0.3,
-      length: 30 + Math.random() * 120,
-      speed: 0.4 + Math.random() * 1.5,
-      opacity: 0.04 + Math.random() * 0.12,
-      opacityDir: (Math.random() > 0.5 ? 1 : -1) * 0.003,
-      width: 1 + Math.random() * 2.5,
-      hue: Math.random() > 0.6 ? 45 : Math.random() > 0.3 ? 160 : 30, // gold, teal, or warm
-      life: 0,
-      maxLife: 200 + Math.random() * 400,
+      length: 50 + Math.random() * 200,
+      speed: 0.3 + Math.random() * 1.2,
+      opacity: 0.08 + Math.random() * 0.18,
+      opacityDir: (Math.random() > 0.5 ? 1 : -1) * 0.004,
+      width: 1 + Math.random() * 3,
+      hue: Math.random() > 0.5 ? 45 : Math.random() > 0.3 ? 30 : 160,
+      life: Math.floor(Math.random() * 200),
+      maxLife: 250 + Math.random() * 500,
     };
+  }
+
+  private createSparkle() {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = Math.random() * Math.max(this.canvas.width, this.canvas.height) * 0.6;
+    const colors = ['#ffe08a', '#f5d870', '#ffd700', '#e8b84a', '#34d399', '#6ee7b7', '#fff8dc', '#fffacd'];
+    return {
+      x: this.centerX + Math.cos(angle) * dist,
+      y: this.centerY + Math.sin(angle) * dist,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      size: 1.5 + Math.random() * 3.5,
+      opacity: 0.15 + Math.random() * 0.5,
+      opacityDir: (Math.random() > 0.5 ? 1 : -1) * (0.006 + Math.random() * 0.012),
+      color: colors[Math.floor(Math.random() * colors.length)],
+      life: Math.floor(Math.random() * 150),
+      maxLife: 200 + Math.random() * 400,
+      twinkleSpeed: 0.06 + Math.random() * 0.12,
+      twinklePhase: Math.random() * Math.PI * 2,
+    };
+  }
+
+  private createBurst() {
+    const rayCount = 14 + Math.floor(Math.random() * 18);
+    const burstRays: Array<{ angle: number; length: number; width: number; opacity: number; hue: number }> = [];
+    const baseAngle = Math.random() * Math.PI * 2;
+    const spread = Math.PI * 0.8 + Math.random() * Math.PI * 0.6;
+    for (let i = 0; i < rayCount; i++) {
+      burstRays.push({
+        angle: baseAngle - spread / 2 + (spread / (rayCount - 1)) * i + (Math.random() - 0.5) * 0.1,
+        length: 80 + Math.random() * 250,
+        width: 1.5 + Math.random() * 3,
+        opacity: 0.4 + Math.random() * 0.4,
+        hue: Math.random() > 0.4 ? 45 : Math.random() > 0.5 ? 30 : 160,
+      });
+    }
+    this.burstGroups.push({
+      x: this.centerX + (Math.random() - 0.5) * 80,
+      y: this.centerY + (Math.random() - 0.5) * 50,
+      age: 0,
+      maxAge: 90 + Math.random() * 70,
+      rays: burstRays,
+    });
+    // Burst sparkles at origin
+    for (let i = 0; i < 10; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const spd = 0.5 + Math.random() * 2;
+      this.sparkles.push({
+        x: this.centerX + (Math.random() - 0.5) * 30,
+        y: this.centerY + (Math.random() - 0.5) * 20,
+        vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+        size: 2 + Math.random() * 4,
+        opacity: 0.6 + Math.random() * 0.3, opacityDir: -0.01,
+        color: Math.random() > 0.3 ? '#ffe08a' : '#34d399',
+        life: 0, maxLife: 120 + Math.random() * 80,
+        twinkleSpeed: 0.15, twinklePhase: Math.random() * Math.PI * 2,
+      });
+    }
   }
 
   stop() {
     this.running = false;
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
     this.rays = [];
+    this.sparkles = [];
+    this.burstGroups = [];
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
   private animate = () => {
     if (!this.running) return;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.frameCount++;
+
+    // Periodic firework bursts
+    if (this.frameCount % 100 === 0) this.createBurst();
+
+    // Ambient rays
     for (const r of this.rays) {
       r.x += Math.cos(r.angle) * r.speed;
       r.y += Math.sin(r.angle) * r.speed;
       r.life++;
       r.opacity += r.opacityDir;
-      if (r.opacity > 0.15 || r.opacity < 0.02) r.opacityDir *= -1;
-      // Reset if out of bounds or life exceeded
-      if (r.x < -80 || r.x > this.canvas.width + 80 || r.y < -80 || r.y > this.canvas.height + 80 || r.life > r.maxLife) {
+      if (r.opacity > 0.3 || r.opacity < 0.04) r.opacityDir *= -1;
+      if (r.x < -100 || r.x > this.canvas.width + 100 || r.y < -100 || r.y > this.canvas.height + 100 || r.life > r.maxLife) {
         Object.assign(r, this.createRay());
       }
       const endX = r.x + Math.cos(r.angle) * r.length;
@@ -214,13 +304,13 @@ class FireworkSystem {
       const gradient = this.ctx.createLinearGradient(r.x, r.y, endX, endY);
       if (r.hue === 45) {
         gradient.addColorStop(0, `rgba(255, 224, 138, ${r.opacity})`);
-        gradient.addColorStop(1, `rgba(255, 224, 138, 0)`);
+        gradient.addColorStop(1, 'rgba(255, 224, 138, 0)');
       } else if (r.hue === 160) {
-        gradient.addColorStop(0, `rgba(52, 211, 153, ${r.opacity * 0.5})`);
-        gradient.addColorStop(1, `rgba(52, 211, 153, 0)`);
+        gradient.addColorStop(0, `rgba(52, 211, 153, ${r.opacity * 0.7})`);
+        gradient.addColorStop(1, 'rgba(52, 211, 153, 0)');
       } else {
-        gradient.addColorStop(0, `rgba(232, 184, 74, ${r.opacity * 0.7})`);
-        gradient.addColorStop(1, `rgba(232, 184, 74, 0)`);
+        gradient.addColorStop(0, `rgba(232, 184, 74, ${r.opacity * 0.85})`);
+        gradient.addColorStop(1, 'rgba(232, 184, 74, 0)');
       }
       this.ctx.beginPath();
       this.ctx.moveTo(r.x, r.y);
@@ -230,6 +320,106 @@ class FireworkSystem {
       this.ctx.lineCap = 'round';
       this.ctx.stroke();
     }
+
+    // Burst groups (firework explosions)
+    for (let g = this.burstGroups.length - 1; g >= 0; g--) {
+      const burst = this.burstGroups[g];
+      burst.age++;
+      const progress = burst.age / burst.maxAge;
+      const fadeOut = progress > 0.4 ? 1 - (progress - 0.4) / 0.6 : 1;
+      for (const ray of burst.rays) {
+        const currentLength = ray.length * Math.min(progress * 2.5, 1);
+        const startX = burst.x;
+        const startY = burst.y;
+        const endX = startX + Math.cos(ray.angle) * currentLength;
+        const endY = startY + Math.sin(ray.angle) * currentLength;
+        const opacity = ray.opacity * fadeOut;
+        if (opacity < 0.01) continue;
+        const gradient = this.ctx.createLinearGradient(startX, startY, endX, endY);
+        if (ray.hue === 45) {
+          gradient.addColorStop(0, `rgba(255, 224, 138, ${opacity})`);
+          gradient.addColorStop(0.3, `rgba(255, 224, 138, ${opacity * 0.6})`);
+          gradient.addColorStop(1, 'rgba(255, 224, 138, 0)');
+        } else if (ray.hue === 160) {
+          gradient.addColorStop(0, `rgba(52, 211, 153, ${opacity * 0.8})`);
+          gradient.addColorStop(0.3, `rgba(52, 211, 153, ${opacity * 0.4})`);
+          gradient.addColorStop(1, 'rgba(52, 211, 153, 0)');
+        } else {
+          gradient.addColorStop(0, `rgba(232, 184, 74, ${opacity * 0.9})`);
+          gradient.addColorStop(0.3, `rgba(232, 184, 74, ${opacity * 0.5})`);
+          gradient.addColorStop(1, 'rgba(232, 184, 74, 0)');
+        }
+        this.ctx.beginPath();
+        this.ctx.moveTo(startX, startY);
+        this.ctx.lineTo(endX, endY);
+        this.ctx.strokeStyle = gradient;
+        this.ctx.lineWidth = ray.width * fadeOut;
+        this.ctx.lineCap = 'round';
+        this.ctx.stroke();
+      }
+      // Burst glow at origin
+      if (fadeOut > 0.1) {
+        const glowSize = 25 + 40 * Math.min(progress * 3, 1);
+        const glowGradient = this.ctx.createRadialGradient(burst.x, burst.y, 0, burst.x, burst.y, glowSize);
+        glowGradient.addColorStop(0, `rgba(255, 224, 138, ${0.4 * fadeOut})`);
+        glowGradient.addColorStop(0.5, `rgba(255, 224, 138, ${0.15 * fadeOut})`);
+        glowGradient.addColorStop(1, 'rgba(255, 224, 138, 0)');
+        this.ctx.beginPath();
+        this.ctx.arc(burst.x, burst.y, glowSize, 0, Math.PI * 2);
+        this.ctx.fillStyle = glowGradient;
+        this.ctx.fill();
+      }
+      if (burst.age >= burst.maxAge) this.burstGroups.splice(g, 1);
+    }
+
+    // Sparkles
+    for (let i = this.sparkles.length - 1; i >= 0; i--) {
+      const s = this.sparkles[i];
+      s.x += s.vx;
+      s.y += s.vy;
+      s.vx *= 0.997;
+      s.vy *= 0.997;
+      s.life++;
+      s.twinklePhase += s.twinkleSpeed;
+      const twinkle = 0.5 + 0.5 * Math.sin(s.twinklePhase);
+      s.opacity += s.opacityDir;
+      if (s.opacity > 0.7) s.opacityDir = -Math.abs(s.opacityDir);
+      if (s.opacity < 0.03) s.opacityDir = Math.abs(s.opacityDir);
+      const finalOpacity = s.opacity * twinkle;
+      if (s.life > s.maxLife || finalOpacity < 0.01) {
+        this.sparkles[i] = this.createSparkle();
+        continue;
+      }
+      this.ctx.save();
+      this.ctx.globalAlpha = finalOpacity;
+      // Glow halo
+      const glowGradient = this.ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 4);
+      glowGradient.addColorStop(0, s.color);
+      glowGradient.addColorStop(0.4, `rgba(255, 224, 138, ${0.3 * finalOpacity})`);
+      glowGradient.addColorStop(1, 'rgba(0,0,0,0)');
+      this.ctx.beginPath();
+      this.ctx.arc(s.x, s.y, s.size * 4, 0, Math.PI * 2);
+      this.ctx.fillStyle = glowGradient;
+      this.ctx.fill();
+      // Core dot
+      this.ctx.beginPath();
+      this.ctx.arc(s.x, s.y, s.size * 0.7, 0, Math.PI * 2);
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fill();
+      // Cross sparkle rays
+      this.ctx.strokeStyle = s.color;
+      this.ctx.lineWidth = 0.6;
+      this.ctx.globalAlpha = finalOpacity * 0.7;
+      const rayLen = s.size * 3;
+      this.ctx.beginPath();
+      this.ctx.moveTo(s.x - rayLen, s.y);
+      this.ctx.lineTo(s.x + rayLen, s.y);
+      this.ctx.moveTo(s.x, s.y - rayLen);
+      this.ctx.lineTo(s.x, s.y + rayLen);
+      this.ctx.stroke();
+      this.ctx.restore();
+    }
+
     this.animFrame = requestAnimationFrame(this.animate);
   };
 }
@@ -420,13 +610,17 @@ export default function LuckyDrawPage() {
     };
   }, []);
 
-  // Bubble canvas setup
+  // Firework/Sparkle canvas setup - delayed to ensure layout is complete
   useEffect(() => {
-    if (fireworkCanvasRef.current) {
-      fireworkRef.current = new FireworkSystem(fireworkCanvasRef.current);
-      fireworkRef.current.start();
-    }
+    const timer = setTimeout(() => {
+      if (fireworkCanvasRef.current) {
+        const canvas = fireworkCanvasRef.current;
+        fireworkRef.current = new FireworkSystem(canvas);
+        fireworkRef.current.start();
+      }
+    }, 300);
     return () => {
+      clearTimeout(timer);
       fireworkRef.current?.stop();
     };
   }, []);
@@ -558,19 +752,45 @@ export default function LuckyDrawPage() {
       const totalHeight = track.length * itemH;
       const maxPos = totalHeight - viewportH;
 
+      // Smooth easing to target position (no CSS transition, pure RAF)
+      let snapTargetY = -1;
+      let snapStartY = -1;
+      let snapStartTime = -1;
+      const SNAP_DURATION = 2500; // ms for final snap
+
       const animate = () => {
+        // Snap phase - smooth ease-out to winner position (NO acceleration)
+        if (snapTargetY >= 0) {
+          const now = performance.now();
+          const elapsed = now - snapStartTime;
+          const t = Math.min(elapsed / SNAP_DURATION, 1);
+          // Ease-out cubic: starts at current speed, smoothly decelerates to 0
+          const eased = 1 - Math.pow(1 - t, 3);
+          const currentY = snapStartY + (snapTargetY - snapStartY) * eased;
+          trackEl!.style.transform = `translateY(-${currentY}px)`;
+          if (t >= 1) {
+            // Arrived at winner position
+            if (onStoppedRef.current) {
+              onStoppedRef.current();
+            }
+            return; // Stop animation
+          }
+          animFrameRef.current = requestAnimationFrame(animate);
+          return;
+        }
+
         // Deceleration phase
         if (isDecelRef.current) {
-          spinSpeedRef.current *= 0.975; // Gradual slowdown (~2.5% per frame)
-          
-          if (spinSpeedRef.current < 0.8) {
-            // Nearly stopped - find winner and snap
+          spinSpeedRef.current *= 0.97; // Gradual slowdown (~3% per frame)
+
+          if (spinSpeedRef.current < 1.5) {
+            // Nearly stopped - find winner and start smooth snap
             const items = trackEl!.querySelectorAll('.slot-item');
             const totalItems = items.length;
             const currentIdx = Math.floor(spinPosRef.current / itemH);
             let targetIdx = -1;
-            // Find winner name ahead of current position (at least 2 items ahead)
-            for (let i = currentIdx + 2; i < totalItems; i++) {
+            // Find winner name ahead of current position (at least 3 items ahead)
+            for (let i = currentIdx + 3; i < totalItems; i++) {
               if (items[i].textContent === pendingWinnerRef.current?.customerName) {
                 targetIdx = i;
                 break;
@@ -578,7 +798,7 @@ export default function LuckyDrawPage() {
             }
             if (targetIdx === -1) {
               // Search from beginning if close to end
-              for (let i = 0; i < Math.min(currentIdx + 2, totalItems); i++) {
+              for (let i = 0; i < Math.min(currentIdx + 3, totalItems); i++) {
                 if (items[i].textContent === pendingWinnerRef.current?.customerName) {
                   targetIdx = i;
                   break;
@@ -586,32 +806,30 @@ export default function LuckyDrawPage() {
               }
             }
             if (targetIdx === -1) targetIdx = Math.min(currentIdx + 5, totalItems - 3);
+            // Winner at row 2 (middle of 5 visible rows): translateY = (targetIdx - 2) * itemH
             const targetY = (targetIdx - 2) * itemH;
-            // Final smooth transition to winner - slow ease-out
-            trackEl!.style.transition = 'transform 3s cubic-bezier(0.0, 0.5, 0.1, 1)';
-            trackEl!.style.transform = `translateY(-${targetY}px)`;
-            // Trigger callback after final transition
-            if (onStoppedRef.current) {
-              setTimeout(onStoppedRef.current, 3200);
-            }
-            return; // Stop animation loop
+            // Start smooth snap from current position
+            snapTargetY = targetY;
+            snapStartY = spinPosRef.current;
+            snapStartTime = performance.now();
+            animFrameRef.current = requestAnimationFrame(animate);
+            return;
           }
         }
 
         // Normal spinning (or decelerating)
         spinPosRef.current += spinSpeedRef.current;
-        
+
         // When wrapping during normal spin, reset seamlessly
-        // During deceleration, DON'T wrap - just keep going (track is long enough)
         if (!isDecelRef.current && spinPosRef.current > maxPos) {
-          spinPosRef.current = spinPosRef.current % itemH; // Reset near top to loop
+          spinPosRef.current = spinPosRef.current % itemH;
         }
-        
+
         // Safety: if position goes beyond track during decel, clamp
         if (isDecelRef.current && spinPosRef.current > maxPos) {
           spinPosRef.current = maxPos;
         }
-        
+
         trackEl!.style.transform = `translateY(-${spinPosRef.current}px)`;
         animFrameRef.current = requestAnimationFrame(animate);
       };
@@ -1166,35 +1384,44 @@ export default function LuckyDrawPage() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[80%] rounded-full blur-3xl pointer-events-none z-0"
             style={{ background: 'radial-gradient(ellipse, rgba(255,224,138,0.1) 0%, transparent 60%)' }} />
 
-          {/* Title bar — aligned with slot machine area, NOT cutting sidebar */}
-          <div className="flex-shrink-0 relative z-10 px-8 pt-4 pb-2 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          {/* Title bar — 3-column flex layout for perfect centering */}
+          <div className="flex-shrink-0 relative z-10 pt-4 pb-2 flex items-center">
+            {/* Left: back button - fixed width */}
+            <div className="flex-shrink-0 px-4">
               <Link href="/" title="Quay lại">
                 <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                   className="p-1.5 hover:bg-white/5 rounded-lg transition-all">
                   <ArrowLeft className="w-5 h-5" style={{ color: '#e8b84a' }} />
                 </motion.button>
               </Link>
-              <motion.div animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}>
-                <Diamond className="w-8 h-8" style={{ color: '#ffe08a' }} />
-              </motion.div>
-              <h1 className="text-4xl font-black uppercase tracking-wider animate-neon-pulse" style={{ color: '#ffe08a' }}>
-                {store.luckyDrawEvent?.name || 'Quay Số May Mắn'}
-              </h1>
             </div>
-            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-              onClick={() => {
-                setSettingsOpen(true);
-                setSettingsAuthenticated(false);
-                setLuckyDrawEventForm({
-                  name: store.luckyDrawEvent?.name || '',
-                  date: store.luckyDrawEvent?.date || '',
-                  location: store.luckyDrawEvent?.location || '',
-                });
-              }}
-              className="p-2 hover:bg-white/5 rounded-lg transition-all" title="Cài đặt">
-              <Settings className="w-6 h-6" style={{ color: '#e8b84a' }} />
-            </motion.button>
+            {/* Center: title - flex-1, centered */}
+            <div className="flex-1 min-w-0 flex items-center justify-center">
+              <div className="flex items-center gap-3">
+                <motion.div animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}>
+                  <Diamond className="w-8 h-8" style={{ color: '#ffe08a' }} />
+                </motion.div>
+                <h1 className="text-4xl font-black uppercase tracking-wider animate-neon-pulse text-center" style={{ color: '#ffe08a' }}>
+                  {store.luckyDrawEvent?.name || 'Quay Số May Mắn'}
+                </h1>
+              </div>
+            </div>
+            {/* Right: settings button - fixed width matching left */}
+            <div className="flex-shrink-0 px-4">
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                onClick={() => {
+                  setSettingsOpen(true);
+                  setSettingsAuthenticated(false);
+                  setLuckyDrawEventForm({
+                    name: store.luckyDrawEvent?.name || '',
+                    date: store.luckyDrawEvent?.date || '',
+                    location: store.luckyDrawEvent?.location || '',
+                  });
+                }}
+                className="p-2 hover:bg-white/5 rounded-lg transition-all" title="Cài đặt">
+                <Settings className="w-6 h-6" style={{ color: '#e8b84a' }} />
+              </motion.button>
+            </div>
           </div>
 
           {/* Slot Machine — takes majority of the right side, moved down slightly */}
