@@ -1282,13 +1282,13 @@ export default function LuckyDrawPage() {
           {/* CUSTOMERS section — 2/3 height */}
           <div className="flex-[2] min-h-0 flex flex-col">
             <div className="flex-shrink-0 flex items-center px-3 py-2" style={{ background: 'linear-gradient(135deg, #142a52, #1c3a6e)', borderBottom: '1px solid rgba(232,184,74,0.35)' }}>
-              <Users className="w-4 h-4" style={{ color: '#ffe08a' }} />
-              <span style={{ color: '#ffe08a' }} className="font-extrabold text-base uppercase ml-1.5">Khách Hàng</span>
-              <span style={{ color: 'rgba(232,184,74,0.6)' }} className="text-xs ml-1">({allCustomers.length})</span>
+              <Users className="w-6 h-6" style={{ color: '#ffe08a' }} />
+              <span style={{ color: '#ffe08a' }} className="font-extrabold text-2xl uppercase ml-1.5">Khách Hàng</span>
+              <span style={{ color: 'rgba(232,184,74,0.6)' }} className="text-base ml-1">({allCustomers.length})</span>
               <div className="ml-auto flex gap-0.5 p-0.5 rounded" style={{ background: 'rgba(15,34,64,0.6)' }}>
-                <button onClick={() => setDrawMode('customer')} className="px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-all"
+                <button onClick={() => setDrawMode('customer')} className="px-2.5 py-0.5 rounded text-base font-bold uppercase transition-all"
                   style={{ background: drawMode === 'customer' ? 'linear-gradient(135deg, #e8b84a, #c9a227)' : 'transparent', color: drawMode === 'customer' ? '#0f2240' : 'rgba(232,184,74,0.5)' }}>KH</button>
-                <button onClick={() => setDrawMode('advisor')} className="px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-all"
+                <button onClick={() => setDrawMode('advisor')} className="px-2.5 py-0.5 rounded text-base font-bold uppercase transition-all"
                   style={{ background: drawMode === 'advisor' ? 'linear-gradient(135deg, #e8b84a, #c9a227)' : 'transparent', color: drawMode === 'advisor' ? '#0f2240' : 'rgba(232,184,74,0.5)' }}>TVV</button>
               </div>
             </div>
@@ -1300,12 +1300,12 @@ export default function LuckyDrawPage() {
                     return (
                       <div key={`${c.id}-${dup}`} className="flex items-center px-3 py-2 transition-colors"
                         style={{ borderBottom: '1px solid rgba(232,184,74,0.08)', background: isWon ? 'rgba(52,211,153,0.06)' : 'transparent', opacity: isWon ? 0.4 : 1 }}>
-                        <span className="font-mono text-xs w-6 flex-shrink-0" style={{ color: 'rgba(232,184,74,0.3)' }}>{idx + 1}</span>
+                        <span className="font-mono text-base w-8 flex-shrink-0" style={{ color: 'rgba(232,184,74,0.3)' }}>{idx + 1}</span>
                         <div className="flex-1 min-w-0">
-                          <span className={`text-sm font-bold truncate block ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(232,184,74,0.25)' : '#ffe08a' }}>{titleCase(c.name)}</span>
-                          {c.advisor && <span className="text-[11px] italic block" style={{ color: isWon ? 'rgba(232,184,74,0.12)' : 'rgba(232,184,74,0.5)' }}>TVV {titleCase(c.advisor)}</span>}
+                          <span className={`text-xl font-bold truncate block ${isWon ? 'line-through' : ''}`} style={{ color: isWon ? 'rgba(232,184,74,0.25)' : '#ffe08a' }}>{titleCase(c.name)}</span>
+                          {c.advisor && <span className="text-base italic block" style={{ color: isWon ? 'rgba(232,184,74,0.12)' : 'rgba(232,184,74,0.5)' }}>TVV {titleCase(c.advisor)}</span>}
                         </div>
-                        {isWon && <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: 'rgba(52,211,153,0.2)', color: '#34d399' }}>Trúng</span>}
+                        {isWon && <span className="text-sm px-1.5 py-0.5 rounded font-bold" style={{ background: 'rgba(52,211,153,0.2)', color: '#34d399' }}>Trúng</span>}
                       </div>
                     );
                   })}
@@ -1317,8 +1317,8 @@ export default function LuckyDrawPage() {
           {/* PRIZE + GIFT section — 1/3 height — only "Giải X - Tên quà" format */}
           <div className="flex-[1] min-h-0 flex flex-col" style={{ borderTop: '1px solid rgba(232,184,74,0.25)' }}>
             <div className="flex-shrink-0 flex items-center px-3 py-2" style={{ background: 'linear-gradient(135deg, #142a52, #1c3a6e)', borderBottom: '1px solid rgba(232,184,74,0.35)' }}>
-              <Gift className="w-4 h-4" style={{ color: '#ffe08a' }} />
-              <span style={{ color: '#ffe08a' }} className="font-extrabold text-base uppercase ml-1.5">Giải & Quà</span>
+              <Gift className="w-6 h-6" style={{ color: '#ffe08a' }} />
+              <span style={{ color: '#ffe08a' }} className="font-extrabold text-2xl uppercase ml-1.5">Giải & Quà</span>
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto px-2 py-2 space-y-1" style={{ fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
               {prizes.length > 0 && prizes.map((prize, idx) => {
@@ -1332,7 +1332,7 @@ export default function LuckyDrawPage() {
                     whileHover={isAvailable ? { scale: 1.02 } : {}}
                     onClick={() => handleSelectPrize(idx)}
                     disabled={!isAvailable}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xl font-bold transition-all"
                     style={{
                       background: isSelected
                         ? 'linear-gradient(135deg, #0d5a3f, #0a7a4a)'
@@ -1349,12 +1349,12 @@ export default function LuckyDrawPage() {
                       boxShadow: isSelected ? '0 0 15px rgba(52,211,153,0.3)' : 'none',
                     }}
                   >
-                    <IconComp className="w-4 h-4 flex-shrink-0" />
+                    <IconComp className="w-6 h-6 flex-shrink-0" />
                     <span className="flex-1 text-left">
                       {prize.name}
-                      {prize.gift && <span className="text-xs ml-1" style={{ color: '#34d399' }}>- {prize.gift}</span>}
+                      {prize.gift && <span className="text-base ml-1" style={{ color: '#34d399' }}>- {prize.gift}</span>}
                     </span>
-                    <span className="text-xs px-1.5 py-0.5 rounded-full"
+                    <span className="text-base px-2 py-0.5 rounded-full"
                       style={{
                         background: prize.remaining <= 0 ? 'rgba(232,184,74,0.08)' : 'rgba(52,211,153,0.2)',
                         color: prize.remaining <= 0 ? 'rgba(232,184,74,0.2)' : '#34d399',
@@ -1365,7 +1365,7 @@ export default function LuckyDrawPage() {
                 );
               })}
               {prizes.length === 0 && (
-                <p className="text-xs text-center py-4 italic" style={{ color: 'rgba(232,184,74,0.3)' }}>Chưa có giải. Thêm trong Cài đặt</p>
+                <p className="text-base text-center py-4 italic" style={{ color: 'rgba(232,184,74,0.3)' }}>Chưa có giải. Thêm trong Cài đặt</p>
               )}
             </div>
           </div>
