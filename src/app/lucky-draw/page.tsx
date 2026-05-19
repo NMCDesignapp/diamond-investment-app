@@ -742,7 +742,7 @@ export default function LuckyDrawPage() {
 
       // Reset animation state - start FAST
       spinPosRef.current = 0;
-      spinSpeedRef.current = itemH * 0.8; // Fast start speed
+      spinSpeedRef.current = itemH * 1.2; // Faster start speed
       isDecelRef.current = false;
       pendingWinnerRef.current = null;
       onStoppedRef.current = null;
@@ -788,32 +788,46 @@ export default function LuckyDrawPage() {
             const items = trackEl!.querySelectorAll('.slot-item');
             const totalItems = items.length;
             const currentIdx = Math.floor(spinPosRef.current / itemH);
+            // Find winner name AHEAD of current position (at least 5 items ahead to ensure forward-only movement)
             let targetIdx = -1;
-            // Find winner name ahead of current position (at least 3 items ahead)
-            for (let i = currentIdx + 3; i < totalItems; i++) {
+            for (let i = currentIdx + 5; i < totalItems; i++) {
               if (items[i].textContent === pendingWinnerRef.current?.customerName) {
                 targetIdx = i;
                 break;
               }
             }
+            // If not found ahead, keep spinning forward until we find it (it's in the next loop)
             if (targetIdx === -1) {
-              // Search from beginning if close to end
-              for (let i = 0; i < Math.min(currentIdx + 3, totalItems); i++) {
+              // The track repeats, so search from the beginning (which is like the next loop)
+              // But we need to ensure forward movement, so we wrap the position
+              for (let i = 0; i < currentIdx + 5; i++) {
                 if (items[i].textContent === pendingWinnerRef.current?.customerName) {
                   targetIdx = i;
                   break;
                 }
               }
+              // If found in an earlier position, we need to advance past the wrap point
+              if (targetIdx !== -1 && targetIdx <= currentIdx) {
+                // Keep spinning forward - add one full loop worth of items
+                targetIdx = -1; // Not found ahead, keep decelerating naturally
+              }
             }
-            if (targetIdx === -1) targetIdx = Math.min(currentIdx + 5, totalItems - 3);
-            // Winner at row 2 (middle of 5 visible rows): translateY = (targetIdx - 2) * itemH
+            if (targetIdx === -1) targetIdx = Math.min(currentIdx + 8, totalItems - 3);
+            // CRITICAL: Ensure targetY > spinPosRef.current (always move FORWARD/DOWN, never backward)
             const targetY = (targetIdx - 2) * itemH;
-            // Start smooth snap from current position
-            snapTargetY = targetY;
-            snapStartY = spinPosRef.current;
-            snapStartTime = performance.now();
-            animFrameRef.current = requestAnimationFrame(animate);
-            return;
+            if (targetY > spinPosRef.current) {
+              // Normal: winner is ahead, smooth snap forward
+              snapTargetY = targetY;
+              snapStartY = spinPosRef.current;
+              snapStartTime = performance.now();
+              animFrameRef.current = requestAnimationFrame(animate);
+              return;
+            } else {
+              // Winner position would be backward - keep spinning forward instead
+              // Don't snap yet, let it keep decelerating to a safe point
+              spinSpeedRef.current = Math.max(spinSpeedRef.current, 3); // Ensure some speed
+              // Will try again on next frame
+            }
           }
         }
 

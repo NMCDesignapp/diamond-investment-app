@@ -220,7 +220,7 @@ export default function InvestmentApp() {
           </div>
         ) : (
           <div className="h-full rounded-lg shadow-lg flex flex-col overflow-hidden"
-            style={{ background: 'rgba(45,75,120,0.85)', border: '2px solid rgba(255,224,138,0.5)' }}>
+            style={{ background: 'rgba(55,90,140,0.92)', border: '2px solid rgba(255,224,138,0.6)', boxShadow: '0 0 30px rgba(255,224,138,0.12)' }}>
             {/* Single table with sticky header - ensures column alignment */}
             <div
               ref={tableBodyRef}
@@ -251,41 +251,41 @@ export default function InvestmentApp() {
                         transition={{ duration: 0.25, delay: realIdx * 0.02 }}
                         className="transition-colors duration-100"
                         style={{
-                          borderBottom: '1px solid rgba(255,224,138,0.18)',
+                          borderBottom: '1px solid rgba(255,224,138,0.22)',
                         }}
                         onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,224,138,0.06)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
-                        <td className="px-5 py-4 text-center font-bold text-3xl w-14" style={{ color: 'rgba(255,224,138,0.4)', borderRight: '1px solid rgba(255,224,138,0.12)' }}>{realIdx + 1}</td>
-                        <td className="px-3 py-4 text-left font-bold text-3xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', maxWidth: '25%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.name)}</td>
-                        <td className="px-3 py-4 text-left text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', maxWidth: '15%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.advisor) || '—'}</td>
-                        <td className="px-3 py-4 text-center font-bold text-3xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.12)', width: '12%' }}>
+                        <td className="px-5 py-3 text-center font-bold text-2xl w-14" style={{ color: 'rgba(255,224,138,0.5)', borderRight: '1px solid rgba(255,224,138,0.12)' }}>{realIdx + 1}</td>
+                        <td className="px-3 py-3 text-left font-bold text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', maxWidth: '25%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.name)}</td>
+                        <td className="px-3 py-3 text-left text-xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', maxWidth: '15%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.advisor) || '—'}</td>
+                        <td className="px-3 py-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.12)', width: '12%' }}>
                           {formatVND(realC.investmentFee * 1e6)}
                         </td>
-                        <td className="px-5 py-4 text-left font-semibold text-2xl whitespace-nowrap" style={{ color: '#e8b84a', borderRight: '1px solid rgba(255,224,138,0.12)' }}>
+                        <td className="px-5 py-3 text-left font-semibold text-xl whitespace-nowrap" style={{ color: '#e8b84a', borderRight: '1px solid rgba(255,224,138,0.12)' }}>
                           <span className="inline-flex items-center gap-2">
-                            <Gift className="w-6 h-6 flex-shrink-0" style={{ color: 'rgba(232,184,74,0.6)' }} />
+                            <Gift className="w-5 h-5 flex-shrink-0" style={{ color: 'rgba(232,184,74,0.6)' }} />
                             <span>{store.getGiftByFee(realC.investmentFee).name || '—'}</span>
                           </span>
                         </td>
-                        <td className="px-5 py-4 text-center font-bold text-3xl whitespace-nowrap" style={{ color: '#e8b84a', borderRight: '1px solid rgba(255,224,138,0.12)' }}>
+                        <td className="px-5 py-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#e8b84a', borderRight: '1px solid rgba(255,224,138,0.12)' }}>
                           {formatVND(store.getGiftByFee(realC.investmentFee).value)}
                         </td>
-                        <td className="px-5 py-4 w-28">
-                          <div className="flex flex-col items-center gap-1.5">
+                        <td className="px-2 py-2 w-28">
+                          <div className="flex flex-col items-center gap-1">
                             <StatusBadge status={realC.status} />
                             <motion.button
-                              whileHover={{ scale: 1.15 }}
-                              whileTap={{ scale: 0.85 }}
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
                               onClick={() => store.toggleReceivedStatus(realC.id)}
-                              className="p-1.5 rounded-md transition-colors"
+                              className="p-1 rounded transition-colors"
                               style={{
                                 background: realC.status === 'Đã nhận quà' ? 'rgba(16,185,129,0.2)' : 'rgba(255,224,138,0.1)',
                                 color: realC.status === 'Đã nhận quà' ? '#34d399' : 'rgba(255,224,138,0.4)',
                               }}
                               title={realC.status === 'Đã nhận quà' ? 'Chưa nhận quà' : 'Đã nhận quà'}
                             >
-                              <Check className="w-5 h-5" />
+                              <Check className="w-4 h-4" />
                             </motion.button>
                           </div>
                         </td>
