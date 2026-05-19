@@ -742,7 +742,7 @@ export default function LuckyDrawPage() {
 
       // Reset animation state - start FAST
       spinPosRef.current = 0;
-      spinSpeedRef.current = itemH * 1.2; // Faster start speed
+      spinSpeedRef.current = itemH * 1.5; // Faster start speed
       isDecelRef.current = false;
       pendingWinnerRef.current = null;
       onStoppedRef.current = null;
@@ -752,82 +752,65 @@ export default function LuckyDrawPage() {
       const totalHeight = track.length * itemH;
       const maxPos = totalHeight - viewportH;
 
-      // Smooth easing to target position (no CSS transition, pure RAF)
-      let snapTargetY = -1;
-      let snapStartY = -1;
-      let snapStartTime = -1;
-      const SNAP_DURATION = 2500; // ms for final snap
+      // NO snap phase - continuous proportional approach that never accelerates
+      // When decelerating and approaching winner, speed = min(naturalDecel, distance * factor)
+      // This ensures speed ONLY decreases, never increases
+      let aligningToWinner = false;
 
       const animate = () => {
-        // Snap phase - smooth ease-out to winner position (NO acceleration)
-        if (snapTargetY >= 0) {
-          const now = performance.now();
-          const elapsed = now - snapStartTime;
-          const t = Math.min(elapsed / SNAP_DURATION, 1);
-          // Ease-out cubic: starts at current speed, smoothly decelerates to 0
-          const eased = 1 - Math.pow(1 - t, 3);
-          const currentY = snapStartY + (snapTargetY - snapStartY) * eased;
-          trackEl!.style.transform = `translateY(-${currentY}px)`;
-          if (t >= 1) {
-            // Arrived at winner position
-            if (onStoppedRef.current) {
-              onStoppedRef.current();
-            }
-            return; // Stop animation
-          }
-          animFrameRef.current = requestAnimationFrame(animate);
-          return;
-        }
-
         // Deceleration phase
         if (isDecelRef.current) {
-          spinSpeedRef.current *= 0.97; // Gradual slowdown (~3% per frame)
+          // Natural deceleration
+          spinSpeedRef.current *= 0.975;
 
-          if (spinSpeedRef.current < 1.5) {
-            // Nearly stopped - find winner and start smooth snap
+          // Always try to find winner ahead when decelerating
+          if (pendingWinnerRef.current) {
             const items = trackEl!.querySelectorAll('.slot-item');
-            const totalItems = items.length;
             const currentIdx = Math.floor(spinPosRef.current / itemH);
-            // Find winner name AHEAD of current position (at least 5 items ahead to ensure forward-only movement)
+
+            // Find winner name ahead (search up to 60 items ahead)
             let targetIdx = -1;
-            for (let i = currentIdx + 5; i < totalItems; i++) {
-              if (items[i].textContent === pendingWinnerRef.current?.customerName) {
+            for (let i = currentIdx + 3; i < Math.min(currentIdx + 60, items.length); i++) {
+              if (items[i].textContent === pendingWinnerRef.current.customerName) {
                 targetIdx = i;
                 break;
               }
             }
-            // If not found ahead, keep spinning forward until we find it (it's in the next loop)
-            if (targetIdx === -1) {
-              // The track repeats, so search from the beginning (which is like the next loop)
-              // But we need to ensure forward movement, so we wrap the position
-              for (let i = 0; i < currentIdx + 5; i++) {
-                if (items[i].textContent === pendingWinnerRef.current?.customerName) {
-                  targetIdx = i;
-                  break;
+
+            if (targetIdx !== -1) {
+              const targetY = (targetIdx - 2) * itemH;
+              const distToTarget = targetY - spinPosRef.current;
+
+              if (distToTarget > 0) {
+                aligningToWinner = true;
+                // Proportional speed: speed proportional to remaining distance
+                // This creates smooth deceleration that NEVER accelerates
+                const approachSpeed = distToTarget * 0.04;
+                // Always take minimum - speed only decreases, never increases
+                spinSpeedRef.current = Math.min(spinSpeedRef.current, approachSpeed);
+
+                // Very close - snap exactly
+                if (distToTarget < 2) {
+                  spinPosRef.current = targetY;
+                  trackEl!.style.transform = `translateY(-${spinPosRef.current}px)`;
+                  if (onStoppedRef.current) {
+                    onStoppedRef.current();
+                  }
+                  return; // Done!
                 }
               }
-              // If found in an earlier position, we need to advance past the wrap point
-              if (targetIdx !== -1 && targetIdx <= currentIdx) {
-                // Keep spinning forward - add one full loop worth of items
-                targetIdx = -1; // Not found ahead, keep decelerating naturally
-              }
             }
-            if (targetIdx === -1) targetIdx = Math.min(currentIdx + 8, totalItems - 3);
-            // CRITICAL: Ensure targetY > spinPosRef.current (always move FORWARD/DOWN, never backward)
-            const targetY = (targetIdx - 2) * itemH;
-            if (targetY > spinPosRef.current) {
-              // Normal: winner is ahead, smooth snap forward
-              snapTargetY = targetY;
-              snapStartY = spinPosRef.current;
-              snapStartTime = performance.now();
-              animFrameRef.current = requestAnimationFrame(animate);
-              return;
-            } else {
-              // Winner position would be backward - keep spinning forward instead
-              // Don't snap yet, let it keep decelerating to a safe point
-              spinSpeedRef.current = Math.max(spinSpeedRef.current, 3); // Ensure some speed
-              // Will try again on next frame
+
+            // If winner not found yet and speed is very low, gentle crawl
+            // Use max(currentSpeed, 1.5) to avoid any visible acceleration
+            if (!aligningToWinner && spinSpeedRef.current < 1.5) {
+              spinSpeedRef.current = Math.max(spinSpeedRef.current, 1.5);
             }
+          }
+
+          // Safety: if no winner pending and speed is very low, stop
+          if (spinSpeedRef.current < 0.3 && !pendingWinnerRef.current) {
+            return;
           }
         }
 
@@ -1398,10 +1381,10 @@ export default function LuckyDrawPage() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[80%] rounded-full blur-3xl pointer-events-none z-0"
             style={{ background: 'radial-gradient(ellipse, rgba(255,224,138,0.1) 0%, transparent 60%)' }} />
 
-          {/* Title bar — 3-column flex layout for perfect centering */}
+          {/* Title bar — 3-column flex layout with equal side columns for perfect centering */}
           <div className="flex-shrink-0 relative z-10 pt-4 pb-2 flex items-center">
-            {/* Left: back button - fixed width */}
-            <div className="flex-shrink-0 px-4">
+            {/* Left: back button - fixed width matching right side */}
+            <div className="flex-shrink-0" style={{ width: '60px', display: 'flex', justifyContent: 'center' }}>
               <Link href="/" title="Quay lại">
                 <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                   className="p-1.5 hover:bg-white/5 rounded-lg transition-all">
@@ -1420,8 +1403,8 @@ export default function LuckyDrawPage() {
                 </h1>
               </div>
             </div>
-            {/* Right: settings button - fixed width matching left */}
-            <div className="flex-shrink-0 px-4">
+            {/* Right: settings button - fixed width matching left side */}
+            <div className="flex-shrink-0" style={{ width: '60px', display: 'flex', justifyContent: 'center' }}>
               <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                 onClick={() => {
                   setSettingsOpen(true);

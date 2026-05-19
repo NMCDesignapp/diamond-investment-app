@@ -123,27 +123,21 @@ export default function InvestmentApp() {
         className="relative flex-shrink-0 overflow-hidden rounded-b-2xl shadow-lg"
         style={{ background: 'linear-gradient(135deg, #142a52, #1c3a6e, #142a52)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}
       >
-        <div className="relative px-4 py-3 md:px-6 md:py-3.5 flex items-center justify-between">
+        <div className="relative px-4 py-2 md:px-6 md:py-2.5 flex items-center justify-between">
           {/* Left: Logo + Center title */}
           <div className="flex-1 flex items-center gap-2">
             <img src="/logo.png" alt="Logo" className="h-[30px] md:h-[50px] w-auto object-contain" />
           </div>
           <div className="flex flex-col items-center">
-            <motion.div
-              animate={{ rotate: [0, 8, -8, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <Diamond className="w-5 h-5 mx-auto" style={{ color: '#ffe08a' }} />
-            </motion.div>
             <h1 className="text-2xl md:text-4xl font-black uppercase tracking-wider" style={{ color: '#ffe08a', textShadow: '0 0 20px rgba(255,224,138,0.3)' }}>
               {store.eventInfo.name}
             </h1>
-            <p style={{ color: 'rgba(255,224,138,0.7)' }} className="font-medium text-[11px] md:text-xs">
+            <p style={{ color: 'rgba(255,224,138,0.7)' }} className="font-medium text-[22px] md:text-2xl">
               {store.eventInfo.date} &bull; {store.eventInfo.location}
             </p>
           </div>
-          {/* Right: icon buttons - vertical layout with gold borders */}
-          <div className="flex-1 flex flex-col items-end gap-1.5">
+          {/* Right: icon buttons - horizontal layout */}
+          <div className="flex-1 flex flex-row items-center justify-end gap-2">
             <Link href="/lucky-draw" title="Quay số may mắn">
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -173,7 +167,7 @@ export default function InvestmentApp() {
       {/* === STATS - Brighter boxes, larger text === */}
       <div className="flex-shrink-0 grid grid-cols-3 gap-1.5 md:gap-3 px-2 md:px-5 pt-2 md:pt-3">
         {[
-          { label: 'Tổng KH', value: stats.totalCustomers, icon: Users, accentColor: '#ffe08a' },
+          { label: 'Tổng KH', value: stats.totalCustomers, icon: Users, accentColor: '#ffe08a', unit: 'KH' },
           { label: 'Tổng phí', value: stats.totalFee * 1e6, icon: DollarSign, accentColor: '#34d399' },
           { label: 'Tổng quà', value: stats.totalGiftValue, icon: Gift, accentColor: '#ffe08a' },
         ].map((stat, idx) => (
@@ -195,8 +189,14 @@ export default function InvestmentApp() {
             <div className="min-w-0">
               <p className="text-[10px] md:text-sm font-bold uppercase tracking-wide" style={{ color: 'rgba(255,224,138,0.7)' }}>{stat.label}</p>
               <p className="text-lg md:text-3xl font-black leading-tight" style={{ color: stat.accentColor, textShadow: '0 0 15px rgba(255,224,138,0.3)' }}>
-                <span className="md:hidden">{typeof stat.value === 'number' ? formatCompactVND(stat.value) : stat.value}</span>
-                <span className="hidden md:inline">{typeof stat.value === 'number' ? formatVND(stat.value) : stat.value}</span>
+                {stat.unit ? (
+                  <>{stat.value} <span className="text-base md:text-xl">{stat.unit}</span></>
+                ) : (
+                  <>
+                    <span className="md:hidden">{typeof stat.value === 'number' ? formatCompactVND(stat.value) : stat.value}</span>
+                    <span className="hidden md:inline">{typeof stat.value === 'number' ? formatVND(stat.value) : stat.value}</span>
+                  </>
+                )}
               </p>
             </div>
           </motion.div>
