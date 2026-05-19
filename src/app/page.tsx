@@ -46,7 +46,7 @@ function StatusBadge({ status }: { status: string }) {
   const c = config[status] || config['Chưa nhận quà'];
   return (
     <span
-      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-base font-semibold whitespace-nowrap"
+      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap"
       style={{ background: c.bg, color: c.text }}
     >
       <span>{c.icon}</span>{status.replace(' nhận quà', '')}
@@ -230,13 +230,13 @@ export default function InvestmentApp() {
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 z-10">
                   <tr style={{ background: 'linear-gradient(135deg, #1a3560, #224a82)' }}>
-                    <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center w-14" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>STT</th>
-                    <th className="px-3 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '25%' }}>Khách Hàng</th>
-                    <th className="px-3 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '15%' }}>TVV</th>
+                    <th className="px-2 py-4 font-extrabold text-3xl uppercase text-center w-10" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>STT</th>
+                    <th className="px-3 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '18%' }}>Khách Hàng</th>
+                    <th className="px-3 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '18%' }}>TVV</th>
                     <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center whitespace-nowrap" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '12%' }}>Phí Đầu Tư</th>
-                    <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '18%' }}>Mức Quà</th>
+                    <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '22%' }}>Mức Quà</th>
                     <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center whitespace-nowrap" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '10%' }}>Giá Trị</th>
-                    <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center w-28" style={{ color: '#ffe08a', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>Ghi Chú</th>
+                    <th className="px-1 py-4 font-extrabold text-3xl uppercase text-center w-16" style={{ color: '#ffe08a', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>Ghi Chú</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -256,36 +256,36 @@ export default function InvestmentApp() {
                         onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,224,138,0.06)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
-                        <td className="px-5 py-3 text-center font-bold text-2xl w-14" style={{ color: 'rgba(255,224,138,0.5)', borderRight: '1px solid rgba(255,224,138,0.12)' }}>{realIdx + 1}</td>
-                        <td className="px-3 py-3 text-left font-bold text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', maxWidth: '25%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.name)}</td>
-                        <td className="px-3 py-3 text-left text-xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', maxWidth: '15%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.advisor) || '—'}</td>
+                        <td className="px-2 py-3 text-center font-bold text-2xl w-10" style={{ color: 'rgba(255,224,138,0.5)', borderRight: '1px solid rgba(255,224,138,0.12)' }}>{realIdx + 1}</td>
+                        <td className="px-3 py-3 text-left font-bold text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', maxWidth: '18%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.name)}</td>
+                        <td className="px-3 py-3 text-left text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', maxWidth: '18%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.advisor) || '—'}</td>
                         <td className="px-3 py-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.12)', width: '12%' }}>
                           {formatVND(realC.investmentFee * 1e6)}
                         </td>
-                        <td className="px-5 py-3 text-left font-semibold text-xl whitespace-nowrap" style={{ color: '#e8b84a', borderRight: '1px solid rgba(255,224,138,0.12)' }}>
+                        <td className="px-3 py-3 text-left font-semibold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.12)' }}>
                           <span className="inline-flex items-center gap-2">
-                            <Gift className="w-5 h-5 flex-shrink-0" style={{ color: 'rgba(232,184,74,0.6)' }} />
+                            <Gift className="w-5 h-5 flex-shrink-0" style={{ color: 'rgba(52,211,153,0.6)' }} />
                             <span>{store.getGiftByFee(realC.investmentFee).name || '—'}</span>
                           </span>
                         </td>
-                        <td className="px-5 py-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#e8b84a', borderRight: '1px solid rgba(255,224,138,0.12)' }}>
+                        <td className="px-3 py-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.12)' }}>
                           {formatVND(store.getGiftByFee(realC.investmentFee).value)}
                         </td>
-                        <td className="px-2 py-2 w-28">
-                          <div className="flex flex-col items-center gap-1">
+                        <td className="px-1 py-1 w-16">
+                          <div className="flex flex-col items-center gap-0.5">
                             <StatusBadge status={realC.status} />
                             <motion.button
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
                               onClick={() => store.toggleReceivedStatus(realC.id)}
-                              className="p-1 rounded transition-colors"
+                              className="p-0.5 rounded transition-colors"
                               style={{
                                 background: realC.status === 'Đã nhận quà' ? 'rgba(16,185,129,0.2)' : 'rgba(255,224,138,0.1)',
                                 color: realC.status === 'Đã nhận quà' ? '#34d399' : 'rgba(255,224,138,0.4)',
                               }}
                               title={realC.status === 'Đã nhận quà' ? 'Chưa nhận quà' : 'Đã nhận quà'}
                             >
-                              <Check className="w-4 h-4" />
+                              <Check className="w-3 h-3" />
                             </motion.button>
                           </div>
                         </td>
