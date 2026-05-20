@@ -57,7 +57,7 @@ function StatusBadge({ status }: { status: string }) {
 export default function InvestmentApp() {
   const store = useInvestmentStore();
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
-  const [autoScroll, setAutoScroll] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(true);
   const tableBodyRef = useRef<HTMLDivElement>(null);
 
   const hasLoaded = useRef(false);
@@ -74,14 +74,20 @@ export default function InvestmentApp() {
 
   // Auto-scroll for desktop table (bottom to top)
   useEffect(() => {
+    if (!autoScroll) return;
     const el = tableBodyRef.current;
-    if (!el || !autoScroll) return;
-    const timer = setTimeout(() => {
-      if (el.scrollHeight <= el.clientHeight) return;
+    if (!el) return;
+
+    let animId: number;
+    let started = false;
+
+    const startScroll = () => {
+      if (started) return;
+      if (el.scrollHeight <= el.clientHeight + 10) return;
+      started = true;
       let scrollPos = el.scrollHeight;
       el.scrollTop = scrollPos;
       const speed = 0.5;
-      let animId: number;
       const scroll = () => {
         scrollPos -= speed;
         if (scrollPos <= 0) {
@@ -91,13 +97,25 @@ export default function InvestmentApp() {
         animId = requestAnimationFrame(scroll);
       };
       animId = requestAnimationFrame(scroll);
-      (el as any)._scrollCleanup = () => cancelAnimationFrame(animId);
-    }, 300);
-    return () => {
-      clearTimeout(timer);
-      if ((el as any)._scrollCleanup) (el as any)._scrollCleanup();
     };
-  }, [autoScroll, filtered.length]);
+
+    // Retry until content is loaded
+    let attempt = 0;
+    const tryStart = () => {
+      if (started || attempt > 30) return;
+      attempt++;
+      if (el.scrollHeight > el.clientHeight + 10) {
+        startScroll();
+      } else {
+        setTimeout(tryStart, 300);
+      }
+    };
+    tryStart();
+
+    return () => {
+      if (animId) cancelAnimationFrame(animId);
+    };
+  }, [autoScroll, filtered.length, store.customers]);
 
   useEffect(() => {
     if (!autoScroll && tableBodyRef.current) {
