@@ -1081,7 +1081,8 @@ export default function LuckyDrawPage() {
           <div className={`relative w-full max-w-md overflow-hidden ${canSpin || canStart ? 'animate-pulse-shadow' : ''}`}
             style={{
               background: 'linear-gradient(180deg, #0f2042 0%, #162d50 50%, #0f2042 100%)',
-              boxShadow: isSpinning ? '0 0 40px rgba(212,168,67,0.5), inset 0 0 30px rgba(212,168,67,0.1)' : canSpin || canStart ? '0 0 25px rgba(212,168,67,0.3), inset 0 0 20px rgba(212,168,67,0.05)' : '0 0 10px rgba(212,168,67,0.1), inset 0 0 10px rgba(212,168,67,0.02)',
+              boxShadow: isSpinning ? '0 0 40px rgba(212,168,67,0.5), inset 0 0 30px rgba(212,168,67,0.1), 0 8px 0 rgba(212,168,67,0.3), 0 14px 28px rgba(0,0,0,0.5)' : canSpin || canStart ? '0 0 25px rgba(212,168,67,0.3), inset 0 0 20px rgba(212,168,67,0.05), 0 6px 0 rgba(212,168,67,0.2), 0 10px 20px rgba(0,0,0,0.4)' : '0 0 10px rgba(212,168,67,0.1), inset 0 0 10px rgba(212,168,67,0.02), 0 4px 0 rgba(212,168,67,0.15), 0 6px 12px rgba(0,0,0,0.3)',
+              border: '2px solid rgba(255,224,138,0.3)',
               borderRadius: '0',
             }}>
             <CircularLEDStrip />
@@ -1169,7 +1170,7 @@ export default function LuckyDrawPage() {
               <div className="w-[90vw] max-w-lg p-6 text-center relative overflow-hidden"
                 style={{
                   background: 'linear-gradient(135deg, #0f2042, #162d50, #0f2042)',
-                  boxShadow: '0 0 80px rgba(255,224,138,0.5), 0 0 200px rgba(255,224,138,0.15), inset 0 0 60px rgba(255,224,138,0.08)',
+                  boxShadow: '0 0 80px rgba(255,224,138,0.5), 0 0 200px rgba(255,224,138,0.15), inset 0 0 60px rgba(255,224,138,0.08), 0 10px 0 rgba(212,168,67,0.4), 0 16px 32px rgba(0,0,0,0.5)',
                   border: '3px solid rgba(255,224,138,0.5)',
                   borderRadius: '0',
                 }}>
@@ -1197,7 +1198,7 @@ export default function LuckyDrawPage() {
                   {currentWinner.customerName}
                 </p>
                 {drawMode === 'customer' && currentWinner.advisor && <p className="text-lg mb-1" style={{ color: 'rgba(232,184,74,0.6)' }}>TVV: {currentWinner.advisor}</p>}
-                <div className="mt-3 py-2 px-4 rounded-xl inline-block" style={{ background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)' }}>
+                <div className="mt-3 py-2 px-4 inline-block" style={{ background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '0' }}>
                   <p className="text-xl font-bold" style={{ color: '#34d399' }}>{currentWinner.prizeName}</p>
                 </div>
                 {currentWinner.gift && <p className="text-lg mt-2" style={{ color: '#ffe08a' }}>🎁 {currentWinner.gift}</p>}
@@ -1446,38 +1447,78 @@ export default function LuckyDrawPage() {
               </div>
             )}
 
-            <div className={`relative w-full max-w-6xl mx-auto overflow-hidden shadow-2xl transition-shadow duration-1000 ${canSpin || canStart ? 'animate-pulse-shadow' : ''}`}
+            <div className={`relative w-full max-w-6xl mx-auto overflow-hidden transition-shadow duration-1000 ${canSpin || canStart ? 'animate-pulse-shadow' : ''}`}
               style={{
                 background: 'linear-gradient(180deg, #142a52 0%, #1c3a6e 30%, #1c3a6e 70%, #142a52 100%)',
-                boxShadow: isSpinning ? '0 0 100px rgba(255,224,138,0.6), inset 0 0 60px rgba(255,224,138,0.1)' : canSpin || canStart ? '0 0 80px rgba(255,224,138,0.45), inset 0 0 60px rgba(255,224,138,0.08)' : '0 0 40px rgba(255,224,138,0.2), inset 0 0 30px rgba(255,224,138,0.04)',
+                boxShadow: isSpinning ? '0 0 100px rgba(255,224,138,0.6), inset 0 0 60px rgba(255,224,138,0.1), 0 12px 0 rgba(212,168,67,0.4), 0 20px 40px rgba(0,0,0,0.6)' : canSpin || canStart ? '0 0 80px rgba(255,224,138,0.45), inset 0 0 60px rgba(255,224,138,0.08), 0 10px 0 rgba(212,168,67,0.3), 0 16px 32px rgba(0,0,0,0.5)' : '0 0 40px rgba(255,224,138,0.2), inset 0 0 30px rgba(255,224,138,0.04), 0 6px 0 rgba(212,168,67,0.2), 0 10px 20px rgba(0,0,0,0.4)',
                 border: '2px solid rgba(255,224,138,0.3)',
                 borderRadius: '0',
               }}>
               {/* LED strip running around in circles */}
               <CircularLEDStrip />
-              {/* LED circle dots around slot machine */}
-              <div className="absolute inset-0 pointer-events-none z-20">
-                {/* Circle of LED dots around the border */}
-                {Array.from({ length: 36 }).map((_, i) => {
-                  const angle = (i / 36) * Math.PI * 2 - Math.PI / 2;
-                  const rx = 50;
-                  const ry = 50;
-                  const x = 50 + rx * Math.cos(angle);
-                  const y = 50 + ry * Math.sin(angle);
-                  return (
-                    <div
-                      key={`circ-led-${i}`}
-                      className="absolute w-2.5 h-2.5 led-corner"
-                      style={{
-                        left: `${x}%`,
-                        top: `${y}%`,
-                        transform: 'translate(-50%, -50%)',
-                        animationDelay: `${i * 0.09}s`,
-                        background: 'rgba(255,224,138,0.3)',
-                      }}
-                    />
-                  );
-                })}
+              {/* Square LED dots arranged along the inside perimeter of the slot machine */}
+              <div className="absolute pointer-events-none z-20" style={{ inset: '6px' }}>
+                {/* Top row */}
+                {Array.from({ length: 40 }).map((_, i) => (
+                  <div
+                    key={`sq-top-${i}`}
+                    className="absolute w-2.5 h-2.5 led-corner"
+                    style={{
+                      top: 0,
+                      left: `${(i / 40) * 100}%`,
+                      animationDelay: `${i * 0.07}s`,
+                    }}
+                  />
+                ))}
+                {/* Bottom row */}
+                {Array.from({ length: 40 }).map((_, i) => (
+                  <div
+                    key={`sq-bot-${i}`}
+                    className="absolute w-2.5 h-2.5 led-corner"
+                    style={{
+                      bottom: 0,
+                      left: `${(i / 40) * 100}%`,
+                      animationDelay: `${(40 - i) * 0.07}s`,
+                    }}
+                  />
+                ))}
+                {/* Left column */}
+                {Array.from({ length: 20 }).map((_, i) => (
+                  <div
+                    key={`sq-left-${i}`}
+                    className="absolute w-2.5 h-2.5 led-corner"
+                    style={{
+                      left: 0,
+                      top: `${(i / 20) * 100}%`,
+                      animationDelay: `${(40 + i) * 0.07}s`,
+                    }}
+                  />
+                ))}
+                {/* Right column */}
+                {Array.from({ length: 20 }).map((_, i) => (
+                  <div
+                    key={`sq-right-${i}`}
+                    className="absolute w-2.5 h-2.5 led-corner"
+                    style={{
+                      right: 0,
+                      top: `${(i / 20) * 100}%`,
+                      animationDelay: `${(60 - i) * 0.07}s`,
+                    }}
+                  />
+                ))}
+                {/* Corner dots - bigger */}
+                {[
+                  { top: '-2px', left: '-2px' },
+                  { top: '-2px', right: '-2px' },
+                  { bottom: '-2px', left: '-2px' },
+                  { bottom: '-2px', right: '-2px' },
+                ].map((pos, i) => (
+                  <div
+                    key={`sq-corner-${i}`}
+                    className="absolute w-3.5 h-3.5 led-corner"
+                    style={{ ...pos, animationDelay: `${i * 0.8}s` } as React.CSSProperties}
+                  />
+                ))}
               </div>
 
               {/* Slot viewport - 5 items visible */}
@@ -1511,13 +1552,14 @@ export default function LuckyDrawPage() {
                     exit={{ opacity: 0, scale: 0.8 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={startSpin}
-                    className="relative px-12 py-4 rounded-2xl font-black text-2xl uppercase tracking-wider"
+                    className="relative px-12 py-4 font-black text-2xl uppercase tracking-wider"
                     style={{
                       background: 'linear-gradient(145deg, #10b981, #059669)',
-                      boxShadow: '0 6px 0 #065f46, 0 10px 20px rgba(6, 95, 70, 0.4), inset 0 1px 3px rgba(255,255,255,0.3)',
+                      boxShadow: '0 8px 0 #065f46, 0 12px 24px rgba(6, 95, 70, 0.5), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.2)',
                       color: '#ecfdf5',
                       textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                      border: '2px solid rgba(110, 231, 183, 0.5)',
+                      border: '3px solid rgba(110, 231, 183, 0.5)',
+                      borderRadius: '0',
                       cursor: 'pointer',
                     }}
                   >
@@ -1537,13 +1579,14 @@ export default function LuckyDrawPage() {
                     whileTap={{ scale: 0.95 }}
                     onClick={handleStopClick}
                     disabled={isStopping}
-                    className="relative px-12 py-4 rounded-2xl font-black text-2xl uppercase tracking-wider"
+                    className="relative px-12 py-4 font-black text-2xl uppercase tracking-wider"
                     style={{
                       background: isStopping ? 'linear-gradient(145deg, #9ca3af, #6b7280)' : 'linear-gradient(145deg, #ef4444, #b91c1c)',
-                      boxShadow: isStopping ? '0 6px 0 #4b5563, 0 10px 20px rgba(75, 85, 99, 0.4)' : '0 6px 0 #7f1d1d, 0 10px 20px rgba(127, 29, 29, 0.4)',
+                      boxShadow: isStopping ? '0 8px 0 #4b5563, 0 12px 24px rgba(75, 85, 99, 0.5), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)' : '0 8px 0 #7f1d1d, 0 12px 24px rgba(127, 29, 29, 0.5), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.2)',
                       color: '#fef2f2',
                       textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                      border: isStopping ? '2px solid rgba(156, 163, 175, 0.5)' : '2px solid rgba(248, 113, 113, 0.5)',
+                      border: isStopping ? '3px solid rgba(156, 163, 175, 0.5)' : '3px solid rgba(248, 113, 113, 0.5)',
+                      borderRadius: '0',
                       cursor: isStopping ? 'not-allowed' : 'pointer',
                     }}
                   >
@@ -1605,7 +1648,7 @@ export default function LuckyDrawPage() {
               >
                 <div className="w-[80vw] max-w-4xl p-10 text-center relative overflow-hidden" style={{
                   background: 'linear-gradient(135deg, #0f2042, #162d50, #0f2042)',
-                  boxShadow: '0 0 100px rgba(255,224,138,0.6), 0 0 250px rgba(255,224,138,0.15), inset 0 0 80px rgba(255,224,138,0.08)',
+                  boxShadow: '0 0 100px rgba(255,224,138,0.6), 0 0 250px rgba(255,224,138,0.15), inset 0 0 80px rgba(255,224,138,0.08), 0 12px 0 rgba(212,168,67,0.4), 0 20px 40px rgba(0,0,0,0.6)',
                   border: '3px solid rgba(255,224,138,0.5)',
                   borderRadius: '0',
                 }}>
@@ -1641,7 +1684,7 @@ export default function LuckyDrawPage() {
                   <p className="text-2xl uppercase tracking-widest mb-3 font-bold" style={{ color: 'rgba(232,184,74,0.7)' }}>🎉 Chúc Mừng Người Trúng Giải 🎉</p>
                   <p className="text-7xl font-black mb-3 animate-neon-pulse" style={{ color: '#ffe08a', textShadow: '0 0 40px rgba(255,224,138,0.5), 0 0 80px rgba(255,224,138,0.2)' }}>{currentWinner.customerName}</p>
                   {drawMode === 'customer' && currentWinner.advisor && <p className="text-3xl mb-2" style={{ color: 'rgba(232,184,74,0.6)' }}>TVV: {currentWinner.advisor}</p>}
-                  <div className="mt-4 py-3 px-8 rounded-2xl inline-block" style={{ background: 'rgba(52,211,153,0.15)', border: '2px solid rgba(52,211,153,0.3)' }}>
+                  <div className="mt-4 py-3 px-8 inline-block" style={{ background: 'rgba(52,211,153,0.15)', border: '2px solid rgba(52,211,153,0.3)', borderRadius: '0' }}>
                     <p className="text-4xl font-bold" style={{ color: '#34d399' }}>{currentWinner.prizeName}</p>
                   </div>
                   {currentWinner.gift && <p className="text-3xl mt-3" style={{ color: '#ffe08a' }}>🎁 {currentWinner.gift}</p>}
