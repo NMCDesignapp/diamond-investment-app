@@ -1085,6 +1085,8 @@ export default function LuckyDrawPage() {
               border: '2px solid rgba(255,224,138,0.3)',
               borderRadius: '0',
             }}>
+            {/* LED strip border running around outside */}
+            <CircularLEDStrip />
             {/* Square LED bulbs arranged along the inside perimeter of the slot machine */}
             <div className="absolute pointer-events-none z-20" style={{ inset: '8px' }}>
               {/* Top row */}
@@ -1517,6 +1519,8 @@ export default function LuckyDrawPage() {
                 border: '2px solid rgba(255,224,138,0.3)',
                 borderRadius: '0',
               }}>
+              {/* LED strip border running around outside */}
+              <CircularLEDStrip />
               {/* Square LED bulbs arranged along the inside perimeter - round bulbs */}
               <div className="absolute pointer-events-none z-20" style={{ inset: '10px' }}>
                 {/* Top row */}
