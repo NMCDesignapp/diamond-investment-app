@@ -1255,7 +1255,7 @@ export default function LuckyDrawPage() {
                   <Trophy className="w-16 h-16 mx-auto" style={{ color: '#ffe08a', filter: 'drop-shadow(0 0 15px rgba(255,224,138,0.5))' }} />
                 </motion.div>
                 <p className="text-lg uppercase tracking-widest mb-2 font-bold" style={{ color: 'rgba(232,184,74,0.7)' }}>🎉 Chúc Mừng 🎉</p>
-                <p className="text-4xl font-black mb-2 animate-neon-pulse whitespace-nowrap" style={{ color: '#ffe08a', textShadow: '0 0 30px rgba(255,224,138,0.5), 0 0 60px rgba(255,224,138,0.2)' }}>
+                <p className="text-2xl font-black mb-2 animate-neon-pulse whitespace-nowrap" style={{ color: '#ffe08a', textShadow: '0 0 30px rgba(255,224,138,0.5), 0 0 60px rgba(255,224,138,0.2)' }}>
                   {currentWinner.customerName}
                 </p>
                 {drawMode === 'customer' && currentWinner.advisor && <p className="text-lg mb-1" style={{ color: 'rgba(232,184,74,0.6)' }}>TVV: {currentWinner.advisor}</p>}
@@ -1743,7 +1743,7 @@ export default function LuckyDrawPage() {
                     <Trophy className="w-24 h-24 mx-auto" style={{ color: '#ffe08a', filter: 'drop-shadow(0 0 20px rgba(255,224,138,0.6))' }} />
                   </motion.div>
                   <p className="text-2xl uppercase tracking-widest mb-3 font-bold" style={{ color: 'rgba(232,184,74,0.7)' }}>🎉 Chúc Mừng Người Trúng Giải 🎉</p>
-                  <p className="text-7xl font-black mb-3 animate-neon-pulse whitespace-nowrap" style={{ color: '#ffe08a', textShadow: '0 0 40px rgba(255,224,138,0.5), 0 0 80px rgba(255,224,138,0.2)' }}>{currentWinner.customerName}</p>
+                  <p className="text-5xl font-black mb-3 animate-neon-pulse whitespace-nowrap" style={{ color: '#ffe08a', textShadow: '0 0 40px rgba(255,224,138,0.5), 0 0 80px rgba(255,224,138,0.2)' }}>{currentWinner.customerName}</p>
                   {drawMode === 'customer' && currentWinner.advisor && <p className="text-3xl mb-2" style={{ color: 'rgba(232,184,74,0.6)' }}>TVV: {currentWinner.advisor}</p>}
                   <div className="mt-4 py-3 px-8 inline-block" style={{ background: 'rgba(52,211,153,0.15)', border: '2px solid rgba(52,211,153,0.3)', borderRadius: '0' }}>
                     <p className="text-4xl font-bold" style={{ color: '#34d399' }}>{currentWinner.prizeName}</p>
