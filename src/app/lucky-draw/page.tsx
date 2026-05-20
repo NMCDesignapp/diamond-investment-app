@@ -651,20 +651,22 @@ export default function LuckyDrawPage() {
     return window.innerWidth >= 768 ? desktopTrackRef.current : mobileTrackRef.current;
   }, []);
 
-  // Auto-scroll for customer table - ALWAYS ON, bottom to top, continuous loop
+  // Auto-scroll for customer table - ALWAYS ON when page loads, bottom to top, continuous loop, NEVER STOPS
   // Handles both mobile and desktop refs
   useEffect(() => {
     const startAutoScroll = (el: HTMLDivElement) => {
       if (!el) return;
       if (el.scrollHeight <= el.clientHeight) return;
-      let scrollPos = el.scrollHeight;
-      el.scrollTop = scrollPos;
+      // Bottom-to-top: start at 0, increase scrollTop to move content upward
+      let scrollPos = 0;
+      el.scrollTop = 0;
+      const singleHeight = el.scrollHeight / 2;
       const speed = 0.5;
       let animId: number;
       const scroll = () => {
-        scrollPos -= speed;
-        if (scrollPos <= 0) {
-          scrollPos = el.scrollHeight / 2;
+        scrollPos += speed;
+        if (scrollPos >= singleHeight) {
+          scrollPos = 0;
         }
         el.scrollTop = scrollPos;
         animId = requestAnimationFrame(scroll);

@@ -106,15 +106,15 @@ export default function InvestmentApp() {
       // Start from bottom: translateY starts at negative offset
       // Single content height = wrapperHeight / 2 (content is doubled)
       const singleContentHeight = wrapperHeight / 2;
-      // Start from the end of the first copy (same as start of second copy)
-      let scrollPos = singleContentHeight - containerHeight;
+      // Bottom-to-top: start at 0, increase translateY to move content upward
+      let scrollPos = 0;
       const speed = 0.8;
 
       const scroll = () => {
-        scrollPos -= speed;
-        // When we've scrolled past the top, jump back to start of second copy
-        if (scrollPos <= 0) {
-          scrollPos = singleContentHeight;
+        scrollPos += speed;
+        // When we've scrolled through one full copy, loop back to start
+        if (scrollPos >= singleContentHeight) {
+          scrollPos = 0;
         }
         wrapper.style.transform = `translateY(-${scrollPos}px)`;
         scrollAnimRef.current = requestAnimationFrame(scroll);
