@@ -654,32 +654,50 @@ export default function LuckyDrawPage() {
   // Auto-scroll for customer table - ALWAYS ON, bottom to top, continuous loop
   // Handles both mobile and desktop refs
   useEffect(() => {
-    const refs = [customerTableRef, customerTableDesktopRef];
+    const startAutoScroll = (el: HTMLDivElement) => {
+      if (!el) return;
+      if (el.scrollHeight <= el.clientHeight) return;
+      let scrollPos = el.scrollHeight;
+      el.scrollTop = scrollPos;
+      const speed = 0.5;
+      let animId: number;
+      const scroll = () => {
+        scrollPos -= speed;
+        if (scrollPos <= 0) {
+          scrollPos = el.scrollHeight / 2;
+        }
+        el.scrollTop = scrollPos;
+        animId = requestAnimationFrame(scroll);
+      };
+      animId = requestAnimationFrame(scroll);
+      return () => cancelAnimationFrame(animId);
+    };
+
     const cleanups: Array<() => void> = [];
+    const refs = [customerTableRef, customerTableDesktopRef];
+
+    // Try starting auto-scroll with retries (data may not be loaded yet)
+    const tryStartScroll = (ref: React.RefObject<HTMLDivElement | null>, attempt: number) => {
+      if (attempt > 10) return; // Max 10 attempts over ~3 seconds
+      const el = ref.current;
+      if (!el) {
+        // Ref not mounted yet, retry
+        const timer = setTimeout(() => tryStartScroll(ref, attempt + 1), 300);
+        cleanups.push(() => clearTimeout(timer));
+        return;
+      }
+      if (el.scrollHeight <= el.clientHeight) {
+        // Content not loaded yet, retry
+        const timer = setTimeout(() => tryStartScroll(ref, attempt + 1), 300);
+        cleanups.push(() => clearTimeout(timer));
+        return;
+      }
+      const cleanup = startAutoScroll(el);
+      if (cleanup) cleanups.push(cleanup);
+    };
 
     refs.forEach(ref => {
-      const el = ref.current;
-      if (!el) return;
-      // Small delay to ensure DOM is populated
-      const timer = setTimeout(() => {
-        // Wait for content to render
-        if (el.scrollHeight <= el.clientHeight) return;
-        let scrollPos = el.scrollHeight;
-        el.scrollTop = scrollPos;
-        const speed = 0.5;
-        let animId: number;
-        const scroll = () => {
-          scrollPos -= speed;
-          if (scrollPos <= 0) {
-            scrollPos = el.scrollHeight / 2;
-          }
-          el.scrollTop = scrollPos;
-          animId = requestAnimationFrame(scroll);
-        };
-        animId = requestAnimationFrame(scroll);
-        cleanups.push(() => cancelAnimationFrame(animId));
-      }, 300);
-      cleanups.push(() => clearTimeout(timer));
+      tryStartScroll(ref, 0);
     });
 
     return () => {
@@ -1381,10 +1399,14 @@ export default function LuckyDrawPage() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[80%] rounded-full blur-3xl pointer-events-none z-0"
             style={{ background: 'radial-gradient(ellipse, rgba(255,224,138,0.1) 0%, transparent 60%)' }} />
 
-          {/* Title bar — 3-column flex layout with equal side columns for perfect centering */}
-          <div className="flex-shrink-0 relative z-10 pt-4 pb-2 flex items-center">
-            {/* Left: back button - fixed width matching right side */}
-            <div className="flex-shrink-0" style={{ width: '60px', display: 'flex', justifyContent: 'center' }}>
+          {/* Title bar — absolute centered title with overlay buttons */}
+          <div className="flex-shrink-0 relative z-10 pt-3 pb-2 flex items-center justify-center">
+            {/* Absolutely centered title */}
+            <h1 className="text-4xl font-black uppercase tracking-wider animate-neon-pulse" style={{ color: '#ffe08a', textShadow: '0 0 20px rgba(255,224,138,0.3)' }}>
+              {store.luckyDrawEvent?.name || 'Quay Số May Mắn'}
+            </h1>
+            {/* Left: back button - overlay */}
+            <div className="absolute left-4 top-1/2 -translate-y-1/2">
               <Link href="/" title="Quay lại">
                 <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                   className="p-1.5 hover:bg-white/5 rounded-lg transition-all">
@@ -1392,19 +1414,8 @@ export default function LuckyDrawPage() {
                 </motion.button>
               </Link>
             </div>
-            {/* Center: title - flex-1, centered */}
-            <div className="flex-1 min-w-0 flex items-center justify-center">
-              <div className="flex items-center gap-3">
-                <motion.div animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}>
-                  <Diamond className="w-8 h-8" style={{ color: '#ffe08a' }} />
-                </motion.div>
-                <h1 className="text-4xl font-black uppercase tracking-wider animate-neon-pulse text-center" style={{ color: '#ffe08a' }}>
-                  {store.luckyDrawEvent?.name || 'Quay Số May Mắn'}
-                </h1>
-              </div>
-            </div>
-            {/* Right: settings button - fixed width matching left side */}
-            <div className="flex-shrink-0" style={{ width: '60px', display: 'flex', justifyContent: 'center' }}>
+            {/* Right: settings button - overlay */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
               <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                 onClick={() => {
                   setSettingsOpen(true);
@@ -1415,8 +1426,8 @@ export default function LuckyDrawPage() {
                     location: store.luckyDrawEvent?.location || '',
                   });
                 }}
-                className="p-2 hover:bg-white/5 rounded-lg transition-all" title="Cài đặt">
-                <Settings className="w-6 h-6" style={{ color: '#e8b84a' }} />
+                className="p-1.5 hover:bg-white/5 rounded-lg transition-all" title="Cài đặt">
+                <Settings className="w-5 h-5" style={{ color: '#e8b84a' }} />
               </motion.button>
             </div>
           </div>
