@@ -278,9 +278,7 @@ export default function InvestmentApp() {
                   <th className="py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>Ghi Chú</th>
                 </tr>
               </thead>
-              {/* Body wrapper for translateY auto-scroll */}
-              <div ref={scrollWrapperRef}>
-                <tbody>
+              <tbody ref={scrollWrapperRef}>
                   {(autoScroll ? [filtered, filtered] : [filtered]).flat().map((c, idx) => {
                     const realIdx = idx % filtered.length;
                     const realC = filtered[realIdx];
@@ -329,7 +327,6 @@ export default function InvestmentApp() {
                     );
                   })}
                 </tbody>
-              </div>
             </table>
           </div>
         )}
