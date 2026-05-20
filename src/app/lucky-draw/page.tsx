@@ -443,7 +443,7 @@ const SLOT_ITEM_HEIGHT_DESKTOP = 100;
 // LED strip component - runs around in circles
 function CircularLEDStrip() {
   return (
-    <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-2xl">
+    <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden" style={{ borderRadius: '0' }}>
       {/* Top LED row - chase left to right */}
       <div className="absolute top-0 left-0 right-0 h-2.5 flex overflow-hidden">
         {Array.from({ length: 60 }).map((_, i) => (
@@ -1078,10 +1078,11 @@ export default function LuckyDrawPage() {
           )}
 
           {/* Slot Machine */}
-          <div className={`relative w-full max-w-md rounded-xl overflow-hidden ${canSpin || canStart ? 'animate-pulse-shadow' : ''}`}
+          <div className={`relative w-full max-w-md overflow-hidden ${canSpin || canStart ? 'animate-pulse-shadow' : ''}`}
             style={{
               background: 'linear-gradient(180deg, #0f2042 0%, #162d50 50%, #0f2042 100%)',
               boxShadow: isSpinning ? '0 0 40px rgba(212,168,67,0.5), inset 0 0 30px rgba(212,168,67,0.1)' : canSpin || canStart ? '0 0 25px rgba(212,168,67,0.3), inset 0 0 20px rgba(212,168,67,0.05)' : '0 0 10px rgba(212,168,67,0.1), inset 0 0 10px rgba(212,168,67,0.02)',
+              borderRadius: '0',
             }}>
             <CircularLEDStrip />
             <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 5}px` }}>
@@ -1165,14 +1166,15 @@ export default function LuckyDrawPage() {
               transition={{ type: 'spring', duration: 0.6, bounce: 0.4 }}
               className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
               style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-              <div className="w-[90vw] max-w-lg rounded-3xl p-6 text-center relative overflow-hidden"
+              <div className="w-[90vw] max-w-lg p-6 text-center relative overflow-hidden"
                 style={{
                   background: 'linear-gradient(135deg, #0f2042, #162d50, #0f2042)',
                   boxShadow: '0 0 80px rgba(255,224,138,0.5), 0 0 200px rgba(255,224,138,0.15), inset 0 0 60px rgba(255,224,138,0.08)',
                   border: '3px solid rgba(255,224,138,0.5)',
+                  borderRadius: '0',
                 }}>
                 {/* LED strip around winner popup */}
-                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+                <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ borderRadius: '0' }}>
                   <div className="absolute top-0 left-0 right-0 h-2 flex overflow-hidden">
                     {Array.from({ length: 40 }).map((_, i) => (
                       <div key={`wt-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${i * 0.05}s` }} />
@@ -1444,11 +1446,12 @@ export default function LuckyDrawPage() {
               </div>
             )}
 
-            <div className={`relative w-full max-w-6xl mx-auto rounded-2xl overflow-hidden shadow-2xl transition-shadow duration-1000 ${canSpin || canStart ? 'animate-pulse-shadow' : ''}`}
+            <div className={`relative w-full max-w-6xl mx-auto overflow-hidden shadow-2xl transition-shadow duration-1000 ${canSpin || canStart ? 'animate-pulse-shadow' : ''}`}
               style={{
                 background: 'linear-gradient(180deg, #142a52 0%, #1c3a6e 30%, #1c3a6e 70%, #142a52 100%)',
                 boxShadow: isSpinning ? '0 0 100px rgba(255,224,138,0.6), inset 0 0 60px rgba(255,224,138,0.1)' : canSpin || canStart ? '0 0 80px rgba(255,224,138,0.45), inset 0 0 60px rgba(255,224,138,0.08)' : '0 0 40px rgba(255,224,138,0.2), inset 0 0 30px rgba(255,224,138,0.04)',
                 border: '2px solid rgba(255,224,138,0.3)',
+                borderRadius: '0',
               }}>
               {/* LED strip running around in circles */}
               <CircularLEDStrip />
@@ -1464,7 +1467,7 @@ export default function LuckyDrawPage() {
                   return (
                     <div
                       key={`circ-led-${i}`}
-                      className="absolute w-2.5 h-2.5 rounded-full led-corner"
+                      className="absolute w-2.5 h-2.5 led-corner"
                       style={{
                         left: `${x}%`,
                         top: `${y}%`,
@@ -1600,13 +1603,14 @@ export default function LuckyDrawPage() {
                 className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none"
                 style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
               >
-                <div className="w-[80vw] max-w-4xl rounded-3xl p-10 text-center relative overflow-hidden" style={{
+                <div className="w-[80vw] max-w-4xl p-10 text-center relative overflow-hidden" style={{
                   background: 'linear-gradient(135deg, #0f2042, #162d50, #0f2042)',
                   boxShadow: '0 0 100px rgba(255,224,138,0.6), 0 0 250px rgba(255,224,138,0.15), inset 0 0 80px rgba(255,224,138,0.08)',
                   border: '3px solid rgba(255,224,138,0.5)',
+                  borderRadius: '0',
                 }}>
                   {/* LED strip around winner popup */}
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ borderRadius: '0' }}>
                     <div className="absolute top-0 left-0 right-0 h-3 flex overflow-hidden">
                       {Array.from({ length: 60 }).map((_, i) => (
                         <div key={`wt-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${i * 0.04}s` }} />
