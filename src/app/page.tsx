@@ -230,11 +230,11 @@ export default function InvestmentApp() {
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 z-10">
                   <tr style={{ background: 'linear-gradient(135deg, #1a3560, #224a82)' }}>
-                    <th className="px-2 py-4 font-extrabold text-3xl uppercase text-center w-10" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>STT</th>
+                    <th className="px-1 py-4 font-extrabold text-2xl uppercase text-center w-8" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>STT</th>
                     <th className="px-3 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '18%' }}>Khách Hàng</th>
                     <th className="px-3 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '18%' }}>TVV</th>
                     <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center whitespace-nowrap" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '12%' }}>Phí Đầu Tư</th>
-                    <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '22%' }}>Mức Quà</th>
+                    <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '26%' }}>Quà Tặng</th>
                     <th className="px-5 py-4 font-extrabold text-3xl uppercase text-center whitespace-nowrap" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)', width: '10%' }}>Giá Trị</th>
                     <th className="px-1 py-4 font-extrabold text-3xl uppercase text-center w-16" style={{ color: '#ffe08a', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>Ghi Chú</th>
                   </tr>
@@ -256,7 +256,7 @@ export default function InvestmentApp() {
                         onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,224,138,0.06)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
-                        <td className="px-2 py-3 text-center font-bold text-2xl w-10" style={{ color: 'rgba(255,224,138,0.5)', borderRight: '1px solid rgba(255,224,138,0.12)' }}>{realIdx + 1}</td>
+                        <td className="px-1 py-3 text-center font-bold text-xl w-8" style={{ color: 'rgba(255,224,138,0.5)', borderRight: '1px solid rgba(255,224,138,0.12)' }}>{realIdx + 1}</td>
                         <td className="px-3 py-3 text-left font-bold text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', maxWidth: '18%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.name)}</td>
                         <td className="px-3 py-3 text-left text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', maxWidth: '18%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.advisor) || '—'}</td>
                         <td className="px-3 py-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.12)', width: '12%' }}>
