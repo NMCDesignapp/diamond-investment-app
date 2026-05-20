@@ -798,16 +798,18 @@ export default function LuckyDrawPage() {
       }
 
       // Reset animation state - start FAST
-      spinPosRef.current = 0;
+      // Direction: top to bottom, so start from bottom (negative offset)
+      spinPosRef.current = -(track.length * itemH - viewportH); // start at bottom
       spinSpeedRef.current = itemH * 1.5; // Faster start speed
       isDecelRef.current = false;
       pendingWinnerRef.current = null;
       onStoppedRef.current = null;
       trackEl.style.transition = 'none';
-      trackEl.style.transform = 'translateY(0)';
+      trackEl.style.transform = `translateY(${spinPosRef.current}px)`;
 
       const totalHeight = track.length * itemH;
       const maxPos = totalHeight - viewportH;
+      const minPos = -(totalHeight - viewportH); // bottom limit for top-to-bottom
 
       // NO snap phase - continuous proportional approach that never accelerates
       // When decelerating and approaching winner, speed = min(naturalDecel, distance * factor)
@@ -835,13 +837,12 @@ export default function LuckyDrawPage() {
             }
 
             if (targetIdx !== -1) {
-              const targetY = (targetIdx - 2) * itemH;
-              const distToTarget = targetY - spinPosRef.current;
+              const targetY = -(targetIdx - 2) * itemH; // negative for top-to-bottom
+              const distToTarget = Math.abs(targetY - spinPosRef.current);
 
               if (distToTarget > 0) {
                 aligningToWinner = true;
                 // Proportional speed: speed proportional to remaining distance
-                // This creates smooth deceleration that NEVER accelerates
                 const approachSpeed = distToTarget * 0.04;
                 // Always take minimum - speed only decreases, never increases
                 spinSpeedRef.current = Math.min(spinSpeedRef.current, approachSpeed);
@@ -849,7 +850,7 @@ export default function LuckyDrawPage() {
                 // Very close - snap exactly
                 if (distToTarget < 2) {
                   spinPosRef.current = targetY;
-                  trackEl!.style.transform = `translateY(-${spinPosRef.current}px)`;
+                  trackEl!.style.transform = `translateY(${spinPosRef.current}px)`;
                   if (onStoppedRef.current) {
                     onStoppedRef.current();
                   }
@@ -871,20 +872,20 @@ export default function LuckyDrawPage() {
           }
         }
 
-        // Normal spinning (or decelerating)
+        // Direction: top to bottom - increase position (less negative = upward in DOM = names scroll down visually)
         spinPosRef.current += spinSpeedRef.current;
 
         // When wrapping during normal spin, reset seamlessly
-        if (!isDecelRef.current && spinPosRef.current > maxPos) {
-          spinPosRef.current = spinPosRef.current % itemH;
+        if (!isDecelRef.current && spinPosRef.current > 0) {
+          spinPosRef.current = -(totalHeight - viewportH) + (spinPosRef.current % itemH);
         }
 
-        // Safety: if position goes beyond track during decel, clamp
-        if (isDecelRef.current && spinPosRef.current > maxPos) {
-          spinPosRef.current = maxPos;
+        // Safety: clamp at top (0) during decel
+        if (isDecelRef.current && spinPosRef.current > 0) {
+          spinPosRef.current = 0;
         }
 
-        trackEl!.style.transform = `translateY(-${spinPosRef.current}px)`;
+        trackEl!.style.transform = `translateY(${spinPosRef.current}px)`;
         animFrameRef.current = requestAnimationFrame(animate);
       };
 
