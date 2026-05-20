@@ -678,7 +678,7 @@ export default function LuckyDrawPage() {
 
     // Try starting auto-scroll with retries (data may not be loaded yet)
     const tryStartScroll = (ref: React.RefObject<HTMLDivElement | null>, attempt: number) => {
-      if (attempt > 10) return; // Max 10 attempts over ~3 seconds
+      if (attempt > 30) return; // Max 30 attempts over ~9 seconds
       const el = ref.current;
       if (!el) {
         // Ref not mounted yet, retry
@@ -686,7 +686,7 @@ export default function LuckyDrawPage() {
         cleanups.push(() => clearTimeout(timer));
         return;
       }
-      if (el.scrollHeight <= el.clientHeight) {
+      if (el.scrollHeight <= el.clientHeight + 10) {
         // Content not loaded yet, retry
         const timer = setTimeout(() => tryStartScroll(ref, attempt + 1), 300);
         cleanups.push(() => clearTimeout(timer));
@@ -703,7 +703,7 @@ export default function LuckyDrawPage() {
     return () => {
       cleanups.forEach(fn => fn());
     };
-  }, [allCustomers.length, wonCustomerIds.size]);
+  }, [allCustomers.length, wonCustomerIds.size, store.customers]);
 
   // Winner table: manual scroll only (no auto-scroll)
 
@@ -1508,7 +1508,7 @@ export default function LuckyDrawPage() {
               </div>
             )}
 
-            <div className={`relative w-full max-w-6xl mx-auto overflow-hidden transition-shadow duration-1000 ${canSpin || canStart ? 'animate-pulse-shadow' : ''}`}
+            <div className={`relative w-full max-w-5xl mx-auto overflow-hidden transition-shadow duration-1000 ${canSpin || canStart ? 'animate-pulse-shadow' : ''}`}
               style={{
                 background: 'linear-gradient(180deg, #142a52 0%, #1c3a6e 30%, #1c3a6e 70%, #142a52 100%)',
                 boxShadow: isSpinning ? '0 0 100px rgba(255,224,138,0.6), inset 0 0 60px rgba(255,224,138,0.1), 0 12px 0 rgba(212,168,67,0.4), 0 20px 40px rgba(0,0,0,0.6)' : canSpin || canStart ? '0 0 80px rgba(255,224,138,0.45), inset 0 0 60px rgba(255,224,138,0.08), 0 10px 0 rgba(212,168,67,0.3), 0 16px 32px rgba(0,0,0,0.5)' : '0 0 40px rgba(255,224,138,0.2), inset 0 0 30px rgba(255,224,138,0.04), 0 6px 0 rgba(212,168,67,0.2), 0 10px 20px rgba(0,0,0,0.4)',
@@ -1659,7 +1659,7 @@ export default function LuckyDrawPage() {
             {/* Centered title with divider - no auto-scroll toggle */}
             <div className="flex-shrink-0 flex items-center justify-center py-2">
               <div className="flex-1 h-px" style={{ background: 'rgba(255,224,138,0.2)' }} />
-              <span style={{ color: '#ffe08a' }} className="font-extrabold text-4xl uppercase mx-3">DS Khách Hàng Trúng Giải</span>
+              <span style={{ color: '#ffe08a', textDecoration: 'underline', textDecorationColor: 'rgba(255,224,138,0.4)' }} className="font-bold text-2xl uppercase mx-3">DS Khách Hàng Trúng Giải</span>
               <span style={{ color: 'rgba(232,184,74,0.5)' }} className="text-2xl">({winners.length})</span>
               <div className="flex-1 h-px" style={{ background: 'rgba(255,224,138,0.2)' }} />
             </div>
