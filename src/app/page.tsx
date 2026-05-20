@@ -192,40 +192,44 @@ export default function InvestmentApp() {
         </div>
       </motion.div>
 
-      {/* === STATS - Horizontal 1-line layout, metrics prominent === */}
-      <div className="flex-shrink-0 grid grid-cols-3 gap-1.5 md:gap-3 px-2 md:px-5 pt-2 md:pt-3">
+      {/* === STATS - 3 cards with bold numbers and icon === */}
+      <div className="flex-shrink-0 grid grid-cols-3 gap-2 md:gap-4 px-2 md:px-5 pt-2 md:pt-3">
         {[
-          { label: 'Tổng KH:', value: stats.totalCustomers, icon: Users, accentColor: '#ffe08a', unit: 'KH' },
-          { label: 'Tổng phí:', value: stats.totalFee * 1e6, icon: DollarSign, accentColor: '#34d399' },
-          { label: 'Tổng quà:', value: stats.totalGiftValue, icon: Gift, accentColor: '#ffe08a' },
+          { label: 'Tổng KH', value: stats.totalCustomers, icon: Users, accentColor: '#ffe08a', unit: 'KH' },
+          { label: 'Tổng Phí', value: stats.totalFee * 1e6, icon: DollarSign, accentColor: '#34d399' },
+          { label: 'Tổng Quà', value: stats.totalGiftValue, icon: Gift, accentColor: '#ffe08a' },
         ].map((stat, idx) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.08 * idx }}
-            className="metallic-grain flex items-center gap-1.5 md:gap-2 rounded-lg px-2 py-1.5 md:px-3 md:py-2 shadow-md overflow-hidden"
+            className="rounded-xl px-3 py-2 md:px-5 md:py-3 overflow-hidden relative"
             style={{
-              background: 'linear-gradient(145deg, #1c3a6e 0%, #224a82 30%, #1a3560 60%, #254f8a 100%)',
-              border: '2px solid rgba(255,224,138,0.5)',
-              boxShadow: '0 0 20px rgba(255,224,138,0.15), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)',
+              background: 'linear-gradient(160deg, #1a3d75 0%, #1e4a8a 40%, #163665 100%)',
+              border: '2px solid rgba(255,224,138,0.6)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4), 0 0 25px rgba(255,224,138,0.15), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 0 rgba(0,0,0,0.3)',
             }}
           >
-            <div className="p-0.5 md:p-1.5 rounded flex-shrink-0" style={{ background: 'rgba(255,224,138,0.15)' }}>
-              <stat.icon className="w-3 h-3 md:w-5 md:h-5" style={{ color: '#ffe08a' }} />
-            </div>
-            <div className="min-w-0 flex items-baseline gap-1 md:gap-1.5 flex-nowrap whitespace-nowrap">
-              <span className="text-[9px] md:text-sm font-bold uppercase tracking-wide" style={{ color: 'rgba(255,224,138,0.65)' }}>{stat.label}</span>
-              <span className="text-base md:text-2xl font-black leading-none" style={{ color: stat.accentColor, textShadow: '0 0 15px rgba(255,224,138,0.3)' }}>
-                {stat.unit ? (
-                  <>{stat.value} <span className="text-xs md:text-lg font-bold">{stat.unit}</span></>
-                ) : (
-                  <>
-                    <span className="md:hidden">{typeof stat.value === 'number' ? formatCompactVND(stat.value) : stat.value}</span>
-                    <span className="hidden md:inline">{typeof stat.value === 'number' ? formatVND(stat.value) : stat.value}</span>
-                  </>
-                )}
-              </span>
+            {/* Shine overlay */}
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 50%)' }} />
+            <div className="relative flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 rounded-lg flex-shrink-0" style={{ background: 'rgba(255,224,138,0.18)', boxShadow: '0 0 10px rgba(255,224,138,0.15)' }}>
+                <stat.icon className="w-4 h-4 md:w-6 md:h-6" style={{ color: '#ffe08a', filter: 'drop-shadow(0 0 4px rgba(255,224,138,0.4))' }} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[10px] md:text-sm font-bold uppercase tracking-wider" style={{ color: '#ffe08a', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{stat.label}</div>
+                <div className="text-lg md:text-3xl font-black leading-tight" style={{ color: stat.accentColor, textShadow: '0 2px 8px rgba(0,0,0,0.5), 0 0 20px rgba(255,224,138,0.25)' }}>
+                  {stat.unit ? (
+                    <>{stat.value} <span className="text-sm md:text-xl font-bold">{stat.unit}</span></>
+                  ) : (
+                    <>
+                      <span className="md:hidden">{typeof stat.value === 'number' ? formatCompactVND(stat.value) : stat.value}</span>
+                      <span className="hidden md:inline">{typeof stat.value === 'number' ? formatVND(stat.value) : stat.value}</span>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </motion.div>
         ))}
@@ -304,19 +308,19 @@ export default function InvestmentApp() {
                           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,224,138,0.06)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                         >
-                          <td className="py-3 px-2 text-center font-bold text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)' }}>{realIdx + 1}</td>
-                          <td className="py-3 px-3 text-left font-bold text-3xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.name)}</td>
-                          <td className="py-3 px-3 text-left text-3xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.advisor) || '—'}</td>
-                          <td className="py-3 px-3 text-center font-bold text-3xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)' }}>
+                          <td className="py-3 px-2 text-center font-bold text-lg" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{realIdx + 1}</td>
+                          <td className="py-3 px-3 text-left font-bold text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{titleCase(realC.name)}</td>
+                          <td className="py-3 px-3 text-left text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{titleCase(realC.advisor) || '—'}</td>
+                          <td className="py-3 px-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                             {formatVND(realC.investmentFee * 1e6)}
                           </td>
-                          <td className="py-3 px-3 text-left font-semibold text-3xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)' }}>
+                          <td className="py-3 px-3 text-left font-semibold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                             <span className="inline-flex items-center gap-2">
-                              <Gift className="w-5 h-5 flex-shrink-0" style={{ color: '#34d399' }} />
+                              <Gift className="w-4 h-4 flex-shrink-0" style={{ color: '#34d399', filter: 'drop-shadow(0 0 3px rgba(52,211,153,0.4))' }} />
                               <span>{store.getGiftByFee(realC.investmentFee).name || '—'}</span>
                             </span>
                           </td>
-                          <td className="py-3 px-3 text-center font-bold text-3xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)' }}>
+                          <td className="py-3 px-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                             {formatVND(store.getGiftByFee(realC.investmentFee).value)}
                           </td>
                           <td className="py-1 px-2">
