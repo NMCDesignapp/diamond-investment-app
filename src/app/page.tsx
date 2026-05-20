@@ -251,9 +251,12 @@ export default function InvestmentApp() {
             <p style={{ color: '#ffe08a' }} className="text-sm">Nhấn &quot;+&quot; để thêm</p>
           </div>
         ) : (
-          <div className="h-full rounded-lg shadow-lg flex flex-col overflow-hidden"
-            style={{ background: 'rgba(55,90,140,0.92)', border: '2px solid rgba(255,224,138,0.6)', boxShadow: '0 0 30px rgba(255,224,138,0.12)' }}>
-            {/* Fixed table header - always visible */}
+          <div
+            ref={tableBodyRef}
+            className="h-full rounded-lg shadow-lg overflow-hidden"
+            style={{ background: 'rgba(55,90,140,0.92)', border: '2px solid rgba(255,224,138,0.6)', boxShadow: '0 0 30px rgba(255,224,138,0.12)', overflowY: autoScroll ? 'hidden' : 'auto', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}
+          >
+            {/* Single table - header sticky, body scrollable */}
             <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
               <colgroup>
                 <col style={{ width: '3%' }} />
@@ -264,7 +267,7 @@ export default function InvestmentApp() {
                 <col style={{ width: '13%' }} />
                 <col style={{ width: '8%' }} />
               </colgroup>
-              <thead>
+              <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                 <tr style={{ background: 'linear-gradient(135deg, #1a3560, #224a82)' }}>
                   <th className="py-4 font-extrabold text-2xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>STT</th>
                   <th className="py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>Khách Hàng</th>
@@ -275,77 +278,59 @@ export default function InvestmentApp() {
                   <th className="py-4 font-extrabold text-3xl uppercase text-center" style={{ color: '#ffe08a', borderBottom: '2px solid rgba(255,224,138,0.5)' }}>Ghi Chú</th>
                 </tr>
               </thead>
-            </table>
-            {/* Scroll viewport for table body */}
-            <div
-              ref={tableBodyRef}
-              className="flex-1 min-h-0"
-              style={{ overflowY: autoScroll ? 'hidden' : 'auto', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}
-            >
-              {/* Inner wrapper moved with translateY for bottom-to-top scroll */}
+              {/* Body wrapper for translateY auto-scroll */}
               <div ref={scrollWrapperRef}>
-                <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
-                  <colgroup>
-                    <col style={{ width: '3%' }} />
-                    <col style={{ width: '19%' }} />
-                    <col style={{ width: '16%' }} />
-                    <col style={{ width: '15%' }} />
-                    <col style={{ width: '26%' }} />
-                    <col style={{ width: '13%' }} />
-                    <col style={{ width: '8%' }} />
-                  </colgroup>
-                  <tbody>
-                    {(autoScroll ? [filtered, filtered] : [filtered]).flat().map((c, idx) => {
-                      const realIdx = idx % filtered.length;
-                      const realC = filtered[realIdx];
-                      return (
-                        <tr
-                          key={`${realC.id}-${idx}`}
-                          className="transition-colors duration-100"
-                          style={{
-                            borderBottom: '1px solid rgba(255,224,138,0.22)',
-                          }}
-                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,224,138,0.06)')}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                        >
-                          <td className="py-3 px-2 text-center font-bold text-lg" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{realIdx + 1}</td>
-                          <td className="py-3 px-3 text-left font-bold text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{titleCase(realC.name)}</td>
-                          <td className="py-3 px-3 text-left text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{titleCase(realC.advisor) || '—'}</td>
-                          <td className="py-3 px-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
-                            {formatVND(realC.investmentFee * 1e6)}
-                          </td>
-                          <td className="py-3 px-3 text-left font-semibold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
-                            <span className="inline-flex items-center gap-2">
-                              <Gift className="w-4 h-4 flex-shrink-0" style={{ color: '#34d399', filter: 'drop-shadow(0 0 3px rgba(52,211,153,0.4))' }} />
-                              <span>{store.getGiftByFee(realC.investmentFee).name || '—'}</span>
-                            </span>
-                          </td>
-                          <td className="py-3 px-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
-                            {formatVND(store.getGiftByFee(realC.investmentFee).value)}
-                          </td>
-                          <td className="py-1 px-2">
-                            <div className="flex flex-col items-center gap-0.5">
-                              <StatusBadge status={realC.status} />
-                              <button
-                                onClick={() => store.toggleReceivedStatus(realC.id)}
-                                className="p-0.5 rounded transition-colors"
-                                style={{
-                                  background: realC.status === 'Đã nhận quà' ? 'rgba(16,185,129,0.2)' : 'rgba(255,224,138,0.1)',
-                                  color: realC.status === 'Đã nhận quà' ? '#34d399' : 'rgba(255,224,138,0.4)',
-                                }}
-                                title={realC.status === 'Đã nhận quà' ? 'Chưa nhận quà' : 'Đã nhận quà'}
-                              >
-                                <Check className="w-3 h-3" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <tbody>
+                  {(autoScroll ? [filtered, filtered] : [filtered]).flat().map((c, idx) => {
+                    const realIdx = idx % filtered.length;
+                    const realC = filtered[realIdx];
+                    return (
+                      <tr
+                        key={`${realC.id}-${idx}`}
+                        className="transition-colors duration-100"
+                        style={{
+                          borderBottom: '1px solid rgba(255,224,138,0.22)',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,224,138,0.06)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <td className="py-3 px-2 text-center font-bold text-lg" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{realIdx + 1}</td>
+                        <td className="py-3 px-3 text-left font-bold text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{titleCase(realC.name)}</td>
+                        <td className="py-3 px-3 text-left text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{titleCase(realC.advisor) || '—'}</td>
+                        <td className="py-3 px-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                          {formatVND(realC.investmentFee * 1e6)}
+                        </td>
+                        <td className="py-3 px-3 text-left font-semibold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                          <span className="inline-flex items-center gap-2">
+                            <Gift className="w-4 h-4 flex-shrink-0" style={{ color: '#34d399', filter: 'drop-shadow(0 0 3px rgba(52,211,153,0.4))' }} />
+                            <span>{store.getGiftByFee(realC.investmentFee).name || '—'}</span>
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                          {formatVND(store.getGiftByFee(realC.investmentFee).value)}
+                        </td>
+                        <td className="py-1 px-2">
+                          <div className="flex flex-col items-center gap-0.5">
+                            <StatusBadge status={realC.status} />
+                            <button
+                              onClick={() => store.toggleReceivedStatus(realC.id)}
+                              className="p-0.5 rounded transition-colors"
+                              style={{
+                                background: realC.status === 'Đã nhận quà' ? 'rgba(16,185,129,0.2)' : 'rgba(255,224,138,0.1)',
+                                color: realC.status === 'Đã nhận quà' ? '#34d399' : 'rgba(255,224,138,0.4)',
+                              }}
+                              title={realC.status === 'Đã nhận quà' ? 'Chưa nhận quà' : 'Đã nhận quà'}
+                            >
+                              <Check className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
               </div>
-            </div>
+            </table>
           </div>
         )}
       </div>
