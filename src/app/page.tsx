@@ -39,7 +39,7 @@ function titleCase(str: string) {
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; text: string; icon: string }> = {
-    'Đã nhận quà': { bg: 'rgba(16,185,129,0.15)', text: '#34d399', icon: '✓' },
+    'Đã nhận quà': { bg: 'rgba(16,185,129,0.15)', text: '#00e676', icon: '✓' },
     'Chưa nhận quà': { bg: 'rgba(245,216,112,0.12)', text: '#ffe08a', icon: '⏳' },
     'Không nhận quà': { bg: 'rgba(239,68,68,0.15)', text: '#ef4444', icon: '✗' },
   };
@@ -196,7 +196,7 @@ export default function InvestmentApp() {
       <div className="flex-shrink-0 grid grid-cols-3 gap-2 md:gap-4 px-2 md:px-5 pt-2 md:pt-3">
         {[
           { label: 'Tổng KH', value: stats.totalCustomers, icon: Users, accentColor: '#ffe08a', unit: 'KH' },
-          { label: 'Tổng Phí', value: stats.totalFee * 1e6, icon: DollarSign, accentColor: '#34d399' },
+          { label: 'Tổng Phí', value: stats.totalFee * 1e6, icon: DollarSign, accentColor: '#00e676' },
           { label: 'Tổng Quà', value: stats.totalGiftValue, icon: Gift, accentColor: '#ffe08a' },
         ].map((stat, idx) => (
           <motion.div
@@ -297,16 +297,16 @@ export default function InvestmentApp() {
                         <td className="py-3 px-2 text-center font-bold text-lg" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{realIdx + 1}</td>
                         <td className="py-3 px-3 text-left font-bold text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{titleCase(realC.name)}</td>
                         <td className="py-3 px-3 text-left text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{titleCase(realC.advisor) || '—'}</td>
-                        <td className="py-3 px-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                        <td className="py-3 px-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#00e676', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                           {formatVND(realC.investmentFee * 1e6)}
                         </td>
-                        <td className="py-3 px-3 text-left font-semibold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                        <td className="py-3 px-3 text-left font-semibold text-2xl whitespace-nowrap" style={{ color: '#00e676', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                           <span className="inline-flex items-center gap-2">
-                            <Gift className="w-4 h-4 flex-shrink-0" style={{ color: '#34d399', filter: 'drop-shadow(0 0 3px rgba(52,211,153,0.4))' }} />
+                            <Gift className="w-4 h-4 flex-shrink-0" style={{ color: '#00e676', filter: 'drop-shadow(0 0 3px rgba(52,211,153,0.4))' }} />
                             <span>{store.getGiftByFee(realC.investmentFee).name || '—'}</span>
                           </span>
                         </td>
-                        <td className="py-3 px-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                        <td className="py-3 px-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#00e676', borderRight: '1px solid rgba(255,224,138,0.25)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                           {formatVND(store.getGiftByFee(realC.investmentFee).value)}
                         </td>
                         <td className="py-1 px-2">
@@ -317,7 +317,7 @@ export default function InvestmentApp() {
                               className="p-0.5 rounded transition-colors"
                               style={{
                                 background: realC.status === 'Đã nhận quà' ? 'rgba(16,185,129,0.2)' : 'rgba(255,224,138,0.1)',
-                                color: realC.status === 'Đã nhận quà' ? '#34d399' : 'rgba(255,224,138,0.4)',
+                                color: realC.status === 'Đã nhận quà' ? '#00e676' : 'rgba(255,224,138,0.4)',
                               }}
                               title={realC.status === 'Đã nhận quà' ? 'Chưa nhận quà' : 'Đã nhận quà'}
                             >
@@ -370,7 +370,7 @@ export default function InvestmentApp() {
                   </div>
                   <div className="mt-1 flex items-center justify-between">
                     <span className="text-xs" style={{ color: 'rgba(255,224,138,0.6)' }}>{titleCase(c.advisor) || '—'}</span>
-                    <span className="text-xs font-mono font-bold" style={{ color: '#34d399' }}>{formatVND(c.investmentFee * 1e6)}</span>
+                    <span className="text-xs font-mono font-bold" style={{ color: '#00e676' }}>{formatVND(c.investmentFee * 1e6)}</span>
                   </div>
                 </div>
                 <AnimatePresence>
@@ -399,7 +399,7 @@ export default function InvestmentApp() {
                           <StatusBadge status={c.status} />
                           <div className="flex gap-1.5">
                             <motion.button whileTap={{ scale: 0.9 }} onClick={() => store.toggleReceivedStatus(c.id)}
-                              className="p-1.5 rounded" style={{ background: 'rgba(16,185,129,0.2)', color: '#34d399' }}>
+                              className="p-1.5 rounded" style={{ background: 'rgba(16,185,129,0.2)', color: '#00e676' }}>
                               <Check className="w-3.5 h-3.5" />
                             </motion.button>
                             <motion.button whileTap={{ scale: 0.9 }} onClick={() => { const event = new CustomEvent('editCustomer', { detail: c }); window.dispatchEvent(event); }}
@@ -460,7 +460,7 @@ export default function InvestmentApp() {
             style={{
               background: autoScroll ? 'rgba(16,185,129,0.2)' : 'rgba(20,42,82,0.9)',
               borderColor: autoScroll ? 'rgba(52,211,153,0.4)' : 'rgba(255,224,138,0.3)',
-              color: autoScroll ? '#34d399' : 'rgba(255,224,138,0.5)',
+              color: autoScroll ? '#00e676' : 'rgba(255,224,138,0.5)',
             }}
             title={autoScroll ? 'Tắt cuộn tự động' : 'Bật cuộn tự động'}
           >
