@@ -57,7 +57,7 @@ function StatusBadge({ status }: { status: string }) {
 export default function InvestmentApp() {
   const store = useInvestmentStore();
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
-  const [autoScroll, setAutoScroll] = useState(true);
+  const [autoScroll, setAutoScroll] = useState(false);
   const tableBodyRef = useRef<HTMLDivElement>(null);
 
   const hasLoaded = useRef(false);
@@ -72,56 +72,53 @@ export default function InvestmentApp() {
   const stats = store.getStats();
   const isEmpty = filtered.length === 0;
 
-  // Auto-scroll for desktop table (bottom to top)
+  // Auto-scroll for desktop table (bottom to top, loop)
+  // Use ref to track animation so it starts/stops immediately
+  const scrollAnimRef = useRef<number>(0);
+
   useEffect(() => {
-    if (!autoScroll) return;
     const el = tableBodyRef.current;
     if (!el) return;
 
-    let animId: number;
-    let started = false;
-
-    const startScroll = () => {
-      if (started) return;
-      if (el.scrollHeight <= el.clientHeight + 10) return;
-      started = true;
-      let scrollPos = el.scrollHeight;
-      el.scrollTop = scrollPos;
-      const speed = 0.5;
-      const scroll = () => {
-        scrollPos -= speed;
-        if (scrollPos <= 0) {
-          scrollPos = el.scrollHeight / 2;
-        }
-        el.scrollTop = scrollPos;
-        animId = requestAnimationFrame(scroll);
-      };
-      animId = requestAnimationFrame(scroll);
-    };
-
-    // Retry until content is loaded
-    let attempt = 0;
-    const tryStart = () => {
-      if (started || attempt > 30) return;
-      attempt++;
-      if (el.scrollHeight > el.clientHeight + 10) {
-        startScroll();
-      } else {
-        setTimeout(tryStart, 300);
+    if (!autoScroll) {
+      // Stop any running scroll animation immediately
+      if (scrollAnimRef.current) {
+        cancelAnimationFrame(scrollAnimRef.current);
+        scrollAnimRef.current = 0;
       }
+      el.scrollTop = 0;
+      return;
+    }
+
+    // Check if there's enough content to scroll
+    if (el.scrollHeight <= el.clientHeight + 10) return;
+
+    // Start from the bottom and scroll up
+    // Content is duplicated when autoScroll is on, so loop from top back to middle (start of copy 2)
+    let scrollPos = el.scrollHeight - el.clientHeight;
+    el.scrollTop = scrollPos;
+    const speed = 0.8;
+
+    const scroll = () => {
+      scrollPos -= speed;
+      if (scrollPos <= 0) {
+        // Seamless loop: jump to start of second copy (scrollHeight / 2)
+        scrollPos = el.scrollHeight / 2;
+      }
+      el.scrollTop = scrollPos;
+      scrollAnimRef.current = requestAnimationFrame(scroll);
     };
-    tryStart();
+    scrollAnimRef.current = requestAnimationFrame(scroll);
 
     return () => {
-      if (animId) cancelAnimationFrame(animId);
+      if (scrollAnimRef.current) {
+        cancelAnimationFrame(scrollAnimRef.current);
+        scrollAnimRef.current = 0;
+      }
     };
   }, [autoScroll, filtered.length, store.customers]);
 
-  useEffect(() => {
-    if (!autoScroll && tableBodyRef.current) {
-      tableBodyRef.current.scrollTop = 0;
-    }
-  }, [autoScroll]);
+
 
   return (
     <div className="h-screen flex flex-col overflow-hidden" style={{ background: '#0f2240' }}>
@@ -182,40 +179,40 @@ export default function InvestmentApp() {
         </div>
       </motion.div>
 
-      {/* === STATS - Brighter boxes, larger text === */}
+      {/* === STATS - Horizontal 1-line layout, metrics prominent === */}
       <div className="flex-shrink-0 grid grid-cols-3 gap-1.5 md:gap-3 px-2 md:px-5 pt-2 md:pt-3">
         {[
-          { label: 'Tổng KH', value: stats.totalCustomers, icon: Users, accentColor: '#ffe08a', unit: 'KH' },
-          { label: 'Tổng phí', value: stats.totalFee * 1e6, icon: DollarSign, accentColor: '#34d399' },
-          { label: 'Tổng quà', value: stats.totalGiftValue, icon: Gift, accentColor: '#ffe08a' },
+          { label: 'Tổng KH:', value: stats.totalCustomers, icon: Users, accentColor: '#ffe08a', unit: 'KH' },
+          { label: 'Tổng phí:', value: stats.totalFee * 1e6, icon: DollarSign, accentColor: '#34d399' },
+          { label: 'Tổng quà:', value: stats.totalGiftValue, icon: Gift, accentColor: '#ffe08a' },
         ].map((stat, idx) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.08 * idx }}
-            className="metallic-grain flex items-center gap-2 md:gap-3 rounded-xl p-2 md:p-4 shadow-md overflow-hidden"
+            className="metallic-grain flex items-center gap-1.5 md:gap-2 rounded-lg px-2 py-1.5 md:px-3 md:py-2 shadow-md overflow-hidden"
             style={{
               background: 'linear-gradient(145deg, #1c3a6e 0%, #224a82 30%, #1a3560 60%, #254f8a 100%)',
               border: '2px solid rgba(255,224,138,0.5)',
               boxShadow: '0 0 20px rgba(255,224,138,0.15), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)',
             }}
           >
-            <div className="p-1 md:p-2 rounded-lg flex-shrink-0" style={{ background: 'rgba(255,224,138,0.15)' }}>
-              <stat.icon className="w-4 h-4 md:w-6 md:h-6" style={{ color: '#ffe08a' }} />
+            <div className="p-0.5 md:p-1.5 rounded flex-shrink-0" style={{ background: 'rgba(255,224,138,0.15)' }}>
+              <stat.icon className="w-3 h-3 md:w-5 md:h-5" style={{ color: '#ffe08a' }} />
             </div>
-            <div className="min-w-0">
-              <p className="text-[10px] md:text-sm font-bold uppercase tracking-wide" style={{ color: 'rgba(255,224,138,0.7)' }}>{stat.label}</p>
-              <p className="text-lg md:text-3xl font-black leading-tight" style={{ color: stat.accentColor, textShadow: '0 0 15px rgba(255,224,138,0.3)' }}>
+            <div className="min-w-0 flex items-baseline gap-1 md:gap-1.5 flex-nowrap whitespace-nowrap">
+              <span className="text-[9px] md:text-sm font-bold uppercase tracking-wide" style={{ color: 'rgba(255,224,138,0.65)' }}>{stat.label}</span>
+              <span className="text-base md:text-2xl font-black leading-none" style={{ color: stat.accentColor, textShadow: '0 0 15px rgba(255,224,138,0.3)' }}>
                 {stat.unit ? (
-                  <>{stat.value} <span className="text-base md:text-xl">{stat.unit}</span></>
+                  <>{stat.value} <span className="text-xs md:text-lg font-bold">{stat.unit}</span></>
                 ) : (
                   <>
                     <span className="md:hidden">{typeof stat.value === 'number' ? formatCompactVND(stat.value) : stat.value}</span>
                     <span className="hidden md:inline">{typeof stat.value === 'number' ? formatVND(stat.value) : stat.value}</span>
                   </>
                 )}
-              </p>
+              </span>
             </div>
           </motion.div>
         ))}
