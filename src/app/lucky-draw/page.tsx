@@ -1085,7 +1085,70 @@ export default function LuckyDrawPage() {
               border: '2px solid rgba(255,224,138,0.3)',
               borderRadius: '0',
             }}>
-            <CircularLEDStrip />
+            {/* Square LED bulbs arranged along the inside perimeter of the slot machine */}
+            <div className="absolute pointer-events-none z-20" style={{ inset: '8px' }}>
+              {/* Top row */}
+              {Array.from({ length: 30 }).map((_, i) => (
+                <div
+                  key={`sq-top-${i}`}
+                  className="absolute w-2 h-2 led-bulb"
+                  style={{
+                    top: 0,
+                    left: `${(i / 30) * 100}%`,
+                    animationDelay: `${i * 0.07}s`,
+                  }}
+                />
+              ))}
+              {/* Bottom row */}
+              {Array.from({ length: 30 }).map((_, i) => (
+                <div
+                  key={`sq-bot-${i}`}
+                  className="absolute w-2 h-2 led-bulb"
+                  style={{
+                    bottom: 0,
+                    left: `${(i / 30) * 100}%`,
+                    animationDelay: `${(30 - i) * 0.07}s`,
+                  }}
+                />
+              ))}
+              {/* Left column */}
+              {Array.from({ length: 15 }).map((_, i) => (
+                <div
+                  key={`sq-left-${i}`}
+                  className="absolute w-2 h-2 led-bulb"
+                  style={{
+                    left: 0,
+                    top: `${(i / 15) * 100}%`,
+                    animationDelay: `${(30 + i) * 0.07}s`,
+                  }}
+                />
+              ))}
+              {/* Right column */}
+              {Array.from({ length: 15 }).map((_, i) => (
+                <div
+                  key={`sq-right-${i}`}
+                  className="absolute w-2 h-2 led-bulb"
+                  style={{
+                    right: 0,
+                    top: `${(i / 15) * 100}%`,
+                    animationDelay: `${(45 - i) * 0.07}s`,
+                  }}
+                />
+              ))}
+              {/* 4 corner bulbs - bigger */}
+              {[
+                { top: '-3px', left: '-3px' },
+                { top: '-3px', right: '-3px' },
+                { bottom: '-3px', left: '-3px' },
+                { bottom: '-3px', right: '-3px' },
+              ].map((pos, i) => (
+                <div
+                  key={`sq-corner-${i}`}
+                  className="absolute w-3 h-3 led-bulb"
+                  style={{ ...pos, animationDelay: `${i * 0.8}s` } as React.CSSProperties}
+                />
+              ))}
+            </div>
             <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 5}px` }}>
               <div className="absolute inset-0 pointer-events-none z-10">
                 <div className="absolute top-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 2}px`, background: 'linear-gradient(to bottom, rgba(15,32,66,1) 0%, rgba(15,32,66,0.95) 30%, rgba(15,32,66,0.7) 60%, rgba(15,32,66,0.3) 85%, transparent 100%)' }} />
@@ -1454,31 +1517,29 @@ export default function LuckyDrawPage() {
                 border: '2px solid rgba(255,224,138,0.3)',
                 borderRadius: '0',
               }}>
-              {/* LED strip running around in circles */}
-              <CircularLEDStrip />
-              {/* Square LED dots arranged along the inside perimeter of the slot machine */}
-              <div className="absolute pointer-events-none z-20" style={{ inset: '6px' }}>
+              {/* Square LED bulbs arranged along the inside perimeter - round bulbs */}
+              <div className="absolute pointer-events-none z-20" style={{ inset: '10px' }}>
                 {/* Top row */}
-                {Array.from({ length: 40 }).map((_, i) => (
+                {Array.from({ length: 50 }).map((_, i) => (
                   <div
                     key={`sq-top-${i}`}
-                    className="absolute w-2.5 h-2.5 led-corner"
+                    className="absolute w-3 h-3 led-bulb"
                     style={{
                       top: 0,
-                      left: `${(i / 40) * 100}%`,
-                      animationDelay: `${i * 0.07}s`,
+                      left: `${(i / 50) * 100}%`,
+                      animationDelay: `${i * 0.06}s`,
                     }}
                   />
                 ))}
                 {/* Bottom row */}
-                {Array.from({ length: 40 }).map((_, i) => (
+                {Array.from({ length: 50 }).map((_, i) => (
                   <div
                     key={`sq-bot-${i}`}
-                    className="absolute w-2.5 h-2.5 led-corner"
+                    className="absolute w-3 h-3 led-bulb"
                     style={{
                       bottom: 0,
-                      left: `${(i / 40) * 100}%`,
-                      animationDelay: `${(40 - i) * 0.07}s`,
+                      left: `${(i / 50) * 100}%`,
+                      animationDelay: `${(50 - i) * 0.06}s`,
                     }}
                   />
                 ))}
@@ -1486,11 +1547,11 @@ export default function LuckyDrawPage() {
                 {Array.from({ length: 20 }).map((_, i) => (
                   <div
                     key={`sq-left-${i}`}
-                    className="absolute w-2.5 h-2.5 led-corner"
+                    className="absolute w-3 h-3 led-bulb"
                     style={{
                       left: 0,
                       top: `${(i / 20) * 100}%`,
-                      animationDelay: `${(40 + i) * 0.07}s`,
+                      animationDelay: `${(50 + i) * 0.06}s`,
                     }}
                   />
                 ))}
@@ -1498,24 +1559,24 @@ export default function LuckyDrawPage() {
                 {Array.from({ length: 20 }).map((_, i) => (
                   <div
                     key={`sq-right-${i}`}
-                    className="absolute w-2.5 h-2.5 led-corner"
+                    className="absolute w-3 h-3 led-bulb"
                     style={{
                       right: 0,
                       top: `${(i / 20) * 100}%`,
-                      animationDelay: `${(60 - i) * 0.07}s`,
+                      animationDelay: `${(70 - i) * 0.06}s`,
                     }}
                   />
                 ))}
-                {/* Corner dots - bigger */}
+                {/* 4 corner bulbs - bigger */}
                 {[
-                  { top: '-2px', left: '-2px' },
-                  { top: '-2px', right: '-2px' },
-                  { bottom: '-2px', left: '-2px' },
-                  { bottom: '-2px', right: '-2px' },
+                  { top: '-4px', left: '-4px' },
+                  { top: '-4px', right: '-4px' },
+                  { bottom: '-4px', left: '-4px' },
+                  { bottom: '-4px', right: '-4px' },
                 ].map((pos, i) => (
                   <div
                     key={`sq-corner-${i}`}
-                    className="absolute w-3.5 h-3.5 led-corner"
+                    className="absolute w-4 h-4 led-bulb"
                     style={{ ...pos, animationDelay: `${i * 0.8}s` } as React.CSSProperties}
                   />
                 ))}
