@@ -160,7 +160,7 @@ export default function InvestmentApp() {
             <h1 className="text-2xl md:text-4xl font-black uppercase tracking-wider" style={{ color: '#ffe08a', textShadow: '0 0 20px rgba(255,224,138,0.3)' }}>
               {store.eventInfo.name}
             </h1>
-            <p style={{ color: 'rgba(255,224,138,0.7)' }} className="font-medium text-[22px] md:text-2xl">
+            <p style={{ color: '#ffe08a', fontStyle: 'italic' }} className="font-medium text-[22px] md:text-2xl">
               {store.eventInfo.date} &bull; {store.eventInfo.location}
             </p>
           </div>
@@ -252,13 +252,13 @@ export default function InvestmentApp() {
             {/* Fixed table header - always visible */}
             <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
               <colgroup>
-                <col style={{ width: '5%' }} />
-                <col style={{ width: '18%' }} />
+                <col style={{ width: '3%' }} />
+                <col style={{ width: '19%' }} />
+                <col style={{ width: '16%' }} />
                 <col style={{ width: '15%' }} />
-                <col style={{ width: '14%' }} />
-                <col style={{ width: '24%' }} />
-                <col style={{ width: '12%' }} />
-                <col style={{ width: '12%' }} />
+                <col style={{ width: '26%' }} />
+                <col style={{ width: '13%' }} />
+                <col style={{ width: '8%' }} />
               </colgroup>
               <thead>
                 <tr style={{ background: 'linear-gradient(135deg, #1a3560, #224a82)' }}>
@@ -282,13 +282,13 @@ export default function InvestmentApp() {
               <div ref={scrollWrapperRef}>
                 <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
                   <colgroup>
-                    <col style={{ width: '5%' }} />
-                    <col style={{ width: '18%' }} />
+                    <col style={{ width: '3%' }} />
+                    <col style={{ width: '19%' }} />
+                    <col style={{ width: '16%' }} />
                     <col style={{ width: '15%' }} />
-                    <col style={{ width: '14%' }} />
-                    <col style={{ width: '24%' }} />
-                    <col style={{ width: '12%' }} />
-                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '26%' }} />
+                    <col style={{ width: '13%' }} />
+                    <col style={{ width: '8%' }} />
                   </colgroup>
                   <tbody>
                     {(autoScroll ? [filtered, filtered] : [filtered]).flat().map((c, idx) => {
@@ -304,22 +304,22 @@ export default function InvestmentApp() {
                           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,224,138,0.06)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                         >
-                          <td className="py-3 text-center font-bold text-xl" style={{ color: 'rgba(255,224,138,0.5)', borderRight: '1px solid rgba(255,224,138,0.12)' }}>{realIdx + 1}</td>
-                          <td className="py-3 text-left font-bold text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.name)}</td>
-                          <td className="py-3 text-left text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.12)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.advisor) || '—'}</td>
-                          <td className="py-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.12)' }}>
+                          <td className="py-3 px-2 text-center font-bold text-2xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)' }}>{realIdx + 1}</td>
+                          <td className="py-3 px-3 text-left font-bold text-3xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.name)}</td>
+                          <td className="py-3 px-3 text-left text-3xl" style={{ color: '#ffe08a', borderRight: '1px solid rgba(255,224,138,0.25)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleCase(realC.advisor) || '—'}</td>
+                          <td className="py-3 px-3 text-center font-bold text-3xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)' }}>
                             {formatVND(realC.investmentFee * 1e6)}
                           </td>
-                          <td className="py-3 text-left font-semibold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.12)' }}>
+                          <td className="py-3 px-3 text-left font-semibold text-3xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)' }}>
                             <span className="inline-flex items-center gap-2">
-                              <Gift className="w-5 h-5 flex-shrink-0" style={{ color: 'rgba(52,211,153,0.6)' }} />
+                              <Gift className="w-5 h-5 flex-shrink-0" style={{ color: '#34d399' }} />
                               <span>{store.getGiftByFee(realC.investmentFee).name || '—'}</span>
                             </span>
                           </td>
-                          <td className="py-3 text-center font-bold text-2xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.12)' }}>
+                          <td className="py-3 px-3 text-center font-bold text-3xl whitespace-nowrap" style={{ color: '#34d399', borderRight: '1px solid rgba(255,224,138,0.25)' }}>
                             {formatVND(store.getGiftByFee(realC.investmentFee).value)}
                           </td>
-                          <td className="py-1">
+                          <td className="py-1 px-2">
                             <div className="flex flex-col items-center gap-0.5">
                               <StatusBadge status={realC.status} />
                               <button
