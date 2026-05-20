@@ -239,8 +239,8 @@ export default function InvestmentApp() {
             {/* Single table with sticky header - ensures column alignment */}
             <div
               ref={tableBodyRef}
-              className={`flex-1 overflow-y-auto ${autoScroll ? 'overflow-y-hidden' : ''}`}
-              style={{ fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}
+              className="flex-1"
+              style={{ overflowY: autoScroll ? 'hidden' : 'auto', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}
             >
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 z-10">
