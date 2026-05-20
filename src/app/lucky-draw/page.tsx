@@ -138,8 +138,51 @@ class ConfettiSystem {
   };
 }
 
-// Enhanced background effect system: Firework rays + Burst fireworks + Sparkle particles
-// Effects radiate from center below the slot machine
+// Enhanced background effect system: Multi-color firework rays + Burst fireworks + Sparkle particles
+// Effects radiate from center with RAINBOW colors
+const HUE_COLORS: Record<number, [number, number, number]> = {
+  0:   [255, 100, 100],  // Red
+  15:  [255, 140, 80],   // Orange-Red
+  30:  [232, 184, 74],   // Amber
+  45:  [255, 224, 138],  // Gold
+  60:  [255, 255, 100],  // Yellow
+  90:  [100, 255, 100],  // Green
+  120: [52, 211, 153],   // Emerald
+  160: [80, 200, 255],   // Cyan
+  200: [100, 140, 255],  // Blue
+  240: [140, 100, 255],  // Purple
+  270: [200, 100, 255],  // Violet
+  300: [255, 100, 200],  // Pink
+  330: [255, 100, 150],  // Rose
+};
+
+function getHueRGB(hue: number): [number, number, number] {
+  const keys = Object.keys(HUE_COLORS).map(Number).sort((a, b) => a - b);
+  let lo = keys[0], hi = keys[keys.length - 1];
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (hue >= keys[i] && hue <= keys[i + 1]) { lo = keys[i]; hi = keys[i + 1]; break; }
+  }
+  const t = hi === lo ? 0 : (hue - lo) / (hi - lo);
+  const cLo = HUE_COLORS[lo], cHi = HUE_COLORS[hi];
+  return [
+    Math.round(cLo[0] + (cHi[0] - cLo[0]) * t),
+    Math.round(cLo[1] + (cHi[1] - cLo[1]) * t),
+    Math.round(cLo[2] + (cHi[2] - cLo[2]) * t),
+  ];
+}
+
+function rgbaStr(rgb: [number, number, number], a: number) {
+  return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
+}
+
+const SPARKLE_COLORS = [
+  '#ffe08a', '#f5d870', '#ffd700', '#e8b84a',
+  '#34d399', '#6ee7b7', '#fff8dc', '#fffacd',
+  '#ff6b6b', '#ff9f43', '#ee5a24', '#f368e0',
+  '#54a0ff', '#5f27cd', '#01a3a4', '#ff9ff3',
+  '#feca57', '#48dbfb', '#ff6348', '#7bed9f',
+];
+
 class FireworkSystem {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -186,10 +229,11 @@ class FireworkSystem {
     this.rays = [];
     this.sparkles = [];
     this.burstGroups = [];
-    for (let i = 0; i < 70; i++) {
+    // More rays and sparkles for richer effect
+    for (let i = 0; i < 120; i++) {
       this.rays.push(this.createRay());
     }
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 180; i++) {
       this.sparkles.push(this.createSparkle());
     }
     this.createBurst();
@@ -199,73 +243,76 @@ class FireworkSystem {
   private createRay() {
     const angle = Math.random() * Math.PI * 2;
     const dist = Math.random() * 50;
+    // Random hue across full spectrum for rainbow effect
+    const hue = Math.random() * 360;
     return {
       x: this.centerX + Math.cos(angle) * dist,
       y: this.centerY + Math.sin(angle) * dist,
       angle: angle + (Math.random() - 0.5) * 0.3,
-      length: 50 + Math.random() * 200,
-      speed: 0.3 + Math.random() * 1.2,
-      opacity: 0.08 + Math.random() * 0.18,
-      opacityDir: (Math.random() > 0.5 ? 1 : -1) * 0.004,
-      width: 1 + Math.random() * 3,
-      hue: Math.random() > 0.5 ? 45 : Math.random() > 0.3 ? 30 : 160,
+      length: 80 + Math.random() * 300,
+      speed: 0.4 + Math.random() * 1.5,
+      opacity: 0.1 + Math.random() * 0.25,
+      opacityDir: (Math.random() > 0.5 ? 1 : -1) * 0.005,
+      width: 1 + Math.random() * 3.5,
+      hue,
       life: Math.floor(Math.random() * 200),
-      maxLife: 250 + Math.random() * 500,
+      maxLife: 200 + Math.random() * 400,
     };
   }
 
   private createSparkle() {
     const angle = Math.random() * Math.PI * 2;
-    const dist = Math.random() * Math.max(this.canvas.width, this.canvas.height) * 0.6;
-    const colors = ['#ffe08a', '#f5d870', '#ffd700', '#e8b84a', '#34d399', '#6ee7b7', '#fff8dc', '#fffacd'];
+    const dist = Math.random() * Math.max(this.canvas.width, this.canvas.height) * 0.65;
     return {
       x: this.centerX + Math.cos(angle) * dist,
       y: this.centerY + Math.sin(angle) * dist,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      size: 1.5 + Math.random() * 3.5,
-      opacity: 0.15 + Math.random() * 0.5,
-      opacityDir: (Math.random() > 0.5 ? 1 : -1) * (0.006 + Math.random() * 0.012),
-      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      size: 1.5 + Math.random() * 4.5,
+      opacity: 0.15 + Math.random() * 0.55,
+      opacityDir: (Math.random() > 0.5 ? 1 : -1) * (0.006 + Math.random() * 0.014),
+      color: SPARKLE_COLORS[Math.floor(Math.random() * SPARKLE_COLORS.length)],
       life: Math.floor(Math.random() * 150),
       maxLife: 200 + Math.random() * 400,
-      twinkleSpeed: 0.06 + Math.random() * 0.12,
+      twinkleSpeed: 0.06 + Math.random() * 0.14,
       twinklePhase: Math.random() * Math.PI * 2,
     };
   }
 
   private createBurst() {
-    const rayCount = 14 + Math.floor(Math.random() * 18);
+    const rayCount = 18 + Math.floor(Math.random() * 24);
     const burstRays: Array<{ angle: number; length: number; width: number; opacity: number; hue: number }> = [];
     const baseAngle = Math.random() * Math.PI * 2;
     const spread = Math.PI * 0.8 + Math.random() * Math.PI * 0.6;
+    // Each burst gets a random dominant hue, with some variation
+    const dominantHue = Math.random() * 360;
     for (let i = 0; i < rayCount; i++) {
       burstRays.push({
         angle: baseAngle - spread / 2 + (spread / (rayCount - 1)) * i + (Math.random() - 0.5) * 0.1,
-        length: 80 + Math.random() * 250,
-        width: 1.5 + Math.random() * 3,
-        opacity: 0.4 + Math.random() * 0.4,
-        hue: Math.random() > 0.4 ? 45 : Math.random() > 0.5 ? 30 : 160,
+        length: 100 + Math.random() * 300,
+        width: 1.5 + Math.random() * 3.5,
+        opacity: 0.5 + Math.random() * 0.4,
+        hue: dominantHue + (Math.random() - 0.5) * 60, // Color variation around dominant
       });
     }
     this.burstGroups.push({
-      x: this.centerX + (Math.random() - 0.5) * 80,
-      y: this.centerY + (Math.random() - 0.5) * 50,
+      x: this.centerX + (Math.random() - 0.5) * 100,
+      y: this.centerY + (Math.random() - 0.5) * 60,
       age: 0,
-      maxAge: 90 + Math.random() * 70,
+      maxAge: 80 + Math.random() * 80,
       rays: burstRays,
     });
     // Burst sparkles at origin
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 15; i++) {
       const a = Math.random() * Math.PI * 2;
-      const spd = 0.5 + Math.random() * 2;
+      const spd = 0.5 + Math.random() * 2.5;
       this.sparkles.push({
         x: this.centerX + (Math.random() - 0.5) * 30,
         y: this.centerY + (Math.random() - 0.5) * 20,
         vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
-        size: 2 + Math.random() * 4,
-        opacity: 0.6 + Math.random() * 0.3, opacityDir: -0.01,
-        color: Math.random() > 0.3 ? '#ffe08a' : '#34d399',
+        size: 2 + Math.random() * 5,
+        opacity: 0.6 + Math.random() * 0.35, opacityDir: -0.01,
+        color: SPARKLE_COLORS[Math.floor(Math.random() * SPARKLE_COLORS.length)],
         life: 0, maxLife: 120 + Math.random() * 80,
         twinkleSpeed: 0.15, twinklePhase: Math.random() * Math.PI * 2,
       });
@@ -286,32 +333,25 @@ class FireworkSystem {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.frameCount++;
 
-    // Periodic firework bursts
-    if (this.frameCount % 100 === 0) this.createBurst();
+    // More frequent firework bursts for richer effect
+    if (this.frameCount % 60 === 0) this.createBurst();
 
-    // Ambient rays
+    // Ambient rays - now with full rainbow colors
     for (const r of this.rays) {
       r.x += Math.cos(r.angle) * r.speed;
       r.y += Math.sin(r.angle) * r.speed;
       r.life++;
       r.opacity += r.opacityDir;
-      if (r.opacity > 0.3 || r.opacity < 0.04) r.opacityDir *= -1;
+      if (r.opacity > 0.35 || r.opacity < 0.05) r.opacityDir *= -1;
       if (r.x < -100 || r.x > this.canvas.width + 100 || r.y < -100 || r.y > this.canvas.height + 100 || r.life > r.maxLife) {
         Object.assign(r, this.createRay());
       }
       const endX = r.x + Math.cos(r.angle) * r.length;
       const endY = r.y + Math.sin(r.angle) * r.length;
+      const rgb = getHueRGB(((r.hue % 360) + 360) % 360);
       const gradient = this.ctx.createLinearGradient(r.x, r.y, endX, endY);
-      if (r.hue === 45) {
-        gradient.addColorStop(0, `rgba(255, 224, 138, ${r.opacity})`);
-        gradient.addColorStop(1, 'rgba(255, 224, 138, 0)');
-      } else if (r.hue === 160) {
-        gradient.addColorStop(0, `rgba(52, 211, 153, ${r.opacity * 0.7})`);
-        gradient.addColorStop(1, 'rgba(52, 211, 153, 0)');
-      } else {
-        gradient.addColorStop(0, `rgba(232, 184, 74, ${r.opacity * 0.85})`);
-        gradient.addColorStop(1, 'rgba(232, 184, 74, 0)');
-      }
+      gradient.addColorStop(0, rgbaStr(rgb, r.opacity));
+      gradient.addColorStop(1, rgbaStr(rgb, 0));
       this.ctx.beginPath();
       this.ctx.moveTo(r.x, r.y);
       this.ctx.lineTo(endX, endY);
@@ -321,7 +361,7 @@ class FireworkSystem {
       this.ctx.stroke();
     }
 
-    // Burst groups (firework explosions)
+    // Burst groups (firework explosions) - now with rainbow colors
     for (let g = this.burstGroups.length - 1; g >= 0; g--) {
       const burst = this.burstGroups[g];
       burst.age++;
@@ -335,20 +375,11 @@ class FireworkSystem {
         const endY = startY + Math.sin(ray.angle) * currentLength;
         const opacity = ray.opacity * fadeOut;
         if (opacity < 0.01) continue;
+        const rgb = getHueRGB(((ray.hue % 360) + 360) % 360);
         const gradient = this.ctx.createLinearGradient(startX, startY, endX, endY);
-        if (ray.hue === 45) {
-          gradient.addColorStop(0, `rgba(255, 224, 138, ${opacity})`);
-          gradient.addColorStop(0.3, `rgba(255, 224, 138, ${opacity * 0.6})`);
-          gradient.addColorStop(1, 'rgba(255, 224, 138, 0)');
-        } else if (ray.hue === 160) {
-          gradient.addColorStop(0, `rgba(52, 211, 153, ${opacity * 0.8})`);
-          gradient.addColorStop(0.3, `rgba(52, 211, 153, ${opacity * 0.4})`);
-          gradient.addColorStop(1, 'rgba(52, 211, 153, 0)');
-        } else {
-          gradient.addColorStop(0, `rgba(232, 184, 74, ${opacity * 0.9})`);
-          gradient.addColorStop(0.3, `rgba(232, 184, 74, ${opacity * 0.5})`);
-          gradient.addColorStop(1, 'rgba(232, 184, 74, 0)');
-        }
+        gradient.addColorStop(0, rgbaStr(rgb, opacity));
+        gradient.addColorStop(0.3, rgbaStr(rgb, opacity * 0.6));
+        gradient.addColorStop(1, rgbaStr(rgb, 0));
         this.ctx.beginPath();
         this.ctx.moveTo(startX, startY);
         this.ctx.lineTo(endX, endY);
@@ -357,13 +388,14 @@ class FireworkSystem {
         this.ctx.lineCap = 'round';
         this.ctx.stroke();
       }
-      // Burst glow at origin
-      if (fadeOut > 0.1) {
-        const glowSize = 25 + 40 * Math.min(progress * 3, 1);
+      // Burst glow at origin - use dominant hue
+      if (fadeOut > 0.1 && burst.rays.length > 0) {
+        const glowSize = 30 + 50 * Math.min(progress * 3, 1);
+        const glowRGB = getHueRGB(((burst.rays[0].hue % 360) + 360) % 360);
         const glowGradient = this.ctx.createRadialGradient(burst.x, burst.y, 0, burst.x, burst.y, glowSize);
-        glowGradient.addColorStop(0, `rgba(255, 224, 138, ${0.4 * fadeOut})`);
-        glowGradient.addColorStop(0.5, `rgba(255, 224, 138, ${0.15 * fadeOut})`);
-        glowGradient.addColorStop(1, 'rgba(255, 224, 138, 0)');
+        glowGradient.addColorStop(0, rgbaStr(glowRGB, 0.5 * fadeOut));
+        glowGradient.addColorStop(0.5, rgbaStr(glowRGB, 0.2 * fadeOut));
+        glowGradient.addColorStop(1, rgbaStr(glowRGB, 0));
         this.ctx.beginPath();
         this.ctx.arc(burst.x, burst.y, glowSize, 0, Math.PI * 2);
         this.ctx.fillStyle = glowGradient;
@@ -372,7 +404,7 @@ class FireworkSystem {
       if (burst.age >= burst.maxAge) this.burstGroups.splice(g, 1);
     }
 
-    // Sparkles
+    // Sparkles - multi-color
     for (let i = this.sparkles.length - 1; i >= 0; i--) {
       const s = this.sparkles[i];
       s.x += s.vx;
@@ -383,7 +415,7 @@ class FireworkSystem {
       s.twinklePhase += s.twinkleSpeed;
       const twinkle = 0.5 + 0.5 * Math.sin(s.twinklePhase);
       s.opacity += s.opacityDir;
-      if (s.opacity > 0.7) s.opacityDir = -Math.abs(s.opacityDir);
+      if (s.opacity > 0.8) s.opacityDir = -Math.abs(s.opacityDir);
       if (s.opacity < 0.03) s.opacityDir = Math.abs(s.opacityDir);
       const finalOpacity = s.opacity * twinkle;
       if (s.life > s.maxLife || finalOpacity < 0.01) {
@@ -393,24 +425,25 @@ class FireworkSystem {
       this.ctx.save();
       this.ctx.globalAlpha = finalOpacity;
       // Glow halo
-      const glowGradient = this.ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 4);
+      const glowGradient = this.ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 5);
       glowGradient.addColorStop(0, s.color);
-      glowGradient.addColorStop(0.4, `rgba(255, 224, 138, ${0.3 * finalOpacity})`);
+      glowGradient.addColorStop(0.35, s.color);
+      glowGradient.addColorStop(0.5, `rgba(255, 255, 255, ${0.15 * finalOpacity})`);
       glowGradient.addColorStop(1, 'rgba(0,0,0,0)');
       this.ctx.beginPath();
-      this.ctx.arc(s.x, s.y, s.size * 4, 0, Math.PI * 2);
+      this.ctx.arc(s.x, s.y, s.size * 5, 0, Math.PI * 2);
       this.ctx.fillStyle = glowGradient;
       this.ctx.fill();
-      // Core dot
+      // Core dot - white bright center
       this.ctx.beginPath();
-      this.ctx.arc(s.x, s.y, s.size * 0.7, 0, Math.PI * 2);
+      this.ctx.arc(s.x, s.y, s.size * 0.8, 0, Math.PI * 2);
       this.ctx.fillStyle = '#ffffff';
       this.ctx.fill();
-      // Cross sparkle rays
+      // Cross sparkle rays - use the sparkle's own color
       this.ctx.strokeStyle = s.color;
-      this.ctx.lineWidth = 0.6;
+      this.ctx.lineWidth = 0.8;
       this.ctx.globalAlpha = finalOpacity * 0.7;
-      const rayLen = s.size * 3;
+      const rayLen = s.size * 4;
       this.ctx.beginPath();
       this.ctx.moveTo(s.x - rayLen, s.y);
       this.ctx.lineTo(s.x + rayLen, s.y);
@@ -652,23 +685,27 @@ export default function LuckyDrawPage() {
   }, []);
 
   // Auto-scroll for customer table - ALWAYS ON when page loads, bottom to top, continuous loop, NEVER STOPS
+  // Uses translateY on inner wrapper for buttery smooth scrolling
   // Handles both mobile and desktop refs
   useEffect(() => {
     const startAutoScroll = (el: HTMLDivElement) => {
       if (!el) return;
-      if (el.scrollHeight <= el.clientHeight) return;
-      // Bottom-to-top: start at 0, increase scrollTop to move content upward
+      // Wrap content in a translateY-driven inner div for smooth scrolling
+      const inner = el.querySelector('.scroll-inner') as HTMLDivElement;
+      if (!inner) return;
+      const totalHeight = inner.scrollHeight;
+      const viewHeight = el.clientHeight;
+      if (totalHeight <= viewHeight + 10) return;
+      const singleHeight = totalHeight / 2;
       let scrollPos = 0;
-      el.scrollTop = 0;
-      const singleHeight = el.scrollHeight / 2;
-      const speed = 0.5;
+      const speed = 1.5; // Faster speed
       let animId: number;
       const scroll = () => {
         scrollPos += speed;
         if (scrollPos >= singleHeight) {
-          scrollPos = 0;
+          scrollPos -= singleHeight;
         }
-        el.scrollTop = scrollPos;
+        inner.style.transform = `translateY(-${scrollPos}px)`;
         animId = requestAnimationFrame(scroll);
       };
       animId = requestAnimationFrame(scroll);
@@ -1321,6 +1358,7 @@ export default function LuckyDrawPage() {
               </div>
             </div>
             <div ref={customerTableRef} className="flex-1 min-h-0 overflow-hidden">
+              <div className="scroll-inner">
               {[0, 1].map(dup => (
                 <div key={dup}>
                   {allCustomers.map((c, idx) => {
@@ -1344,6 +1382,7 @@ export default function LuckyDrawPage() {
                   })}
                 </div>
               ))}
+              </div>
             </div>
           </div>
         </div>
@@ -1374,6 +1413,7 @@ export default function LuckyDrawPage() {
               </div>
             </div>
             <div ref={customerTableDesktopRef} className="flex-1 min-h-0 overflow-hidden" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
+              <div className="scroll-inner">
               {[0, 1].map(dup => (
                 <div key={dup}>
                   {allCustomers.map((c, idx) => {
@@ -1392,6 +1432,7 @@ export default function LuckyDrawPage() {
                   })}
                 </div>
               ))}
+              </div>
             </div>
           </div>
 
