@@ -1228,10 +1228,10 @@ export default function LuckyDrawPage() {
               transition={{ type: 'spring', duration: 0.6, bounce: 0.4 }}
               className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
               style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-              <div className="w-[90vw] max-w-lg p-6 text-center relative overflow-hidden"
+              <div className="w-[95vw] max-w-2xl p-6 text-center relative overflow-hidden"
                 style={{
                   background: 'linear-gradient(135deg, #0f2042, #162d50, #0f2042)',
-                  boxShadow: '0 0 80px rgba(255,224,138,0.5), 0 0 200px rgba(255,224,138,0.15), inset 0 0 60px rgba(255,224,138,0.08), 0 10px 0 rgba(212,168,67,0.4), 0 16px 32px rgba(0,0,0,0.5)',
+                  boxShadow: '0 0 100px rgba(255,224,138,0.6), 0 0 250px rgba(255,224,138,0.15), inset 0 0 60px rgba(255,224,138,0.1), 0 12px 0 rgba(212,168,67,0.5), 0 20px 40px rgba(0,0,0,0.6)',
                   border: '3px solid rgba(255,224,138,0.5)',
                   borderRadius: '0',
                 }}>
@@ -1255,7 +1255,7 @@ export default function LuckyDrawPage() {
                   <Trophy className="w-16 h-16 mx-auto" style={{ color: '#ffe08a', filter: 'drop-shadow(0 0 15px rgba(255,224,138,0.5))' }} />
                 </motion.div>
                 <p className="text-lg uppercase tracking-widest mb-2 font-bold" style={{ color: 'rgba(232,184,74,0.7)' }}>🎉 Chúc Mừng 🎉</p>
-                <p className="text-4xl font-black mb-2 animate-neon-pulse" style={{ color: '#ffe08a', textShadow: '0 0 30px rgba(255,224,138,0.5), 0 0 60px rgba(255,224,138,0.2)' }}>
+                <p className="text-4xl font-black mb-2 animate-neon-pulse whitespace-nowrap" style={{ color: '#ffe08a', textShadow: '0 0 30px rgba(255,224,138,0.5), 0 0 60px rgba(255,224,138,0.2)' }}>
                   {currentWinner.customerName}
                 </p>
                 {drawMode === 'customer' && currentWinner.advisor && <p className="text-lg mb-1" style={{ color: 'rgba(232,184,74,0.6)' }}>TVV: {currentWinner.advisor}</p>}
@@ -1318,7 +1318,7 @@ export default function LuckyDrawPage() {
                   style={{ background: drawMode === 'advisor' ? 'linear-gradient(135deg, #d4a843, #c9a227)' : 'transparent', color: drawMode === 'advisor' ? '#0a1628' : 'rgba(212,168,67,0.5)' }}>TVV</button>
               </div>
             </div>
-            <div ref={customerTableRef} className="flex-1 overflow-y-auto">
+            <div ref={customerTableRef} className="flex-1 min-h-0 overflow-hidden">
               {[0, 1].map(dup => (
                 <div key={dup}>
                   {allCustomers.map((c, idx) => {
@@ -1371,7 +1371,7 @@ export default function LuckyDrawPage() {
                   style={{ background: drawMode === 'advisor' ? 'linear-gradient(135deg, #e8b84a, #c9a227)' : 'transparent', color: drawMode === 'advisor' ? '#0f2240' : 'rgba(232,184,74,0.5)' }}>TVV</button>
               </div>
             </div>
-            <div ref={customerTableDesktopRef} className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
+            <div ref={customerTableDesktopRef} className="flex-1 min-h-0 overflow-hidden" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e8b84a transparent', fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif' }}>
               {[0, 1].map(dup => (
                 <div key={dup}>
                   {allCustomers.map((c, idx) => {
@@ -1459,9 +1459,13 @@ export default function LuckyDrawPage() {
             className="absolute inset-0 w-full h-full pointer-events-none z-0"
           />
 
-          {/* Background glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[80%] rounded-full blur-3xl pointer-events-none z-0"
-            style={{ background: 'radial-gradient(ellipse, rgba(255,224,138,0.1) 0%, transparent 60%)' }} />
+          {/* Background glow orbs - animated depth effect */}
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[90%] rounded-full blur-3xl pointer-events-none z-0 animate-pulse"
+            style={{ background: 'radial-gradient(ellipse, rgba(255,224,138,0.12) 0%, rgba(20,42,82,0.05) 40%, transparent 70%)' }} />
+          <div className="absolute bottom-0 left-1/4 w-[50%] h-[40%] rounded-full blur-3xl pointer-events-none z-0 animate-pulse"
+            style={{ background: 'radial-gradient(ellipse, rgba(52,211,153,0.08) 0%, transparent 60%)', animationDelay: '1s' }} />
+          <div className="absolute top-0 right-1/4 w-[40%] h-[35%] rounded-full blur-3xl pointer-events-none z-0 animate-pulse"
+            style={{ background: 'radial-gradient(ellipse, rgba(212,168,67,0.08) 0%, transparent 60%)', animationDelay: '2s' }} />
 
           {/* Title bar — absolute centered title with overlay buttons */}
           <div className="flex-shrink-0 relative z-10 pt-3 pb-2 flex items-center justify-center">
@@ -1511,7 +1515,7 @@ export default function LuckyDrawPage() {
             <div className={`relative w-full max-w-5xl mx-auto overflow-hidden transition-shadow duration-1000 ${canSpin || canStart ? 'animate-pulse-shadow' : ''}`}
               style={{
                 background: 'linear-gradient(180deg, #142a52 0%, #1c3a6e 30%, #1c3a6e 70%, #142a52 100%)',
-                boxShadow: isSpinning ? '0 0 100px rgba(255,224,138,0.6), inset 0 0 60px rgba(255,224,138,0.1), 0 12px 0 rgba(212,168,67,0.4), 0 20px 40px rgba(0,0,0,0.6)' : canSpin || canStart ? '0 0 80px rgba(255,224,138,0.45), inset 0 0 60px rgba(255,224,138,0.08), 0 10px 0 rgba(212,168,67,0.3), 0 16px 32px rgba(0,0,0,0.5)' : '0 0 40px rgba(255,224,138,0.2), inset 0 0 30px rgba(255,224,138,0.04), 0 6px 0 rgba(212,168,67,0.2), 0 10px 20px rgba(0,0,0,0.4)',
+                boxShadow: isSpinning ? '0 0 100px rgba(255,224,138,0.6), inset 0 0 60px rgba(255,224,138,0.1), 0 16px 0 rgba(212,168,67,0.5), 0 28px 56px rgba(0,0,0,0.7)' : canSpin || canStart ? '0 0 80px rgba(255,224,138,0.45), inset 0 0 60px rgba(255,224,138,0.08), 0 14px 0 rgba(212,168,67,0.4), 0 22px 44px rgba(0,0,0,0.6)' : '0 0 40px rgba(255,224,138,0.2), inset 0 0 30px rgba(255,224,138,0.04), 0 8px 0 rgba(212,168,67,0.25), 0 14px 28px rgba(0,0,0,0.5)',
                 border: '2px solid rgba(255,224,138,0.3)',
                 borderRadius: '0',
               }}>
@@ -1703,10 +1707,10 @@ export default function LuckyDrawPage() {
                 className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none"
                 style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
               >
-                <div className="w-[80vw] max-w-4xl p-10 text-center relative overflow-hidden" style={{
+                <div className="w-[90vw] max-w-6xl p-10 text-center relative overflow-hidden" style={{
                   background: 'linear-gradient(135deg, #0f2042, #162d50, #0f2042)',
-                  boxShadow: '0 0 100px rgba(255,224,138,0.6), 0 0 250px rgba(255,224,138,0.15), inset 0 0 80px rgba(255,224,138,0.08), 0 12px 0 rgba(212,168,67,0.4), 0 20px 40px rgba(0,0,0,0.6)',
-                  border: '3px solid rgba(255,224,138,0.5)',
+                  boxShadow: '0 0 120px rgba(255,224,138,0.7), 0 0 300px rgba(255,224,138,0.2), inset 0 0 80px rgba(255,224,138,0.1), 0 14px 0 rgba(212,168,67,0.5), 0 24px 48px rgba(0,0,0,0.7)',
+                  border: '3px solid rgba(255,224,138,0.6)',
                   borderRadius: '0',
                 }}>
                   {/* LED strip around winner popup */}
@@ -1739,7 +1743,7 @@ export default function LuckyDrawPage() {
                     <Trophy className="w-24 h-24 mx-auto" style={{ color: '#ffe08a', filter: 'drop-shadow(0 0 20px rgba(255,224,138,0.6))' }} />
                   </motion.div>
                   <p className="text-2xl uppercase tracking-widest mb-3 font-bold" style={{ color: 'rgba(232,184,74,0.7)' }}>🎉 Chúc Mừng Người Trúng Giải 🎉</p>
-                  <p className="text-7xl font-black mb-3 animate-neon-pulse" style={{ color: '#ffe08a', textShadow: '0 0 40px rgba(255,224,138,0.5), 0 0 80px rgba(255,224,138,0.2)' }}>{currentWinner.customerName}</p>
+                  <p className="text-7xl font-black mb-3 animate-neon-pulse whitespace-nowrap" style={{ color: '#ffe08a', textShadow: '0 0 40px rgba(255,224,138,0.5), 0 0 80px rgba(255,224,138,0.2)' }}>{currentWinner.customerName}</p>
                   {drawMode === 'customer' && currentWinner.advisor && <p className="text-3xl mb-2" style={{ color: 'rgba(232,184,74,0.6)' }}>TVV: {currentWinner.advisor}</p>}
                   <div className="mt-4 py-3 px-8 inline-block" style={{ background: 'rgba(52,211,153,0.15)', border: '2px solid rgba(52,211,153,0.3)', borderRadius: '0' }}>
                     <p className="text-4xl font-bold" style={{ color: '#34d399' }}>{currentWinner.prizeName}</p>
