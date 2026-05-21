@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, X, Plus, Trash2, Diamond, Gift } from 'lucide-react';
+import { Settings, X, Plus, Trash2, Diamond, Gift, Pencil, Users } from 'lucide-react';
 import { useInvestmentStore, GiftTier } from '@/lib/investment-store';
 
 interface TierFormData {
@@ -29,6 +29,8 @@ export function SettingsModal() {
   });
   const [tiers, setTiers] = useState<TierFormData[]>([]);
   const [drawPrizes, setDrawPrizes] = useState<DrawPrizeFormData[]>([]);
+  const [editCustomerId, setEditCustomerId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', advisor: '', investmentFee: '', note: '' });
 
   useEffect(() => {
     if (isOpen) {
@@ -118,7 +120,39 @@ export function SettingsModal() {
     await store.saveDrawPrizes(
       drawPrizes.map(p => ({ name: p.name, quantity: parseInt(p.quantity) || 1, gift: p.gift }))
     );
+    setEditCustomerId(null);
     setIsOpen(false);
+  };
+
+  const startEditCustomer = (customerId: string) => {
+    const c = store.customers.find(cu => cu.id === customerId);
+    if (!c) return;
+    setEditCustomerId(customerId);
+    setEditForm({
+      name: c.name,
+      advisor: c.advisor,
+      investmentFee: String(c.investmentFee),
+      note: c.note,
+    });
+  };
+
+  const saveEditCustomer = async () => {
+    if (!editCustomerId) return;
+    const c = store.customers.find(cu => cu.id === editCustomerId);
+    if (!c) return;
+    await store.saveCustomer({
+      ...c,
+      name: editForm.name.trim() || c.name,
+      advisor: editForm.advisor.trim(),
+      investmentFee: parseFloat(editForm.investmentFee) || c.investmentFee,
+      note: editForm.note,
+    });
+    setEditCustomerId(null);
+  };
+
+  const handleDeleteCustomer = async (id: string) => {
+    await store.deleteCustomer(id);
+    if (editCustomerId === id) setEditCustomerId(null);
   };
 
   const inputStyle = {
@@ -363,6 +397,107 @@ export function SettingsModal() {
                   >
                     <Plus className="w-4 h-4" /> Thêm giải
                   </motion.button>
+                </div>
+
+                {/* Customer List */}
+                <div>
+                  <h3 className="font-bold mb-3 flex items-center gap-2" style={{ color: '#d4a843' }}>
+                    <span className="w-1.5 h-5 rounded-full" style={{ background: '#f59e0b' }} />
+                    Danh sách khách hàng ({store.customers.length})
+                  </h3>
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {store.customers.length === 0 && (
+                      <p className="text-center py-4 rounded-lg" style={{ color: 'rgba(212,168,67,0.4)', background: 'rgba(10,22,40,0.5)' }}>
+                        Chưa có khách hàng
+                      </p>
+                    )}
+                    {store.customers.map((c) => (
+                      <div
+                        key={c.id}
+                        className="p-3 rounded-xl"
+                        style={{ background: editCustomerId === c.id ? 'rgba(212,168,67,0.08)' : 'rgba(10,22,40,0.5)', border: editCustomerId === c.id ? '1px solid rgba(212,168,67,0.4)' : '1px solid rgba(212,168,67,0.1)' }}
+                      >
+                        {editCustomerId === c.id ? (
+                          <div className="space-y-2">
+                            <input
+                              value={editForm.name}
+                              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                              placeholder="Họ tên"
+                              className="w-full p-2 rounded-lg outline-none text-sm"
+                              style={inputStyle}
+                            />
+                            <div className="flex gap-2">
+                              <input
+                                value={editForm.advisor}
+                                onChange={(e) => setEditForm({ ...editForm, advisor: e.target.value })}
+                                placeholder="TVV"
+                                className="flex-1 p-2 rounded-lg outline-none text-sm"
+                                style={inputStyle}
+                              />
+                              <input
+                                type="number"
+                                value={editForm.investmentFee}
+                                onChange={(e) => setEditForm({ ...editForm, investmentFee: e.target.value })}
+                                placeholder="Phí (tr)"
+                                className="w-24 p-2 rounded-lg outline-none text-sm"
+                                style={inputStyle}
+                              />
+                            </div>
+                            <input
+                              value={editForm.note}
+                              onChange={(e) => setEditForm({ ...editForm, note: e.target.value })}
+                              placeholder="Ghi chú"
+                              className="w-full p-2 rounded-lg outline-none text-sm"
+                              style={inputStyle}
+                            />
+                            <div className="flex gap-2 pt-1">
+                              <button
+                                onClick={() => setEditCustomerId(null)}
+                                className="flex-1 py-1.5 rounded-lg text-sm font-semibold"
+                                style={{ background: 'rgba(212,168,67,0.08)', color: 'rgba(212,168,67,0.5)' }}
+                              >
+                                Hủy
+                              </button>
+                              <button
+                                onClick={saveEditCustomer}
+                                className="flex-1 py-1.5 rounded-lg text-sm font-bold"
+                                style={{ background: 'linear-gradient(135deg, #0d5a3f, #0a7a4a)', color: '#f5d870' }}
+                              >
+                                Lưu
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-bold text-sm truncate" style={{ color: '#f5d870' }}>{c.name}</div>
+                              <div className="text-xs truncate" style={{ color: 'rgba(212,168,67,0.5)' }}>
+                                {c.advisor && `${c.advisor} • `}{c.investmentFee}tr • {c.gift || '—'}
+                              </div>
+                            </div>
+                            <div className="flex gap-1 flex-shrink-0">
+                              <button
+                                onClick={() => startEditCustomer(c.id)}
+                                className="p-1.5 rounded-lg transition-colors"
+                                style={{ background: 'rgba(212,168,67,0.1)', color: '#d4a843' }}
+                                title="Sửa"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCustomer(c.id)}
+                                className="p-1.5 rounded-lg transition-colors"
+                                style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}
+                                title="Xóa"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <button
