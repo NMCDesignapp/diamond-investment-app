@@ -59,7 +59,9 @@ interface InvestmentStore {
   setSearchKeyword: (keyword: string) => void;
   setStatusFilter: (status: string) => void;
   loadAll: () => Promise<void>;
+  refreshCustomers: () => Promise<void>;
   saveCustomer: (customer: Partial<Customer> & { name: string }) => Promise<void>;
+  saveCustomerSilent: (customer: Partial<Customer> & { name: string }) => Promise<void>;
   deleteCustomer: (id: string) => Promise<void>;
   toggleReceivedStatus: (id: string) => Promise<void>;
   saveEventInfo: (info: Partial<EventInfo>) => Promise<void>;
@@ -131,7 +133,47 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
     }
   },
 
+  // Refresh customers silently (no loading spinner) - used for background sync after optimistic updates
+  refreshCustomers: async () => {
+    try {
+      const res = await fetch('/api/customers', { cache: 'no-store' });
+      const data = await res.json();
+      if (data.success) {
+        set({ customers: data.customers || [] });
+      }
+    } catch (error) {
+      console.error('Failed to refresh customers:', error);
+    }
+  },
+
+  // Save customer to API without triggering optimistic UI updates (used internally by toggleReceivedStatus)
+  saveCustomerSilent: async (customer) => {
+    const res = await fetch('/api/customers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(customer),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to save');
+    }
+  },
+
   saveCustomer: async (customer) => {
+    // Optimistic: update local state immediately to avoid flicker
+    const isEdit = !!customer.id && get().customers.some(c => c.id === customer.id);
+    if (isEdit) {
+      // Update existing customer locally
+      const gift = get().getGiftByFee(customer.investmentFee || 0);
+      set({
+        customers: get().customers.map(c =>
+          c.id === customer.id
+            ? { ...c, ...customer, gift: gift.name || c.gift, giftValue: gift.value || c.giftValue, updatedAt: new Date().toISOString() }
+            : c
+        ),
+      });
+    }
+
     const res = await fetch('/api/customers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -139,18 +181,35 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
     });
     const data = await res.json();
     if (data.success) {
-      await get().loadAll();
+      if (isEdit) {
+        // Already updated optimistically, refresh data silently in background (no loading spinner)
+        get().refreshCustomers();
+      } else {
+        // New customer: add from API response to avoid full reload
+        if (data.customer) {
+          set({ customers: [...get().customers, data.customer] });
+        } else {
+          await get().refreshCustomers();
+        }
+      }
     } else {
+      // Revert on failure
+      if (isEdit) await get().refreshCustomers();
       throw new Error(data.error || 'Failed to save');
     }
   },
 
   deleteCustomer: async (id) => {
+    // Optimistic: remove from local state immediately
+    set({ customers: get().customers.filter(c => c.id !== id) });
+
     const res = await fetch(`/api/customers?id=${id}`, { method: 'DELETE' });
     const data = await res.json();
     if (data.success) {
-      await get().loadAll();
+      // Already removed optimistically, no need for full reload
     } else {
+      // Revert on failure: reload from server
+      await get().refreshCustomers();
       throw new Error(data.error || 'Failed to delete');
     }
   },
@@ -159,7 +218,25 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
     const customer = get().customers.find(c => c.id === id);
     if (!customer) return;
     const newStatus = customer.status === 'Đã nhận quà' ? 'Chưa nhận quà' : 'Đã nhận quà';
-    await get().saveCustomer({ ...customer, status: newStatus });
+
+    // Optimistic: update local state immediately
+    set({
+      customers: get().customers.map(c =>
+        c.id === id ? { ...c, status: newStatus, updatedAt: new Date().toISOString() } : c
+      ),
+    });
+
+    // Save to API in background (no await to avoid any delay)
+    try {
+      await get().saveCustomerSilent({ ...customer, status: newStatus });
+    } catch {
+      // Revert on failure
+      set({
+        customers: get().customers.map(c =>
+          c.id === id ? { ...c, status: customer.status } : c
+        ),
+      });
+    }
   },
 
   saveEventInfo: async (info) => {
