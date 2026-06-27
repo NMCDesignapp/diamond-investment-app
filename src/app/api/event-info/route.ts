@@ -16,37 +16,28 @@ export async function GET() {
       });
     }
     return NextResponse.json({ success: true, eventInfo });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: 'Failed to load event info' }, { status: 500 });
+  } catch (error: unknown) {
+    console.error('EventInfo GET error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to load event info';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
 // POST update event info
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { name, date, location } = body;
-
-    // Get current values to preserve fields not provided
-    const current = await db.eventInfo.findUnique({ where: { id: 'default' } });
+    const { name, date, location } = await request.json();
 
     const eventInfo = await db.eventInfo.upsert({
       where: { id: 'default' },
-      update: {
-        name: name !== undefined ? name : (current?.name || 'SỰ KIỆN ĐẦU TƯ 2025'),
-        date: date !== undefined ? date : (current?.date || ''),
-        location: location !== undefined ? location : (current?.location || ''),
-      },
-      create: {
-        id: 'default',
-        name: name || 'SỰ KIỆN ĐẦU TƯ 2025',
-        date: date !== undefined ? date : '',
-        location: location !== undefined ? location : '',
-      },
+      update: { name, date, location },
+      create: { id: 'default', name, date, location },
     });
 
     return NextResponse.json({ success: true, eventInfo });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: 'Failed to save event info' }, { status: 500 });
+  } catch (error: unknown) {
+    console.error('EventInfo POST error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to save event info';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
