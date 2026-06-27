@@ -815,21 +815,32 @@ export default function LuckyDrawPage() {
       // When decelerating and approaching winner, speed = min(naturalDecel, distance * factor)
       // This ensures speed ONLY decreases, never increases
       let aligningToWinner = false;
+      let decelFrames = 0; // Safety counter to prevent infinite animation
+      const MAX_DECEL_FRAMES = 600; // ~10 seconds at 60fps max decel time
 
       const animate = () => {
         // Deceleration phase
         if (isDecelRef.current) {
+          decelFrames++;
+          // Safety: force stop if decelerating for too long (stuck in loop)
+          if (decelFrames > MAX_DECEL_FRAMES) {
+            if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+            if (onStoppedRef.current) onStoppedRef.current();
+            return;
+          }
+
           // Natural deceleration
           spinSpeedRef.current *= 0.975;
 
           // Always try to find winner ahead when decelerating
           if (pendingWinnerRef.current) {
             const items = trackEl!.querySelectorAll('.slot-item');
-            const currentIdx = Math.floor(spinPosRef.current / itemH);
+            // Use absolute value for index calculation since spinPos can be negative
+            const currentIdx = Math.max(0, Math.floor(Math.abs(spinPosRef.current) / itemH));
 
-            // Find winner name ahead (search up to 60 items ahead)
+            // Find winner name ahead (search up to 80 items ahead)
             let targetIdx = -1;
-            for (let i = currentIdx + 3; i < Math.min(currentIdx + 60, items.length); i++) {
+            for (let i = currentIdx + 3; i < Math.min(currentIdx + 80, items.length); i++) {
               if (items[i].textContent === pendingWinnerRef.current.customerName) {
                 targetIdx = i;
                 break;
@@ -847,8 +858,8 @@ export default function LuckyDrawPage() {
                 // Always take minimum - speed only decreases, never increases
                 spinSpeedRef.current = Math.min(spinSpeedRef.current, approachSpeed);
 
-                // Very close - snap exactly
-                if (distToTarget < 2) {
+                // Close enough - snap exactly
+                if (distToTarget < itemH * 0.5 || spinSpeedRef.current < 0.3) {
                   spinPosRef.current = targetY;
                   trackEl!.style.transform = `translateY(${spinPosRef.current}px)`;
                   if (onStoppedRef.current) {
@@ -860,7 +871,6 @@ export default function LuckyDrawPage() {
             }
 
             // If winner not found yet and speed is very low, gentle crawl
-            // Use max(currentSpeed, 1.5) to avoid any visible acceleration
             if (!aligningToWinner && spinSpeedRef.current < 1.5) {
               spinSpeedRef.current = Math.max(spinSpeedRef.current, 1.5);
             }
@@ -868,8 +878,14 @@ export default function LuckyDrawPage() {
 
           // Safety: if no winner pending and speed is very low, stop
           if (spinSpeedRef.current < 0.3 && !pendingWinnerRef.current) {
+            if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+            setIsSpinning(false);
+            setIsStopping(false);
             return;
           }
+
+          // Safety timeout: if decelerating for too long (stuck), force stop
+          // This prevents infinite loops
         }
 
         // Direction: top to bottom - increase position (less negative = upward in DOM = names scroll down visually)
