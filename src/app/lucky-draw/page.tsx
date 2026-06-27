@@ -764,8 +764,8 @@ export default function LuckyDrawPage() {
     if (track.length === 0) return;
 
     const isDesktop = window.innerWidth >= 768;
-    const itemH = isDesktop ? SLOT_ITEM_HEIGHT_DESKTOP : SLOT_ITEM_HEIGHT_MOBILE;
-    const viewportH = itemH * 5;
+    const presetItemH = isDesktop ? SLOT_ITEM_HEIGHT_DESKTOP : SLOT_ITEM_HEIGHT_MOBILE;
+    const viewportH = presetItemH * 5;
 
     // Populate DOM
     requestAnimationFrame(() => {
@@ -779,19 +779,24 @@ export default function LuckyDrawPage() {
         div.className = 'slot-item';
         div.textContent = name;
         div.style.cssText = `
-          height: ${itemH}px; display: flex; align-items: center; justify-content: center;
-          font-size: ${isDesktop ? '48px' : '24px'}; font-weight: 800; color: ${isDesktop ? '#ffe08a' : '#d4a843'}; white-space: nowrap;
+          height: ${presetItemH}px; display: flex; align-items: center; justify-content: center;
+          font-size: ${isDesktop ? `min(48px, ${presetItemH * 0.48}px)` : `min(24px, ${presetItemH * 0.43}px)`}; font-weight: 800; color: ${isDesktop ? '#ffe08a' : '#d4a843'}; white-space: nowrap;
           padding: 0 ${isDesktop ? '50px' : '20px'}; text-align: center; letter-spacing: 0.05em;
           text-shadow: 0 0 10px ${isDesktop ? 'rgba(255,224,138,0.3)' : 'rgba(212,168,67,0.3)'};
-          will-change: transform;
+          will-change: transform; overflow: hidden;
         `;
         fragment.appendChild(div);
       }
       trackEl.appendChild(fragment);
 
+      // Measure ACTUAL item height from DOM (handles browser zoom correctly)
+      const firstItem = trackEl.querySelector('.slot-item') as HTMLElement;
+      const itemH = firstItem ? firstItem.offsetHeight : presetItemH;
+      const actualViewportH = trackEl.parentElement ? trackEl.parentElement.offsetHeight : viewportH;
+
       // Reset animation state - start FAST
       // Direction: top to bottom, so start from bottom (negative offset)
-      spinPosRef.current = -(track.length * itemH - viewportH); // start at bottom
+      spinPosRef.current = -(track.length * itemH - actualViewportH); // start at bottom
       spinSpeedRef.current = itemH * 1.5; // Faster start speed
       isDecelRef.current = false;
       pendingWinnerRef.current = null;
@@ -801,8 +806,10 @@ export default function LuckyDrawPage() {
       trackEl.style.transform = `translateY(${spinPosRef.current}px)`;
 
       const totalHeight = track.length * itemH;
-      const maxPos = totalHeight - viewportH;
-      const minPos = -(totalHeight - viewportH); // bottom limit for top-to-bottom
+      const maxPos = totalHeight - actualViewportH;
+      const minPos = -(totalHeight - actualViewportH); // bottom limit for top-to-bottom
+      // Center offset: which row index (0-based) should be in the center of the viewport
+      const centerOffset = Math.floor((actualViewportH / itemH) / 2); // = 2 for 5 rows
 
       // NO snap phase - continuous proportional approach that never accelerates
       // When decelerating and approaching winner, speed = min(naturalDecel, distance * factor)
@@ -832,11 +839,15 @@ export default function LuckyDrawPage() {
             const items = trackEl!.querySelectorAll('.slot-item');
             const currentPos = spinPosRef.current;
 
+            // Re-measure item height in case zoom changed during spin
+            const measureItem = items[0] as HTMLElement;
+            const curItemH = measureItem ? measureItem.offsetHeight : itemH;
+
             // Find the nearest winner occurrence AHEAD (targetY > currentPos, i.e. closer to 0)
-            // targetY = -(targetIdx - 2) * itemH
-            // We need targetY > currentPos, so -(targetIdx-2)*itemH > currentPos
-            // => targetIdx < -currentPos/itemH + 2
-            const maxReachableIdx = Math.floor(-currentPos / itemH) + 2;
+            // targetY = -(targetIdx - centerOffset) * curItemH
+            // We need targetY > currentPos, so -(targetIdx-centerOffset)*curItemH > currentPos
+            // => targetIdx < -currentPos/curItemH + centerOffset
+            const maxReachableIdx = Math.floor(-currentPos / curItemH) + centerOffset;
             const searchFrom = Math.max(0, maxReachableIdx - 80); // search up to 80 items back
             const searchTo = Math.max(0, maxReachableIdx - 3); // at least 3 items ahead
 
@@ -846,7 +857,7 @@ export default function LuckyDrawPage() {
 
             for (let i = searchTo; i <= maxReachableIdx && i < items.length; i++) {
               if (items[i] && items[i].textContent === pendingWinnerRef.current.customerName) {
-                const targetY = -(i - 2) * itemH;
+                const targetY = -(i - centerOffset) * curItemH;
                 // Must be ahead: targetY must be > currentPos (closer to 0)
                 if (targetY > currentPos) {
                   const dist = targetY - currentPos;
@@ -866,14 +877,14 @@ export default function LuckyDrawPage() {
                 aligningToWinner = true;
                 // Smoother proportional approach: use square root for more gradual deceleration
                 // This ensures speed decreases smoothly without sudden drops
-                const approachSpeed = Math.sqrt(distToTarget / itemH) * itemH * 0.08;
+                const approachSpeed = Math.sqrt(distToTarget / curItemH) * curItemH * 0.08;
                 // Clamp approachSpeed to minimum of 0.5 so it doesn't freeze
                 const clampedApproach = Math.max(approachSpeed, 0.5);
                 // Always take minimum - speed only decreases, never increases
                 spinSpeedRef.current = Math.min(spinSpeedRef.current, clampedApproach);
 
                 // Close enough or speed very low - snap to winner
-                if (distToTarget < itemH * 0.15 || spinSpeedRef.current < 0.15) {
+                if (distToTarget < curItemH * 0.15 || spinSpeedRef.current < 0.15) {
                   spinPosRef.current = bestTargetY;
                   trackEl!.style.transform = `translateY(${spinPosRef.current}px)`;
                   if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
@@ -905,7 +916,7 @@ export default function LuckyDrawPage() {
 
         // When wrapping during normal spin, reset seamlessly
         if (!isDecelRef.current && spinPosRef.current > 0) {
-          spinPosRef.current = -(totalHeight - viewportH) + (spinPosRef.current % itemH);
+          spinPosRef.current = -(totalHeight - actualViewportH) + (spinPosRef.current % itemH);
         }
 
         // Safety: clamp at top (0) during decel
@@ -1217,9 +1228,9 @@ export default function LuckyDrawPage() {
             </div>
             <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 5}px` }}>
               <div className="absolute inset-0 pointer-events-none z-10">
-                <div className="absolute top-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 2}px`, background: 'linear-gradient(to bottom, rgba(15,32,66,1) 0%, rgba(15,32,66,0.95) 30%, rgba(15,32,66,0.7) 60%, rgba(15,32,66,0.3) 85%, transparent 100%)' }} />
-                <div className="absolute bottom-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_MOBILE * 2}px`, background: 'linear-gradient(to top, rgba(15,32,66,1) 0%, rgba(15,32,66,0.95) 30%, rgba(15,32,66,0.7) 60%, rgba(15,32,66,0.3) 85%, transparent 100%)' }} />
-                <div className="absolute left-0 right-0" style={{ top: `calc(50% - ${SLOT_ITEM_HEIGHT_MOBILE / 2}px)`, height: `${SLOT_ITEM_HEIGHT_MOBILE}px`, borderTop: '2px solid rgba(212,168,67,0.6)', borderBottom: '2px solid rgba(212,168,67,0.6)', background: 'rgba(13,90,63,0.15)' }} />
+                <div className="absolute top-0 left-0 right-0" style={{ height: '40%', background: 'linear-gradient(to bottom, rgba(15,32,66,1) 0%, rgba(15,32,66,0.95) 30%, rgba(15,32,66,0.7) 60%, rgba(15,32,66,0.3) 85%, transparent 100%)' }} />
+                <div className="absolute bottom-0 left-0 right-0" style={{ height: '40%', background: 'linear-gradient(to top, rgba(15,32,66,1) 0%, rgba(15,32,66,0.95) 30%, rgba(15,32,66,0.7) 60%, rgba(15,32,66,0.3) 85%, transparent 100%)' }} />
+                <div className="absolute left-0 right-0" style={{ top: '40%', height: '20%', borderTop: '2px solid rgba(212,168,67,0.6)', borderBottom: '2px solid rgba(212,168,67,0.6)', background: 'rgba(13,90,63,0.15)' }} />
                 <div className="absolute left-1.5 top-1/2 -translate-y-1/2"><div className="w-0 h-0" style={{ borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '8px solid #d4a843' }} /></div>
                 <div className="absolute right-1.5 top-1/2 -translate-y-1/2"><div className="w-0 h-0" style={{ borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderRight: '8px solid #d4a843' }} /></div>
               </div>
@@ -1230,7 +1241,7 @@ export default function LuckyDrawPage() {
                   </p>
                 </div>
               )}
-              <div ref={mobileTrackRef} className="absolute left-0 right-0 top-0" />
+              <div ref={mobileTrackRef} className="absolute left-0 right-0 top-0 bottom-0" />
             </div>
           </div>
 
@@ -1306,13 +1317,13 @@ export default function LuckyDrawPage() {
                 {/* LED strip around winner popup */}
                 <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ borderRadius: '0' }}>
                   <div className="absolute top-0 left-0 right-0 h-2 flex overflow-hidden">
-                    {Array.from({ length: 40 }).map((_, i) => (
-                      <div key={`wt-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${i * 0.05}s` }} />
+                    {Array.from({ length: 20 }).map((_, i) => (
+                      <div key={`wt-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${i * 0.1}s` }} />
                     ))}
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 h-2 flex overflow-hidden">
-                    {Array.from({ length: 40 }).map((_, i) => (
-                      <div key={`wb-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${(40 - i) * 0.05}s` }} />
+                    {Array.from({ length: 20 }).map((_, i) => (
+                      <div key={`wb-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${(20 - i) * 0.1}s` }} />
                     ))}
                   </div>
                 </div>
@@ -1657,9 +1668,9 @@ export default function LuckyDrawPage() {
               {/* Slot viewport - 5 items visible */}
               <div className="relative overflow-hidden" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 5}px` }}>
                 <div className="absolute inset-0 pointer-events-none z-10">
-                  <div className="absolute top-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 2}px`, background: 'linear-gradient(to bottom, rgba(20,42,82,1) 0%, rgba(20,42,82,0.95) 30%, rgba(20,42,82,0.7) 60%, rgba(20,42,82,0.3) 85%, transparent 100%)' }} />
-                  <div className="absolute bottom-0 left-0 right-0" style={{ height: `${SLOT_ITEM_HEIGHT_DESKTOP * 2}px`, background: 'linear-gradient(to top, rgba(20,42,82,1) 0%, rgba(20,42,82,0.95) 30%, rgba(20,42,82,0.7) 60%, rgba(20,42,82,0.3) 85%, transparent 100%)' }} />
-                  <div className="absolute left-0 right-0" style={{ top: `calc(50% - ${SLOT_ITEM_HEIGHT_DESKTOP / 2}px)`, height: `${SLOT_ITEM_HEIGHT_DESKTOP}px`, borderTop: '3px solid rgba(255,224,138,0.7)', borderBottom: '3px solid rgba(255,224,138,0.7)', background: 'rgba(255,224,138,0.12)' }} />
+                  <div className="absolute top-0 left-0 right-0" style={{ height: '40%', background: 'linear-gradient(to bottom, rgba(20,42,82,1) 0%, rgba(20,42,82,0.95) 30%, rgba(20,42,82,0.7) 60%, rgba(20,42,82,0.3) 85%, transparent 100%)' }} />
+                  <div className="absolute bottom-0 left-0 right-0" style={{ height: '40%', background: 'linear-gradient(to top, rgba(20,42,82,1) 0%, rgba(20,42,82,0.95) 30%, rgba(20,42,82,0.7) 60%, rgba(20,42,82,0.3) 85%, transparent 100%)' }} />
+                  <div className="absolute left-0 right-0" style={{ top: '40%', height: '20%', borderTop: '3px solid rgba(255,224,138,0.7)', borderBottom: '3px solid rgba(255,224,138,0.7)', background: 'rgba(255,224,138,0.12)' }} />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2"><div className="w-0 h-0" style={{ borderTop: '20px solid transparent', borderBottom: '20px solid transparent', borderLeft: '28px solid #ffe08a' }} /></div>
                   <div className="absolute right-3 top-1/2 -translate-y-1/2"><div className="w-0 h-0" style={{ borderTop: '20px solid transparent', borderBottom: '20px solid transparent', borderRight: '28px solid #ffe08a' }} /></div>
                 </div>
@@ -1670,7 +1681,7 @@ export default function LuckyDrawPage() {
                     </p>
                   </div>
                 )}
-                <div ref={desktopTrackRef} className="absolute left-0 right-0 top-0" />
+                <div ref={desktopTrackRef} className="absolute left-0 right-0 top-0 bottom-0" />
               </div>
             </div>
 
@@ -1788,23 +1799,23 @@ export default function LuckyDrawPage() {
                   {/* LED strip around winner popup */}
                   <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ borderRadius: '0' }}>
                     <div className="absolute top-0 left-0 right-0 h-3 flex overflow-hidden">
-                      {Array.from({ length: 60 }).map((_, i) => (
-                        <div key={`wt-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${i * 0.04}s` }} />
+                      {Array.from({ length: 30 }).map((_, i) => (
+                        <div key={`wt-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${i * 0.08}s` }} />
                       ))}
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 h-3 flex overflow-hidden">
-                      {Array.from({ length: 60 }).map((_, i) => (
-                        <div key={`wb-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${(60 - i) * 0.04}s` }} />
+                      {Array.from({ length: 30 }).map((_, i) => (
+                        <div key={`wb-${i}`} className="flex-1 led-dot" style={{ animationDelay: `${(30 - i) * 0.08}s` }} />
                       ))}
                     </div>
                     <div className="absolute top-3 left-0 bottom-3 w-3 flex flex-col overflow-hidden">
-                      {Array.from({ length: 25 }).map((_, i) => (
-                        <div key={`wl-${i}`} className="flex-1 led-dot-v" style={{ animationDelay: `${(60 + i) * 0.04}s` }} />
+                      {Array.from({ length: 12 }).map((_, i) => (
+                        <div key={`wl-${i}`} className="flex-1 led-dot-v" style={{ animationDelay: `${(30 + i) * 0.08}s` }} />
                       ))}
                     </div>
                     <div className="absolute top-3 right-0 bottom-3 w-3 flex flex-col overflow-hidden">
-                      {Array.from({ length: 25 }).map((_, i) => (
-                        <div key={`wr-${i}`} className="flex-1 led-dot-v" style={{ animationDelay: `${(95 - i) * 0.04}s` }} />
+                      {Array.from({ length: 12 }).map((_, i) => (
+                        <div key={`wr-${i}`} className="flex-1 led-dot-v" style={{ animationDelay: `${(54 - i) * 0.08}s` }} />
                       ))}
                     </div>
                   </div>
