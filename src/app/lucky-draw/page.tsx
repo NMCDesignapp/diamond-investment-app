@@ -832,24 +832,42 @@ export default function LuckyDrawPage() {
           // Natural deceleration
           spinSpeedRef.current *= 0.975;
 
-          // Always try to find winner ahead when decelerating
+          // Find winner ahead in the CORRECT direction
+          // Animation direction: spinPos goes from very negative → 0 (increasing)
+          // So "ahead" means LOWER indices (closer to 0 in position)
           if (pendingWinnerRef.current) {
             const items = trackEl!.querySelectorAll('.slot-item');
-            // Use absolute value for index calculation since spinPos can be negative
-            const currentIdx = Math.max(0, Math.floor(Math.abs(spinPosRef.current) / itemH));
+            const currentPos = spinPosRef.current;
 
-            // Find winner name ahead (search up to 80 items ahead)
-            let targetIdx = -1;
-            for (let i = currentIdx + 3; i < Math.min(currentIdx + 80, items.length); i++) {
-              if (items[i].textContent === pendingWinnerRef.current.customerName) {
-                targetIdx = i;
-                break;
+            // Find the nearest winner occurrence AHEAD (targetY > currentPos, i.e. closer to 0)
+            // targetY = -(targetIdx - 2) * itemH
+            // We need targetY > currentPos, so -(targetIdx-2)*itemH > currentPos
+            // => targetIdx < -currentPos/itemH + 2
+            const maxReachableIdx = Math.floor(-currentPos / itemH) + 2;
+            const searchFrom = Math.max(0, maxReachableIdx - 80); // search up to 80 items back
+            const searchTo = Math.max(0, maxReachableIdx - 3); // at least 3 items ahead
+
+            let bestTargetIdx = -1;
+            let bestTargetY = 0;
+            let bestDist = Infinity;
+
+            for (let i = searchTo; i <= maxReachableIdx && i < items.length; i++) {
+              if (items[i] && items[i].textContent === pendingWinnerRef.current.customerName) {
+                const targetY = -(i - 2) * itemH;
+                // Must be ahead: targetY must be > currentPos (closer to 0)
+                if (targetY > currentPos) {
+                  const dist = targetY - currentPos;
+                  if (dist < bestDist) {
+                    bestDist = dist;
+                    bestTargetIdx = i;
+                    bestTargetY = targetY;
+                  }
+                }
               }
             }
 
-            if (targetIdx !== -1) {
-              const targetY = -(targetIdx - 2) * itemH; // negative for top-to-bottom
-              const distToTarget = Math.abs(targetY - spinPosRef.current);
+            if (bestTargetIdx !== -1) {
+              const distToTarget = bestTargetY - currentPos;
 
               if (distToTarget > 0) {
                 aligningToWinner = true;
@@ -858,10 +876,11 @@ export default function LuckyDrawPage() {
                 // Always take minimum - speed only decreases, never increases
                 spinSpeedRef.current = Math.min(spinSpeedRef.current, approachSpeed);
 
-                // Close enough - snap exactly
-                if (distToTarget < itemH * 0.5 || spinSpeedRef.current < 0.3) {
-                  spinPosRef.current = targetY;
+                // Close enough or speed very low - snap to winner
+                if (distToTarget < itemH * 0.3 || spinSpeedRef.current < 0.2) {
+                  spinPosRef.current = bestTargetY;
                   trackEl!.style.transform = `translateY(${spinPosRef.current}px)`;
+                  if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
                   if (onStoppedRef.current) {
                     onStoppedRef.current();
                   }
@@ -870,7 +889,7 @@ export default function LuckyDrawPage() {
               }
             }
 
-            // If winner not found yet and speed is very low, gentle crawl
+            // If winner not found ahead and speed is very low, gentle crawl to keep searching
             if (!aligningToWinner && spinSpeedRef.current < 1.5) {
               spinSpeedRef.current = Math.max(spinSpeedRef.current, 1.5);
             }
@@ -883,9 +902,6 @@ export default function LuckyDrawPage() {
             setIsStopping(false);
             return;
           }
-
-          // Safety timeout: if decelerating for too long (stuck), force stop
-          // This prevents infinite loops
         }
 
         // Direction: top to bottom - increase position (less negative = upward in DOM = names scroll down visually)
