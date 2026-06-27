@@ -185,9 +185,11 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
         // Already updated optimistically, refresh data silently in background (no loading spinner)
         get().refreshCustomers();
       } else {
-        // New customer: add from API response to avoid full reload
+        // New customer: add from API response immediately, then refresh silently for correct sort order
         if (data.customer) {
           set({ customers: [...get().customers, data.customer] });
+          // Refresh silently in background to get correct sort order from server
+          get().refreshCustomers();
         } else {
           await get().refreshCustomers();
         }
