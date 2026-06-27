@@ -229,11 +229,11 @@ class FireworkSystem {
     this.rays = [];
     this.sparkles = [];
     this.burstGroups = [];
-    // More rays and sparkles for richer effect
-    for (let i = 0; i < 120; i++) {
+    // Optimized ray and sparkle count for performance
+    for (let i = 0; i < 60; i++) {
       this.rays.push(this.createRay());
     }
-    for (let i = 0; i < 180; i++) {
+    for (let i = 0; i < 80; i++) {
       this.sparkles.push(this.createSparkle());
     }
     this.createBurst();
@@ -333,8 +333,8 @@ class FireworkSystem {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.frameCount++;
 
-    // More frequent firework bursts for richer effect
-    if (this.frameCount % 60 === 0) this.createBurst();
+    // Less frequent firework bursts for performance
+    if (this.frameCount % 120 === 0) this.createBurst();
 
     // Ambient rays - now with full rainbow colors
     for (const r of this.rays) {
@@ -424,14 +424,13 @@ class FireworkSystem {
       }
       this.ctx.save();
       this.ctx.globalAlpha = finalOpacity;
-      // Glow halo
-      const glowGradient = this.ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 5);
+      // Simplified glow halo - smaller radius for performance
+      const glowGradient = this.ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 3);
       glowGradient.addColorStop(0, s.color);
-      glowGradient.addColorStop(0.35, s.color);
-      glowGradient.addColorStop(0.5, `rgba(255, 255, 255, ${0.15 * finalOpacity})`);
+      glowGradient.addColorStop(0.5, s.color);
       glowGradient.addColorStop(1, 'rgba(0,0,0,0)');
       this.ctx.beginPath();
-      this.ctx.arc(s.x, s.y, s.size * 5, 0, Math.PI * 2);
+      this.ctx.arc(s.x, s.y, s.size * 3, 0, Math.PI * 2);
       this.ctx.fillStyle = glowGradient;
       this.ctx.fill();
       // Core dot - white bright center
@@ -439,17 +438,6 @@ class FireworkSystem {
       this.ctx.arc(s.x, s.y, s.size * 0.8, 0, Math.PI * 2);
       this.ctx.fillStyle = '#ffffff';
       this.ctx.fill();
-      // Cross sparkle rays - use the sparkle's own color
-      this.ctx.strokeStyle = s.color;
-      this.ctx.lineWidth = 0.8;
-      this.ctx.globalAlpha = finalOpacity * 0.7;
-      const rayLen = s.size * 4;
-      this.ctx.beginPath();
-      this.ctx.moveTo(s.x - rayLen, s.y);
-      this.ctx.lineTo(s.x + rayLen, s.y);
-      this.ctx.moveTo(s.x, s.y - rayLen);
-      this.ctx.lineTo(s.x, s.y + rayLen);
-      this.ctx.stroke();
       this.ctx.restore();
     }
 
@@ -479,41 +467,41 @@ function CircularLEDStrip() {
     <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden" style={{ borderRadius: '0' }}>
       {/* Top LED row - chase left to right */}
       <div className="absolute top-0 left-0 right-0 h-2.5 flex overflow-hidden">
-        {Array.from({ length: 60 }).map((_, i) => (
+        {Array.from({ length: 30 }).map((_, i) => (
           <div
             key={`top-${i}`}
             className="flex-1 led-dot"
-            style={{ animationDelay: `${i * 0.06}s` }}
+            style={{ animationDelay: `${i * 0.12}s` }}
           />
         ))}
       </div>
       {/* Bottom LED row - chase right to left */}
       <div className="absolute bottom-0 left-0 right-0 h-2.5 flex overflow-hidden">
-        {Array.from({ length: 60 }).map((_, i) => (
+        {Array.from({ length: 30 }).map((_, i) => (
           <div
             key={`bot-${i}`}
             className="flex-1 led-dot"
-            style={{ animationDelay: `${(60 - i) * 0.06}s` }}
+            style={{ animationDelay: `${(30 - i) * 0.12}s` }}
           />
         ))}
       </div>
       {/* Left LED column - chase top to bottom */}
       <div className="absolute top-2.5 left-0 bottom-2.5 w-2.5 flex flex-col overflow-hidden">
-        {Array.from({ length: 25 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div
             key={`left-${i}`}
             className="flex-1 led-dot-v"
-            style={{ animationDelay: `${(60 + i) * 0.06}s` }}
+            style={{ animationDelay: `${(30 + i) * 0.12}s` }}
           />
         ))}
       </div>
       {/* Right LED column - chase bottom to top */}
       <div className="absolute top-2.5 right-0 bottom-2.5 w-2.5 flex flex-col overflow-hidden">
-        {Array.from({ length: 25 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div
             key={`right-${i}`}
             className="flex-1 led-dot-v"
-            style={{ animationDelay: `${(110 - i) * 0.06}s` }}
+            style={{ animationDelay: `${(54 - i) * 0.12}s` }}
           />
         ))}
       </div>
@@ -698,7 +686,7 @@ export default function LuckyDrawPage() {
       if (totalHeight <= viewHeight + 10) return;
       const singleHeight = totalHeight / 2;
       let scrollPos = 0;
-      const speed = 1.5; // Faster speed
+      const speed = 3.5; // Faster speed for customer list scrolling
       let animId: number;
       const scroll = () => {
         scrollPos += speed;
@@ -751,7 +739,7 @@ export default function LuckyDrawPage() {
     const items = drawItems.map(item => item.name);
     if (items.length === 0) return [];
     const track: string[] = [];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 25; i++) {
       const shuffled = [...items].sort(() => Math.random() - 0.5);
       track.push(...shuffled);
     }
@@ -784,6 +772,8 @@ export default function LuckyDrawPage() {
       if (!trackEl) return;
 
       trackEl.innerHTML = '';
+      // Use DocumentFragment for faster DOM insertion
+      const fragment = document.createDocumentFragment();
       for (const name of track) {
         const div = document.createElement('div');
         div.className = 'slot-item';
@@ -793,9 +783,11 @@ export default function LuckyDrawPage() {
           font-size: ${isDesktop ? '48px' : '24px'}; font-weight: 800; color: ${isDesktop ? '#ffe08a' : '#d4a843'}; white-space: nowrap;
           padding: 0 ${isDesktop ? '50px' : '20px'}; text-align: center; letter-spacing: 0.05em;
           text-shadow: 0 0 10px ${isDesktop ? 'rgba(255,224,138,0.3)' : 'rgba(212,168,67,0.3)'};
+          will-change: transform;
         `;
-        trackEl.appendChild(div);
+        fragment.appendChild(div);
       }
+      trackEl.appendChild(fragment);
 
       // Reset animation state - start FAST
       // Direction: top to bottom, so start from bottom (negative offset)
@@ -805,6 +797,7 @@ export default function LuckyDrawPage() {
       pendingWinnerRef.current = null;
       onStoppedRef.current = null;
       trackEl.style.transition = 'none';
+      trackEl.style.willChange = 'transform';
       trackEl.style.transform = `translateY(${spinPosRef.current}px)`;
 
       const totalHeight = track.length * itemH;
@@ -829,8 +822,8 @@ export default function LuckyDrawPage() {
             return;
           }
 
-          // Natural deceleration
-          spinSpeedRef.current *= 0.975;
+          // Natural deceleration - smoother, more gradual
+          spinSpeedRef.current *= 0.985;
 
           // Find winner ahead in the CORRECT direction
           // Animation direction: spinPos goes from very negative → 0 (increasing)
@@ -871,13 +864,16 @@ export default function LuckyDrawPage() {
 
               if (distToTarget > 0) {
                 aligningToWinner = true;
-                // Proportional speed: speed proportional to remaining distance
-                const approachSpeed = distToTarget * 0.04;
+                // Smoother proportional approach: use square root for more gradual deceleration
+                // This ensures speed decreases smoothly without sudden drops
+                const approachSpeed = Math.sqrt(distToTarget / itemH) * itemH * 0.08;
+                // Clamp approachSpeed to minimum of 0.5 so it doesn't freeze
+                const clampedApproach = Math.max(approachSpeed, 0.5);
                 // Always take minimum - speed only decreases, never increases
-                spinSpeedRef.current = Math.min(spinSpeedRef.current, approachSpeed);
+                spinSpeedRef.current = Math.min(spinSpeedRef.current, clampedApproach);
 
                 // Close enough or speed very low - snap to winner
-                if (distToTarget < itemH * 0.3 || spinSpeedRef.current < 0.2) {
+                if (distToTarget < itemH * 0.15 || spinSpeedRef.current < 0.15) {
                   spinPosRef.current = bestTargetY;
                   trackEl!.style.transform = `translateY(${spinPosRef.current}px)`;
                   if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
@@ -896,7 +892,7 @@ export default function LuckyDrawPage() {
           }
 
           // Safety: if no winner pending and speed is very low, stop
-          if (spinSpeedRef.current < 0.3 && !pendingWinnerRef.current) {
+          if (spinSpeedRef.current < 0.2 && !pendingWinnerRef.current) {
             if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
             setIsSpinning(false);
             setIsStopping(false);
@@ -1162,46 +1158,46 @@ export default function LuckyDrawPage() {
             {/* Square LED bulbs arranged along the inside perimeter - alternating blink */}
             <div className="absolute pointer-events-none z-20" style={{ inset: '14px' }}>
               {/* Top row */}
-              {Array.from({ length: 30 }).map((_, i) => (
+              {Array.from({ length: 15 }).map((_, i) => (
                 <div
                   key={`sq-top-${i}`}
                   className={`absolute w-1.5 h-1.5 ${i % 2 === 0 ? 'led-bulb-a' : 'led-bulb-b'}`}
                   style={{
                     top: 0,
-                    left: `${(i / 30) * 100}%`,
+                    left: `${(i / 15) * 100}%`,
                   }}
                 />
               ))}
               {/* Bottom row */}
-              {Array.from({ length: 30 }).map((_, i) => (
+              {Array.from({ length: 15 }).map((_, i) => (
                 <div
                   key={`sq-bot-${i}`}
                   className={`absolute w-1.5 h-1.5 ${i % 2 === 0 ? 'led-bulb-a' : 'led-bulb-b'}`}
                   style={{
                     bottom: 0,
-                    left: `${(i / 30) * 100}%`,
+                    left: `${(i / 15) * 100}%`,
                   }}
                 />
               ))}
               {/* Left column */}
-              {Array.from({ length: 15 }).map((_, i) => (
+              {Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={`sq-left-${i}`}
                   className={`absolute w-1.5 h-1.5 ${i % 2 === 0 ? 'led-bulb-a' : 'led-bulb-b'}`}
                   style={{
                     left: 0,
-                    top: `${(i / 15) * 100}%`,
+                    top: `${(i / 8) * 100}%`,
                   }}
                 />
               ))}
               {/* Right column */}
-              {Array.from({ length: 15 }).map((_, i) => (
+              {Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={`sq-right-${i}`}
                   className={`absolute w-1.5 h-1.5 ${i % 2 === 0 ? 'led-bulb-a' : 'led-bulb-b'}`}
                   style={{
                     right: 0,
-                    top: `${(i / 15) * 100}%`,
+                    top: `${(i / 8) * 100}%`,
                   }}
                 />
               ))}
@@ -1600,46 +1596,46 @@ export default function LuckyDrawPage() {
               {/* Square LED bulbs arranged along the inside perimeter - alternating blink */}
               <div className="absolute pointer-events-none z-20" style={{ inset: '16px' }}>
                 {/* Top row */}
-                {Array.from({ length: 50 }).map((_, i) => (
+                {Array.from({ length: 25 }).map((_, i) => (
                   <div
                     key={`sq-top-${i}`}
                     className={`absolute w-2 h-2 ${i % 2 === 0 ? 'led-bulb-a' : 'led-bulb-b'}`}
                     style={{
                       top: 0,
-                      left: `${(i / 50) * 100}%`,
+                      left: `${(i / 25) * 100}%`,
                     }}
                   />
                 ))}
                 {/* Bottom row */}
-                {Array.from({ length: 50 }).map((_, i) => (
+                {Array.from({ length: 25 }).map((_, i) => (
                   <div
                     key={`sq-bot-${i}`}
                     className={`absolute w-2 h-2 ${i % 2 === 0 ? 'led-bulb-a' : 'led-bulb-b'}`}
                     style={{
                       bottom: 0,
-                      left: `${(i / 50) * 100}%`,
+                      left: `${(i / 25) * 100}%`,
                     }}
                   />
                 ))}
                 {/* Left column */}
-                {Array.from({ length: 20 }).map((_, i) => (
+                {Array.from({ length: 10 }).map((_, i) => (
                   <div
                     key={`sq-left-${i}`}
                     className={`absolute w-2 h-2 ${i % 2 === 0 ? 'led-bulb-a' : 'led-bulb-b'}`}
                     style={{
                       left: 0,
-                      top: `${(i / 20) * 100}%`,
+                      top: `${(i / 10) * 100}%`,
                     }}
                   />
                 ))}
                 {/* Right column */}
-                {Array.from({ length: 20 }).map((_, i) => (
+                {Array.from({ length: 10 }).map((_, i) => (
                   <div
                     key={`sq-right-${i}`}
                     className={`absolute w-2 h-2 ${i % 2 === 0 ? 'led-bulb-a' : 'led-bulb-b'}`}
                     style={{
                       right: 0,
-                      top: `${(i / 20) * 100}%`,
+                      top: `${(i / 10) * 100}%`,
                     }}
                   />
                 ))}
