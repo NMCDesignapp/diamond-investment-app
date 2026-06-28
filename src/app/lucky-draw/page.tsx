@@ -1124,7 +1124,7 @@ export default function LuckyDrawPage() {
                   <Diamond className="w-4 h-4" style={{ color: '#f5d870' }} />
                 </motion.div>
                 <h1 className="text-sm font-black uppercase tracking-wider" style={{ color: '#f5d870', textShadow: '0 0 20px rgba(212,168,67,0.3)' }}>
-                  Quay Số May Mắn
+                  QUAY SỐ MAY MẮN
                 </h1>
               </div>
             </div>
@@ -1554,7 +1554,7 @@ export default function LuckyDrawPage() {
           <div className="flex-shrink-0 relative z-10 pt-3 pb-2 flex items-center justify-center">
             {/* Absolutely centered title */}
             <h1 className="text-4xl font-black uppercase tracking-wider animate-neon-pulse" style={{ color: '#ffe08a', textShadow: '0 0 20px rgba(255,224,138,0.3)' }}>
-              {store.luckyDrawEvent?.name || 'Quay Số May Mắn'}
+              QUAY SỐ MAY MẮN
             </h1>
             {/* Left: back button - overlay */}
             <div className="absolute left-4 top-1/2 -translate-y-1/2">
