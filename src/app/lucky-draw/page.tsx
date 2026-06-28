@@ -601,6 +601,43 @@ export default function LuckyDrawPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Remote command polling — uses refs to avoid circular dependency
+  const startSpinRef = useRef<() => void>(() => {});
+  const stopSpinRef = useRef<() => void>(() => {});
+  const resetWinnersRef = useRef<() => void>(() => {});
+
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const res = await fetch('/api/commands');
+        const data = await res.json();
+        if (data.success && data.commands && data.commands.length > 0) {
+          const ids: string[] = [];
+          for (const cmd of data.commands) {
+            ids.push(cmd.id);
+            switch (cmd.command) {
+              case 'START_SPIN':
+                startSpinRef.current();
+                break;
+              case 'STOP_SPIN':
+                stopSpinRef.current();
+                break;
+              case 'RESET_WINNERS':
+                resetWinnersRef.current();
+                break;
+              case 'REFRESH_DATA':
+                store.loadAll();
+                break;
+            }
+          }
+          await fetch(`/api/commands?ids=${ids.join(',')}`, { method: 'DELETE' });
+        }
+      } catch {}
+    };
+    const interval = setInterval(poll, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Cleanup animation frame on unmount
   useEffect(() => {
     return () => {
@@ -1096,6 +1133,11 @@ export default function LuckyDrawPage() {
       return base.map(p => ({ ...p, remaining: p.quantity }));
     });
   };
+
+  // Assign refs for remote command polling
+  startSpinRef.current = startSpin;
+  stopSpinRef.current = stopSpin;
+  resetWinnersRef.current = handleResetWinners;
 
   return (
     <div className="h-screen flex flex-col overflow-hidden" style={{ background: '#0a1628' }}>

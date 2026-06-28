@@ -52,3 +52,10 @@ model LuckyDrawEvent {
   date     String @default("")
   location String @default("")
 }
+
+model RemoteCommand {
+  id        String   @id @default(cuid())
+  command   String
+  payload   String   @default("{}")
+  createdAt DateTime @default(now())
+}

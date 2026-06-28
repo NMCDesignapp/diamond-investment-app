@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Check, Pencil, Settings, Plus,
   Users, DollarSign, Gift, ChevronDown, ChevronUp, Diamond, Sparkles, Dices,
-  Pause, Play
+  Pause, Play, Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import { useInvestmentStore } from '@/lib/investment-store';
@@ -67,6 +67,60 @@ export default function InvestmentApp() {
       store.loadAll();
     }
   }, []);
+
+  // Remote command polling — check for commands every 2s
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const res = await fetch('/api/commands');
+        const data = await res.json();
+        if (data.success && data.commands && data.commands.length > 0) {
+          const ids: string[] = [];
+          for (const cmd of data.commands) {
+            ids.push(cmd.id);
+            let payload = {};
+            try { payload = JSON.parse(cmd.payload); } catch {}
+            switch (cmd.command) {
+              case 'TOGGLE_AUTO_SCROLL':
+                setAutoScroll(prev => !prev);
+                break;
+              case 'REFRESH_DATA':
+                store.loadAll();
+                break;
+              case 'MARK_ALL_RECEIVED':
+                for (const c of store.customers) {
+                  if (c.status !== 'Đã nhận quà') {
+                    await fetch('/api/customers', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ id: c.id, name: c.name, advisor: c.advisor, investmentFee: c.investmentFee, gift: c.gift, giftValue: c.giftValue, status: 'Đã nhận quà', note: c.note }),
+                    });
+                  }
+                }
+                store.loadAll();
+                break;
+              case 'MARK_ALL_NOT_RECEIVED':
+                for (const c of store.customers) {
+                  if (c.status !== 'Chưa nhận quà') {
+                    await fetch('/api/customers', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ id: c.id, name: c.name, advisor: c.advisor, investmentFee: c.investmentFee, gift: c.gift, giftValue: c.giftValue, status: 'Chưa nhận quà', note: c.note }),
+                    });
+                  }
+                }
+                store.loadAll();
+                break;
+            }
+          }
+          // Delete consumed commands
+          await fetch(`/api/commands?ids=${ids.join(',')}`, { method: 'DELETE' });
+        }
+      } catch {}
+    };
+    const interval = setInterval(poll, 2000);
+    return () => clearInterval(interval);
+  }, [store.customers]);
 
   const filtered = store.getFilteredCustomers();
   const stats = store.getStats();
@@ -184,6 +238,21 @@ export default function InvestmentApp() {
                 >
                   <Dices className="w-4 h-4" style={{ color: '#ffe08a' }} />
                 </motion.div>
+              </motion.button>
+            </Link>
+            <Link href="/remote" title="Điều khiển từ xa">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="flex items-center justify-center rounded-full transition-all"
+                style={{
+                  width: '36px', height: '36px',
+                  border: '2px solid rgba(52,211,153,0.5)',
+                  background: 'rgba(20,42,82,0.8)',
+                  boxShadow: '0 0 8px rgba(52,211,153,0.15)',
+                }}
+              >
+                <Zap className="w-4 h-4" style={{ color: '#34d399' }} />
               </motion.button>
             </Link>
             <SettingsModal />
