@@ -87,6 +87,15 @@ export default function InvestmentApp() {
               case 'REFRESH_DATA':
                 store.loadAll();
                 break;
+              case 'SET_SEARCH':
+                store.setSearchKeyword((payload as { keyword: string }).keyword || '');
+                break;
+              case 'SET_STATUS_FILTER':
+                store.setStatusFilter((payload as { status: string }).status || '');
+                break;
+              case 'SET_GIFT_FILTER':
+                store.setGiftTierFilter((payload as { giftName: string }).giftName || '');
+                break;
               case 'MARK_ALL_RECEIVED':
                 for (const c of store.customers) {
                   if (c.status !== 'Đã nhận quà') {

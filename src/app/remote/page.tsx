@@ -67,6 +67,7 @@ export default function RemotePage() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [giftFilter, setGiftFilter] = useState('');
+  const [syncFilters, setSyncFilters] = useState(true); // Auto-sync filters to main app
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -347,6 +348,20 @@ export default function RemotePage() {
         {/* === CUSTOMERS TAB === */}
         {activeTab === 'customers' && (
           <div className="p-3 space-y-2">
+            {/* Sync toggle */}
+            <div className="flex items-center justify-between px-1 py-1 rounded-lg" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
+              <span className="text-xs font-semibold" style={{ color: syncFilters ? '#00e676' : 'rgba(212,168,67,0.4)' }}>
+                {syncFilters ? '🔗 Đồng bộ bộ lọc với trang chính' : '🔓 Lọc riêng trên Remote'}
+              </span>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setSyncFilters(!syncFilters)}
+                className="p-1 rounded"
+              >
+                {syncFilters ? <ToggleRight className="w-6 h-6" style={{ color: '#00e676' }} /> : <ToggleLeft className="w-6 h-6" style={{ color: 'rgba(212,168,67,0.4)' }} />}
+              </motion.button>
+            </div>
+
             {/* Search & filters */}
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -354,7 +369,10 @@ export default function RemotePage() {
                   type="text"
                   placeholder="Tìm tên, TVV..."
                   value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  onChange={(e) => {
+                    setSearchKeyword(e.target.value);
+                    if (syncFilters) sendCommand('SET_SEARCH', { keyword: e.target.value });
+                  }}
                   className="w-full pl-3 pr-3 py-2 rounded-lg text-sm outline-none"
                   style={{ border: '1px solid rgba(212,168,67,0.3)', background: 'rgba(20,42,82,0.9)', color: '#ffe08a' }}
                 />
@@ -363,7 +381,10 @@ export default function RemotePage() {
             <div className="flex gap-2">
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  if (syncFilters) sendCommand('SET_STATUS_FILTER', { status: e.target.value });
+                }}
                 className="flex-1 px-2 py-1.5 rounded-lg text-xs outline-none cursor-pointer"
                 style={{ border: '1px solid rgba(212,168,67,0.3)', background: 'rgba(20,42,82,0.9)', color: '#ffe08a' }}
               >
@@ -374,7 +395,10 @@ export default function RemotePage() {
               </select>
               <select
                 value={giftFilter}
-                onChange={(e) => setGiftFilter(e.target.value)}
+                onChange={(e) => {
+                  setGiftFilter(e.target.value);
+                  if (syncFilters) sendCommand('SET_GIFT_FILTER', { giftName: e.target.value });
+                }}
                 className="flex-1 px-2 py-1.5 rounded-lg text-xs outline-none cursor-pointer"
                 style={{ border: '1px solid rgba(212,168,67,0.3)', background: 'rgba(20,42,82,0.9)', color: '#ffe08a' }}
               >
