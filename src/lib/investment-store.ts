@@ -54,10 +54,12 @@ interface InvestmentStore {
   isLoading: boolean;
   searchKeyword: string;
   statusFilter: string;
+  giftTierFilter: string;
 
   // Actions
   setSearchKeyword: (keyword: string) => void;
   setStatusFilter: (status: string) => void;
+  setGiftTierFilter: (giftName: string) => void;
   loadAll: () => Promise<void>;
   refreshCustomers: () => Promise<void>;
   saveCustomer: (customer: Partial<Customer> & { name: string }) => Promise<void>;
@@ -84,9 +86,11 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
   isLoading: true,
   searchKeyword: '',
   statusFilter: '',
+  giftTierFilter: '',
 
   setSearchKeyword: (keyword) => set({ searchKeyword: keyword }),
   setStatusFilter: (status) => set({ statusFilter: status }),
+  setGiftTierFilter: (giftName) => set({ giftTierFilter: giftName }),
 
   loadAll: async () => {
     set({ isLoading: true });
@@ -303,13 +307,17 @@ export const useInvestmentStore = create<InvestmentStore>((set, get) => ({
   },
 
   getFilteredCustomers: () => {
-    const { customers, searchKeyword, statusFilter } = get();
+    const { customers, searchKeyword, statusFilter, giftTierFilter, giftTiers } = get();
     return customers.filter(c => {
       const matchKeyword = !searchKeyword ||
         c.name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
         c.advisor.toLowerCase().includes(searchKeyword.toLowerCase());
       const matchStatus = !statusFilter || c.status === statusFilter;
-      return matchKeyword && matchStatus;
+      const matchGiftTier = !giftTierFilter || (() => {
+        const tier = giftTiers.find(t => c.investmentFee >= t.minFee && c.investmentFee <= t.maxFee);
+        return tier ? tier.giftName === giftTierFilter : false;
+      })();
+      return matchKeyword && matchStatus && matchGiftTier;
     });
   },
 

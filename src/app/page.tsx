@@ -449,6 +449,24 @@ export default function InvestmentApp() {
             <option value="Chưa nhận quà">Chưa nhận</option>
             <option value="Không nhận quà">Không nhận</option>
           </select>
+          <select
+            value={store.giftTierFilter}
+            onChange={(e) => store.setGiftTierFilter(e.target.value)}
+            className="px-3 py-2 rounded-lg text-sm outline-none transition-all cursor-pointer"
+            style={{
+              border: '1px solid rgba(255,224,138,0.3)',
+              background: 'rgba(20,42,82,0.9)',
+              color: '#ffe08a',
+            }}
+          >
+            <option value="">Tất cả quà</option>
+            {store.giftTiers
+              .slice()
+              .sort((a, b) => a.order - b.order)
+              .map(tier => (
+                <option key={tier.id} value={tier.giftName}>{tier.giftName}</option>
+              ))}
+          </select>
           {/* Auto-scroll toggle */}
           <motion.button
             whileTap={{ scale: 0.9 }}
